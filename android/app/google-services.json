@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "321867004635",
+    "project_id": "osakel-app",
+    "storage_bucket": "osakel-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:321867004635:android:28ffdfac72751c947beafe",
+        "android_client_info": {
+          "package_name": "com.osakel.testapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwCZa2Sw4Uib-yS7OmnoPRvCesZcxnBT4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
