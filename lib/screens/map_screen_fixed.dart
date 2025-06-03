@@ -1,14 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../models/shop.dart';
-import '../models/shop_with_price.dart';
-import '../models/drink_shop_link.dart';
-import '../services/firestore_service.dart';
-import '../utils/custom_marker_generator.dart';
-import 'shop_detail_screen.dart';
+import 'package:store_map_app/models/shop.dart';
+import 'package:store_map_app/models/shop_with_price.dart';
+import 'package:store_map_app/models/drink_shop_link.dart';
+import 'package:store_map_app/screens/shop_detail_screen.dart';
+import 'package:store_map_app/services/firestore_service.dart';
+import 'package:store_map_app/utils/custom_marker_generator.dart';
+import 'package:store_map_app/widgets/shop_card_widget.dart';
 
 class MapScreen extends StatefulWidget {
   final String? drinkId;
@@ -305,16 +304,6 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // Google Mapsを開く
-  Future<void> _launchMaps(Shop shop) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      print('Could not launch $url');
-    }
-  }
-  
   // 店舗詳細画面に遷移
   void _navigateToShopDetail(ShopWithPrice shopWithPrice) {
     Navigator.push(
@@ -367,7 +356,7 @@ class _MapScreenState extends State<MapScreen> {
               left: 0,
               right: 0,
               child: Container(
-                height: 220,
+                height: 190,
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: _shopsWithPrice.length,
@@ -380,161 +369,9 @@ class _MapScreenState extends State<MapScreen> {
                   },
                   itemBuilder: (context, index) {
                     final shopWithPrice = _shopsWithPrice[index];
-                    final shop = shopWithPrice.shop;
-                    final price = shopWithPrice.drinkShopLink.price;
-                    
-                    String? imageUrl;
-                    if (shop.imageURL != null && shop.imageURL!.isNotEmpty) {
-                      imageUrl = shop.imageURL;
-                    } else if (shop.imageUrl != null && shop.imageUrl!.isNotEmpty) {
-                      imageUrl = shop.imageUrl;
-                    }
-                    
-                    return Container(
-                      margin: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 店舗画像
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
-                            ),
-                            child: imageUrl != null && imageUrl.isNotEmpty
-                              ? Image.network(
-                                  imageUrl,
-                                  height: 100,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      height: 100,
-                                      width: double.infinity,
-                                      color: Colors.grey[300],
-                                      child: const Center(
-                                        child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Container(
-                                  height: 100,
-                                  width: double.infinity,
-                                  color: Colors.grey[300],
-                                  child: const Center(
-                                    child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
-                                  ),
-                                ),
-                          ),
-                          
-                          // 店舗情報
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 店舗名と価格
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        shop.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '¥${price.toInt()}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                
-                                // 住所
-                                Text(
-                                  shop.address,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 12),
-                                
-                                // ボタン
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () => _launchMaps(shop),
-                                        icon: const Icon(Icons.map, size: 16),
-                                        label: const Text('地図で見る'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Colors.blue,
-                                          elevation: 0,
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            side: const BorderSide(color: Colors.blue),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () => _navigateToShopDetail(shopWithPrice),
-                                        icon: const Icon(Icons.info_outline, size: 16),
-                                        label: const Text('詳細を見る'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    return ShopCardWidget(
+                      shopWithPrice: shopWithPrice,
+                      onNavigateToDetail: _navigateToShopDetail,
                     );
                   },
                 ),
