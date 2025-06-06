@@ -55,7 +55,7 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     // 初期化時に空のリストを作成
     _shopsWithPrice = [];
-    print('MapScreen initialized with drinkId: ${widget.drinkId}');
+    // print('MapScreen initialized with drinkId: ${widget.drinkId}');
     
     // データを読み込む前に少し遅延させる（UIの初期化を待つため）
     Future.delayed(const Duration(milliseconds: 500), () {
@@ -65,7 +65,7 @@ class _MapScreenState extends State<MapScreen> {
 
   // 店舗データを読み込む
   Future<void> _loadShopsData() async {
-    print('店舗データの読み込み開始');
+    // print('店舗データの読み込み開始');
     setState(() {
       _isLoading = true;
     });
@@ -88,7 +88,7 @@ class _MapScreenState extends State<MapScreen> {
       
       // データが取得できなかった場合はモックデータを生成
       if (shops.isEmpty) {
-        print('店舗データが取得できなかったため、モックデータを生成します');
+        // print('店舗データが取得できなかったため、モックデータを生成します');
         _generateMockData();
         return;
       }
@@ -102,7 +102,7 @@ class _MapScreenState extends State<MapScreen> {
       _updateMarkerPositions();
       
     } catch (e) {
-      print('データ取得エラー: $e');
+      // print('データ取得エラー: $e');
       // エラー時はモックデータを生成
       _generateMockData();
     }
@@ -110,7 +110,7 @@ class _MapScreenState extends State<MapScreen> {
   
   // モックデータを生成
   void _generateMockData() {
-    print('モックデータを生成します');
+    // print('モックデータを生成します');
     List<ShopWithPrice> mockShops = [];
     
     for (int i = 1; i <= 10; i++) {
@@ -187,7 +187,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void _scrollToShopCard(ShopWithPrice shop) {
     if (!_scrollController.hasClients) {
-      print('スクロールコントローラーが準備できていないため、リトライをスケジュール');
+      // print('スクロールコントローラーが準備できていないため、リトライをスケジュール');
       _scrollRetryCount++;
       if (_scrollRetryCount < 5) {
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -201,11 +201,11 @@ class _MapScreenState extends State<MapScreen> {
     
     final int index = _shopsWithPrice.indexWhere((s) => s.shop.id == shop.shop.id);
     if (index == -1) {
-      print('指定されたショップが見つかりません: ${shop.shop.id}');
+      // print('指定されたショップが見つかりません: ${shop.shop.id}');
       return;
     }
     
-    print('ショップカードへスクロール: インデックス=$index, ショップID=${shop.shop.id}');
+    // print('ショップカードへスクロール: インデックス=$index, ショップID=${shop.shop.id}');
     
     final double cardWidth = 146.0; // カード幅（itemExtent値と同じにする）
     final double targetPosition = index * cardWidth;
@@ -217,7 +217,7 @@ class _MapScreenState extends State<MapScreen> {
       curve: Curves.easeInOut,
     ).then((_) {
       _isProgrammaticScrolling = false;
-      print('ショップカードへのスクロール完了: インデックス=$index');
+      // print('ショップカードへのスクロール完了: インデックス=$index');
     });
   }
   
@@ -284,7 +284,7 @@ class _MapScreenState extends State<MapScreen> {
         position: LatLng(shop.lat, shop.lng),
         icon: markerIcon,
         onTap: () {
-          print('マーカーがタップされました: ${shop.id}');
+          // print('マーカーがタップされました: ${shop.id}');
           _updateSelectedShop(_shopsWithPrice[i]);
           
           // PageViewを該当のインデックスに移動
@@ -369,9 +369,11 @@ class _MapScreenState extends State<MapScreen> {
                   },
                   itemBuilder: (context, index) {
                     final shopWithPrice = _shopsWithPrice[index];
-                    return ShopCardWidget(
-                      shopWithPrice: shopWithPrice,
-                      onNavigateToDetail: _navigateToShopDetail,
+                    return GestureDetector(
+                      onTap: () => _navigateToShopDetail(shopWithPrice),
+                      child: ShopCardWidget(
+                        shopWithPrice: shopWithPrice,
+                      ),
                     );
                   },
                 ),

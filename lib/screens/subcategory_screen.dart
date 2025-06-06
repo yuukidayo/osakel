@@ -8,7 +8,7 @@ import 'drink_detail_screen.dart';
 class SubcategoryScreen extends StatefulWidget {
   final Category category;
 
-  const SubcategoryScreen({Key? key, required this.category}) : super(key: key);
+  const SubcategoryScreen({super.key, required this.category});
 
   @override
   State<SubcategoryScreen> createState() => _SubcategoryScreenState();
@@ -23,6 +23,10 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
   @override
   void initState() {
     super.initState();
+    // カテゴリから最初のサブカテゴリを選択
+    if (widget.category.subcategories.isNotEmpty) {
+      _selectedSubcategory = widget.category.subcategories.first;
+    }
     _loadDrinks();
   }
 
@@ -31,31 +35,34 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
       _isLoading = true;
     });
 
+    // デバッグ情報：カテゴリのサブカテゴリを表示
+    print('カテゴリ「${widget.category.name}」のサブカテゴリ: ${widget.category.subcategories.join(', ')}');
+
     try {
       // Firebaseのドリンクコレクションの全ドキュメントをデバッグ用に取得
-      final allDrinksSnapshot = await FirebaseFirestore.instance
-          .collection('drinks')
-          .limit(20)
-          .get();
+      // final allDrinksSnapshot = await FirebaseFirestore.instance
+      //     .collection('drinks')
+      //     .limit(20)
+      //     .get();
       
-      print('全ドリンクドキュメント数: ${allDrinksSnapshot.docs.length}');
+      // print('全ドリンクドキュメント数: ${allDrinksSnapshot.docs.length}');
       
       // 全ドキュメントのデータ構造を確認
-      for (var doc in allDrinksSnapshot.docs) {
-        final data = doc.data();
-        print('ドキュメントID: ${doc.id}, データ全体: $data');
-        print('カテゴリID: ${data['category']}, タイプ: ${data['type']}');
-      }
+      // for (var doc in allDrinksSnapshot.docs) {
+      //   // final data = doc.data();
+      //   // print('ドキュメントID: ${doc.id}, データ全体: $data');
+      //   // print('カテゴリID: ${data['category']}, タイプ: ${data['type']}');
+      // }
       
-      print('現在のカテゴリID: ${widget.category.id}');
+      // print('現在のカテゴリID: ${widget.category.id}');
       
       // Firestoreから全てのドリンクデータを取得
-      print('選択されたカテゴリID: ${widget.category.id}');
+      // print('選択されたカテゴリID: ${widget.category.id}');
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('drinks')
           .get();
           
-      print('取得した全ドリンク数: ${snapshot.docs.length}');
+      // print('取得した全ドリンク数: ${snapshot.docs.length}');
       
       // カテゴリIDとそのドリンクの関係を確認
       Map<String, List<String>> categoryToDrinks = {};
@@ -73,7 +80,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
       
       // 各カテゴリに含まれるドリンク数を表示
       categoryToDrinks.forEach((categoryId, drinkIds) {
-        print('カテゴリID: $categoryId, ドリンク数: ${drinkIds.length}');
+        // print('カテゴリID: $categoryId, ドリンク数: ${drinkIds.length}');
       });
       
       // カテゴリ名に基づいてドリンクをフィルタリング
@@ -81,7 +88,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
       
       // カテゴリ名に基づいてフィルタリング条件を設定
       String categoryName = widget.category.name.toLowerCase();
-      print('選択されたカテゴリ名: ${widget.category.name}');
+      // print('選択されたカテゴリ名: ${widget.category.name}');
       
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -106,22 +113,22 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
         
         if (shouldInclude) {
           filteredDocs.add(doc);
-          print('ドリンク追加: ${data['name']}, タイプ: $drinkType');
+          // print('ドリンク追加: ${data['name']}, タイプ: $drinkType');
         }
       }
       
-      print('カテゴリ ${widget.category.name} に関連するドリンク数: ${filteredDocs.length}');
+      // print('カテゴリ ${widget.category.name} に関連するドリンク数: ${filteredDocs.length}');
       
       // フィルタリングしたドキュメントからドリンクリストを生成
       final List<Drink> fetchedDrinks = filteredDocs.map((doc) {
         return Drink.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
       
-      print('取得したドリンク数: ${fetchedDrinks.length}');
+      // print('取得したドリンク数: ${fetchedDrinks.length}');
       
       // データが取得できなかった場合はモックデータを使用
       if (fetchedDrinks.isEmpty) {
-        print('Firestoreからドリンクが見つかりませんでした。モックデータを使用します。');
+        // print('Firestoreからドリンクが見つかりませんでした。モックデータを使用します。');
         final mockDrinks = _createMockDrinks();
         
         setState(() {
@@ -141,12 +148,12 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
       });
       
       // デバッグ情報
-      for (var drink in _drinks) {
-        print('ドリンク: ${drink.name}, タイプ: ${drink.type}');
-      }
+      // for (var drink in _drinks) {
+        // print('ドリンク: ${drink.name}, タイプ: ${drink.type}');
+      // }
       
     } catch (e) {
-      print('Firestoreからドリンクを取得中にエラーが発生しました: $e');
+      // print('Firestoreからドリンクを取得中にエラーが発生しました: $e');
       
       // エラー時はモックデータを使用
       final mockDrinks = _createMockDrinks();
@@ -259,29 +266,29 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
   }
 
   void _selectSubcategory(String subcategory) {
-    print('選択前のサブカテゴリ: $_selectedSubcategory');
-    print('タップされたサブカテゴリ: $subcategory');
-    print('現在のドリンク数: ${_drinks.length}');
+    // print('選択前のサブカテゴリ: $_selectedSubcategory');
+    // print('タップされたサブカテゴリ: $subcategory');
+    // print('現在のドリンク数: ${_drinks.length}');
     
     // ドリンクのタイプを確認
-    for (var drink in _drinks) {
-      print('ドリンク: ${drink.name}, タイプ: ${drink.type}, サブカテゴリ: ${drink.subcategoryId}');
-    }
+    // for (var drink in _drinks) {
+    //   // print('ドリンク: ${drink.name}, タイプ: ${drink.type}, サブカテゴリ: ${drink.subcategoryId}');
+    // }
     
     setState(() {
       if (_selectedSubcategory == subcategory) {
         // 同じものをタップしたら選択解除
         _selectedSubcategory = null;
         _filteredDrinks = List.from(_drinks); // フィルタ解除
-        print('フィルタ解除: 全てのドリンクを表示');
+        // print('フィルタ解除: 全てのドリンクを表示');
       } else {
         _selectedSubcategory = subcategory;
         // サブカテゴリでフィルタリング
         _filteredDrinks = _drinks.where((drink) => drink.type == subcategory).toList();
-        print('フィルタ適用: $subcategory のドリンクのみ表示');
+        // print('フィルタ適用: $subcategory のドリンクのみ表示');
       }
       
-      print('フィルタリング後のドリンク数: ${_filteredDrinks.length}');
+      // print('フィルタリング後のドリンク数: ${_filteredDrinks.length}');
     });
   }
 
@@ -293,7 +300,28 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('お店を表示', style: TextStyle(fontSize: 16)),
+        title: GestureDetector(
+          onTap: () {
+            // お店一覧画面に遷移
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ShopListScreen(
+                  categoryId: widget.category.id,
+                  title: 'お酒を表示',
+                ),
+              ),
+            );
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text('お酒を表示', style: TextStyle(fontSize: 16)),
+              SizedBox(width: 4),
+              Icon(Icons.refresh, size: 16),
+            ],
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -491,7 +519,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
                         );
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        print('画像読み込みエラー: $error');
+                        // print('画像読み込みエラー: $error');
                         return Container(
                           color: Colors.grey[300],
                           child: const Icon(Icons.image_not_supported, color: Colors.white),
@@ -510,7 +538,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withAlpha((255 * 0.1).round()),
                             blurRadius: 2,
                             offset: const Offset(0, 1),
                           ),

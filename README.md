@@ -1,14 +1,17 @@
-# Drink Shop Map App
+# OSAKEL - Drink Shop Map App
 
-A Flutter application that connects to Firebase Firestore and displays store locations on a Google Map with custom price markers. When a marker is tapped, a bottom sheet appears showing the shop name and drink price.
+A Flutter application that connects to Firebase Firestore and displays store locations on a Google Map with custom price markers. Users can find shops that serve specific drinks, view pricing information, and get details about each location.
 
 ## Features
 
-- Firebase Firestore integration
-- Google Maps integration
-- Custom price markers showing drink prices at each location
-- Bottom sheet with shop and price details
+- Firebase Firestore integration for real-time data
+- Google Maps integration with custom markers
+- Price markers showing drink prices at each location
+- Horizontal scrollable shop list with detailed cards
+- Bottom sheet with shop details and action buttons
 - Filtering shops by drink availability
+- Drink categories and details screens
+- Modern UI with custom animations
 
 ## Firestore Structure
 
@@ -76,6 +79,9 @@ flutter run
 - Implements custom price markers using Canvas and PictureRecorder
 - Uses `intl` package for price formatting
 - Implements a bottom sheet for shop and price details
+- Horizontal shop cards with 16:9 image aspect ratio
+- Displays shop atmosphere tags and operating hours
+- Shows "ノミタイ" (want to drink) counts for popularity metrics
 
 ## Sample Data
 

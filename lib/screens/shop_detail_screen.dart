@@ -24,13 +24,16 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
   }
 
   void _openGoogleMaps() async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=${widget.shop.lat},${widget.shop.lng}';
-    if (await canLaunch(url)) {
-      await launch(url);
+    final String urlString = 'https://www.google.com/maps/search/?api=1&query=${widget.shop.lat},${widget.shop.lng}';
+    final Uri mapUri = Uri.parse(urlString);
+    if (await canLaunchUrl(mapUri)) {
+      await launchUrl(mapUri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('マップアプリを開けませんでした')),
-      );
+      if (mounted) { // Check if the widget is still in the tree
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('マップアプリを開けませんでした')),
+        );
+      }
     }
   }
 
@@ -98,7 +101,7 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withAlpha((255 * 0.1).round()),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
