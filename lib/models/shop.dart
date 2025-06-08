@@ -69,6 +69,12 @@ class Shop {
       openTime: data['openTime'],
     );
   }
+  
+  // FirestoreのDocumentSnapshotからShopオブジェクトを作成するファクトリーメソッド
+  factory Shop.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Shop.fromMap(doc.id, data);
+  }
 
   Map<String, dynamic> toMap() {
     return {

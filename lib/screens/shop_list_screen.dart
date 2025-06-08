@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/shop.dart';
+import 'dart:developer' as developer;
 
 class ShopListScreen extends StatefulWidget {
   final String? categoryId;
@@ -21,8 +22,11 @@ class ShopListScreen extends StatefulWidget {
 class _ShopListScreenState extends State<ShopListScreen> {
   final List<Shop> _shops = [];
   bool _isLoading = true;
+  bool _isUpdating = false;
   String _selectedFilter = 'バー';
   final List<String> _filters = ['バー', 'ひとり歓迎', '試飲可', '静か'];
+  int _updatedCount = 0;
+  int _errorCount = 0;
 
   @override
   void initState() {
@@ -36,16 +40,95 @@ class _ShopListScreenState extends State<ShopListScreen> {
     });
 
     try {
-      // Firestoreからショップデータを取得
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('shops')
-          .limit(20)
-          .get();
-
       List<Shop> shops = [];
-      for (var doc in snapshot.docs) {
-        final shop = Shop.fromFirestore(doc);
-        shops.add(shop);
+      
+      // カテゴリIDがあれば、drink_shop_linksコレクションからカテゴリIDに関連する店舗を取得
+      if (widget.categoryId != null) {
+        print('カテゴリID: ${widget.categoryId} に基づいてお店を取得します');
+        
+        // 1. まず、カテゴリIDに関連するドリンクを取得
+        final drinksSnapshot = await FirebaseFirestore.instance
+            .collection('drinks')
+            .where('categoryId', isEqualTo: widget.categoryId)
+            .get();
+            
+        // 2. 取得したドリンクのIDを使ってdrink_shop_linksから関連する店舗IDを取得
+        Set<String> shopIds = {}; // 重複を避けるためにSetを使用
+        
+        for (var drinkDoc in drinksSnapshot.docs) {
+          final drinkId = drinkDoc.id;
+          
+          final linksSnapshot = await FirebaseFirestore.instance
+              .collection('drink_shop_links')
+              .where('drinkId', isEqualTo: drinkId)
+              .get();
+              
+          for (var linkDoc in linksSnapshot.docs) {
+            final data = linkDoc.data();
+            if (data.containsKey('shopId')) {
+              shopIds.add(data['shopId']);
+            }
+          }
+        }
+        
+        print('取得した店舗IDの数: ${shopIds.length}');
+        
+        // 3. 店舗IDを使ってshopsコレクションから店舗データを取得
+        for (String shopId in shopIds) {
+          final shopDoc = await FirebaseFirestore.instance
+              .collection('shops')
+              .doc(shopId)
+              .get();
+              
+          if (shopDoc.exists) {
+            final shop = Shop.fromFirestore(shopDoc);
+            shops.add(shop);
+          }
+        }
+      } 
+      // ドリンクIDがあれば、そのドリンクを提供している店舗を取得
+      else if (widget.drinkId != null) {
+        print('ドリンクID: ${widget.drinkId} に基づいてお店を取得します');
+        
+        // drink_shop_linksからドリンクIDに関連する店舗を取得
+        final linksSnapshot = await FirebaseFirestore.instance
+            .collection('drink_shop_links')
+            .where('drinkId', isEqualTo: widget.drinkId)
+            .get();
+            
+        Set<String> shopIds = {};
+        for (var doc in linksSnapshot.docs) {
+          final data = doc.data();
+          if (data.containsKey('shopId')) {
+            shopIds.add(data['shopId']);
+          }
+        }
+        
+        // 店舗IDを使ってshopsコレクションから店舗データを取得
+        for (String shopId in shopIds) {
+          final shopDoc = await FirebaseFirestore.instance
+              .collection('shops')
+              .doc(shopId)
+              .get();
+              
+          if (shopDoc.exists) {
+            final shop = Shop.fromFirestore(shopDoc);
+            shops.add(shop);
+          }
+        }
+      }
+      // どちらもなければ、全ての店舗を取得
+      else {
+        print('全てのお店を取得します');
+        final snapshot = await FirebaseFirestore.instance
+            .collection('shops')
+            .limit(20)
+            .get();
+            
+        for (var doc in snapshot.docs) {
+          final shop = Shop.fromFirestore(doc);
+          shops.add(shop);
+        }
       }
 
       setState(() {
@@ -63,10 +146,81 @@ class _ShopListScreenState extends State<ShopListScreen> {
     }
   }
 
+  // drink_shop_linksコレクションにカテゴリIDを追加するメソッド
+  Future<void> _updateLinksCategoryId() async {
+    setState(() {
+      _isUpdating = true;
+      _updatedCount = 0;
+      _errorCount = 0;
+    });
+    
+    try {
+      // カテゴリIDがない場合は更新しない
+      if (widget.categoryId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('カテゴリIDがありません。'))
+        );
+        setState(() {
+          _isUpdating = false;
+        });
+        return;
+      }
+      
+      final categoryId = widget.categoryId!;
+      
+      // 1. カテゴリIDに関連するドリンクを取得
+      final drinksSnapshot = await FirebaseFirestore.instance
+          .collection('drinks')
+          .where('categoryId', isEqualTo: categoryId)
+          .get();
+      
+      // 2. 各ドリンクについて、関連するdrink_shop_linksドキュメントを更新
+      for (var drinkDoc in drinksSnapshot.docs) {
+        final drinkId = drinkDoc.id;
+        
+        // ドリンクに関連するリンクを取得
+        final linksSnapshot = await FirebaseFirestore.instance
+            .collection('drink_shop_links')
+            .where('drinkId', isEqualTo: drinkId)
+            .get();
+            
+        // 各リンクにカテゴリIDを追加
+        for (var linkDoc in linksSnapshot.docs) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('drink_shop_links')
+                .doc(linkDoc.id)
+                .update({
+                  'categoryId': categoryId,
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+            _updatedCount++;
+          } catch (e) {
+            developer.log('リンク更新エラー: ${e.toString()}');
+            _errorCount++;
+          }
+        }
+      }
+      
+      // 更新完了後にUIに通知
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('更新完了: $_updatedCount 件のリンクを更新しました。エラー: $_errorCount 件'))
+      );
+    } catch (e) {
+      developer.log('カテゴリID更新エラー: ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('エラーが発生しました: ${e.toString()}'))
+      );
+    } finally {
+      setState(() {
+        _isUpdating = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -79,6 +233,14 @@ class _ShopListScreenState extends State<ShopListScreen> {
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         actions: [
+          // 更新用ボタン
+          if (widget.categoryId != null)
+            IconButton(
+              icon: Icon(_isUpdating ? Icons.sync : Icons.update, color: Colors.black),
+              tooltip: 'カテゴリIDを更新',
+              onPressed: _isUpdating ? null : _updateLinksCategoryId,
+            ),
+          // 店舗リスト再読み込みボタン
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black),
             onPressed: _loadShops,
@@ -357,19 +519,6 @@ class _ShopListScreenState extends State<ShopListScreen> {
                     Text(
                       '${shop.address} ${shop.distance != null ? '${shop.distance}m' : ''}',
                       style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // 料金
-                Row(
-                  children: [
-                    Text(
-                      '¥ ${shop.price != null ? shop.price : 3200}-',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ],
                 ),
