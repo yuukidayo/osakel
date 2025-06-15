@@ -233,6 +233,31 @@ class _ShopListScreenState extends State<ShopListScreen> {
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         actions: [
+          // お酒を表示ボタン
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                // 前の画面（サブカテゴリー画面）に戻る
+                Navigator.pop(context);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('お酒を表示', style: TextStyle(color: Colors.red, fontSize: 14)),
+                    SizedBox(width: 4),
+                    Icon(Icons.refresh, color: Colors.red, size: 14),
+                  ],
+                ),
+              ),
+            ),
+          ),
           // 更新用ボタン
           if (widget.categoryId != null)
             IconButton(

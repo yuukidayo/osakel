@@ -6,10 +6,10 @@ class PriceMarkerWidget extends StatelessWidget {
   final bool isSelected;
   
   const PriceMarkerWidget({
-    Key? key,
+    super.key,
     required this.price,
     this.isSelected = false,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {

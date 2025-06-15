@@ -7,10 +7,10 @@ class ShopDetailScreen extends StatefulWidget {
   final int price;
 
   const ShopDetailScreen({
-    Key? key,
+    super.key,
     required this.shop,
     required this.price,
-  }) : super(key: key);
+  });
 
   @override
   State<ShopDetailScreen> createState() => _ShopDetailScreenState();

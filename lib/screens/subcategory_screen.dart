@@ -314,13 +314,20 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
               ),
             );
           },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text('お酒を表示', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 4),
-              Icon(Icons.refresh, size: 16),
-            ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text('お店を表示', style: TextStyle(color: Colors.red, fontSize: 16)),
+                SizedBox(width: 4),
+                Icon(Icons.refresh, color: Colors.red, size: 16),
+              ],
+            ),
           ),
         ),
         centerTitle: true,

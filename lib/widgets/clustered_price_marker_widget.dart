@@ -6,10 +6,10 @@ class ClusteredPriceMarkerWidget extends StatelessWidget {
   final bool isSelected;
 
   const ClusteredPriceMarkerWidget({
-    Key? key,
+    super.key,
     required this.shops,
     this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

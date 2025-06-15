@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/sauna_facility.dart';
 
 class FacilityDetailScreen extends StatelessWidget {
-  const FacilityDetailScreen({Key? key}) : super(key: key);
+  const FacilityDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,7 @@ import 'pro_comments_screen.dart';
 class DrinkDetailScreen extends StatefulWidget {
   final String drinkId;
 
-  const DrinkDetailScreen({Key? key, required this.drinkId}) : super(key: key);
+  const DrinkDetailScreen({super.key, required this.drinkId});
 
   @override
   State<DrinkDetailScreen> createState() => _DrinkDetailScreenState();

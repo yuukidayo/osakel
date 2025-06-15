@@ -10,10 +10,10 @@ class ProCommentsScreen extends StatefulWidget {
   final String drinkName;
 
   const ProCommentsScreen({
-    Key? key,
+    super.key,
     required this.drinkId,
     required this.drinkName,
-  }) : super(key: key);
+  });
 
   @override
   State<ProCommentsScreen> createState() => _ProCommentsScreenState();
@@ -121,7 +121,7 @@ class _ProCommentsScreenState extends State<ProCommentsScreen> {
     final userName = user?.name ?? '不明なユーザー';
     final shopName = shop?.name ?? '';
     final displayName = shopName.isNotEmpty 
-        ? '$userName（${shopName}）' 
+        ? '$userName（$shopName）' 
         : userName;
     
     return Card(

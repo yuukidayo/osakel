@@ -1,39 +1,46 @@
-# Uncomment this line to define a global platform for your project
+# Simplified Podfile for store_map_app iOS
+source 'https://cdn.cocoapods.org/'
+
 platform :ios, '14.0'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
-ENV['COCOAPODS_DISABLE_STATS'] = 'true'
-
 project 'Runner', {
-  'Debug' => :debug,
+  'Debug'   => :debug,
   'Profile' => :release,
   'Release' => :release,
 }
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  generated_xcode_build_settings_path = File.expand_path(
+    File.join('..', 'Flutter', 'Generated.xcconfig'),
+    __FILE__
+  )
   unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+    raise "#{generated_xcode_build_settings_path} must exist. Run `flutter pub get` first."
   end
 
   File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    matches = line.match(/FLUTTER_ROOT\=(.*)/) 
     return matches[1].strip if matches
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}"
 end
 
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+require File.expand_path(
+  File.join('packages', 'flutter_tools', 'bin', 'podhelper'),
+  flutter_root
+)
 
 flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
-
-  # Explicitly add GoogleMaps pod with version compatible with iOS 14.0+
-  pod 'GoogleMaps', '8.4.0'
   
+  # Install all Flutter plugins
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  
+  # Add GoogleMaps separately
+  pod 'GoogleMaps', '~> 8.0'
+
   target 'RunnerTests' do
     inherit! :search_paths
   end
@@ -42,15 +49,15 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    
+
     target.build_configurations.each do |config|
+      # Match your platform
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      
-      # Disable code signing for pods
+      # Disable signing inside Pods project
       config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-      
-      # Enable SWIFT_VERSION for GoogleMaps
-      if target.name.start_with?("GoogleMaps")
+
+      # Ensure Swift 5 for GoogleMaps
+      if target.name.start_with?('GoogleMaps')
         config.build_settings['SWIFT_VERSION'] = '5.0'
       end
     end

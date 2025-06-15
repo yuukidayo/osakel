@@ -9,10 +9,10 @@ class StoreBottomSheet extends StatelessWidget {
   final VoidCallback onClose;
 
   const StoreBottomSheet({
-    Key? key,
+    super.key,
     required this.shopWithPrice,
     required this.onClose,
-  }) : super(key: key);
+  });
 
   // Google Mapsで店舗の場所を開く
   Future<void> _openMaps() async {
