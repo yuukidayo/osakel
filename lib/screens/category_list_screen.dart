@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/category_service.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/side_menu.dart';
 import 'subcategory_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
@@ -59,20 +62,21 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 現在のユーザー情報を取得
+    final user = FirebaseAuth.instance.currentUser;
+    final userName = user?.displayName ?? 'ユーザー';
+    final profileImageUrl = user?.photoURL;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('OSAKEL', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.grey[200],
-            height: 1.0,
-          ),
-        ),
+      appBar: CustomAppBar(
+        onProfileTap: () {
+          showSideMenu(
+            context,
+            userName: userName,
+            profileImage: profileImageUrl,
+            notificationCount: 2, // 通知数は実際のデータに置き換え可能
+          );
+        },
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

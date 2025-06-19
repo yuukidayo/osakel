@@ -125,6 +125,17 @@ class _DrinkMapScreenState extends State<DrinkMapScreen> {
       
       if (_mapController != null) {
         _createMarkers();
+        
+        // 最初のお店の位置にカメラを移動
+        if (_stores.isNotEmpty) {
+          final firstShop = _stores[0];
+          _mapController!.animateCamera(
+            CameraUpdate.newLatLngZoom(
+              LatLng(firstShop.shop.lat, firstShop.shop.lng),
+              14.0, // ズームレベルは調整可能
+            ),
+          );
+        }
       }
     } catch (e) {
       print('Error loading shops: $e');

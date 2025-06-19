@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
 import 'screens/drink_detail_screen.dart';
 import 'screens/map_screen_fixed.dart' as map_screen;
 import 'screens/shop_detail_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/signup_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 
 void main() async {
   // This must be called first
@@ -48,26 +52,89 @@ void main() async {
 
 // Function removed as we now initialize Firebase directly in main()
 
+/// 認証状態を監視し、適切な画面にルーティングするためのラッパー
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      // 認証状態の変更を監視
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // ローディング中
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // ユーザーがログインしている場合
+        if (snapshot.hasData) {
+          final user = snapshot.data;
+          // メール認証が完了しているかチェック
+          if (user != null && user.emailVerified) {
+            // メール認証完了済み → カテゴリー一覧画面へ
+            return const CategoryListScreen();
+          } else {
+            // メール認証未完了 → ログイン画面に戻して、そこでダイアログ表示
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // ログアウト
+              FirebaseAuth.instance.signOut();
+              
+              // 認証未完了メッセージ
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('メール認証を完了してからログインしてください'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            });
+            return const LoginScreen();
+          }
+        }
+        
+        // ユーザーがログインしていない場合はログイン画面へ
+        return const LoginScreen();
+      },
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'サウナマップ',
+      title: 'OSAKEL',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.teal,
         ),
       ),
-      // カテゴリ選択画面をホーム画面として表示
-      home: const CategoryListScreen(),
+      // 認証状態に基づいてホーム画面を表示
+      home: const AuthWrapper(),
       onGenerateRoute: (settings) {
-        if (settings.name == '/category') {
+        if (settings.name == '/login') {
+          return MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          );
+        } else if (settings.name == '/signup') {
+          return MaterialPageRoute(
+            builder: (context) => const SignUpScreen(),
+          );
+        } else if (settings.name == '/forgot_password') {
+          return MaterialPageRoute(
+            builder: (context) => const ForgotPasswordScreen(),
+          );
+        } else if (settings.name == '/categories') {
           return MaterialPageRoute(
             builder: (context) => const CategoryListScreen(),
           );
