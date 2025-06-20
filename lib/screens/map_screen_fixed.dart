@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:store_map_app/models/shop.dart';
-import 'package:store_map_app/models/shop_with_price.dart';
-import 'package:store_map_app/models/drink_shop_link.dart';
-import 'package:store_map_app/screens/shop_detail_screen.dart';
-import 'package:store_map_app/services/firestore_service.dart';
-import 'package:store_map_app/utils/custom_marker_generator.dart';
-import 'package:store_map_app/widgets/shop_card_widget.dart';
+import 'package:osakel/models/shop.dart';
+import 'package:osakel/models/shop_with_price.dart';
+import 'package:osakel/models/drink_shop_link.dart';
+import 'package:osakel/screens/shop_detail_screen.dart';
+import 'package:osakel/services/firestore_service.dart';
+import 'package:osakel/utils/custom_marker_generator.dart';
+import 'package:osakel/widgets/shop_card_widget.dart';
 
 class MapScreen extends StatefulWidget {
   final String? drinkId;

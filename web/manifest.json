@@ -1,6 +1,6 @@
 {
-    "name": "store_map_app",
-    "short_name": "store_map_app",
+    "name": "OSAKEL",
+    "short_name": "OSAKEL",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
