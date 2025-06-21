@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/auth/login_screen.dart';
+import '../services/admin_service.dart';
+import '../screens/admin/add_drink_screen.dart';
 
 /// サイドメニューコンポーネント
 /// 
@@ -51,6 +53,52 @@ class SideMenu extends StatelessWidget {
                       Icons.store_outlined, 
                       'お気に入り お店',
                     ),
+                    
+                    // 管理者専用メニュー
+                    FutureBuilder<bool>(
+                      future: AdminService.isAdmin(),
+                      builder: (context, snapshot) {
+                        if (snapshot.data == true) {
+                          return Column(
+                            children: [
+                              const Divider(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.admin_panel_settings, size: 16, color: Colors.grey),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      '管理者メニュー',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              _buildMenuItem(
+                                Icons.add_box_outlined,
+                                'お酒登録',
+                                onTap: () {
+                                  onClose();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const AddDrinkScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const Divider(),
+                            ],
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    
                     _buildMenuItem(
                       Icons.help_outline, 
                       'ヘルプ',

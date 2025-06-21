@@ -23,6 +23,8 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
   Drink? _drink;
   List<Map<String, dynamic>> _proCommentsWithUserData = [];
   int _totalProComments = 0;
+  String? _countryName; // 国名を保存するフィールドを追加
+  Map<String, dynamic>? _drinkData; // 元のFirestoreデータを保存
 
   @override
   void initState() {
@@ -46,7 +48,28 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
         final drinkData = drinkDoc.data() as Map<String, dynamic>;
         setState(() {
           _drink = Drink.fromMap(widget.drinkId, drinkData);
+          _drinkData = drinkData;
         });
+
+        // 国名を取得（countryRefが存在する場合は優先、なければcountryフィールドを使用）
+        final countryRef = drinkData['countryRef'];
+        if (countryRef != null) {
+          // countryRefが存在する場合は参照先から国名を取得
+          final countryDoc = await countryRef.get();
+          if (countryDoc.exists) {
+            setState(() {
+              _countryName = countryDoc.data()!['name'] as String?;
+            });
+          }
+        } else {
+          // countryRefが存在しない場合は既存のcountryフィールドを使用
+          final countryString = drinkData['country'] as String?;
+          if (countryString != null && countryString.isNotEmpty) {
+            setState(() {
+              _countryName = countryString;
+            });
+          }
+        }
 
         // プロユーザーのコメントを取得
         await _loadProComments();
@@ -410,52 +433,26 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
   
   // お酒の種類に応じた情報項目を構築する
   List<Widget> _buildDrinkInfoItems() {
-    if (_drink == null) return [];
+    if (_drink == null || _drinkData == null) return [];
     
     final List<Widget> infoItems = [];
     
-    // Firebaseのデータを取得
-    final String type = _drink!.type.toLowerCase();
-    final String category = _drink!.type; // カテゴリ（ラガー、IPA、スタウトなど）
-    final String brand = _drink!.name.split(' ').first; // ブランド名（サントリー、アサヒなど）を名前から推測
-    final String country = _drink!.categoryId; // 仮のデータとして使用
-    final String region = _drink!.subcategoryId; // 仮のデータとして使用
-    final String abv = '5'; // アルコール度数（仮）
+    // Firestoreのデータを取得
+    final String name = _drinkData!['name'] as String; // ドリンク名（日本語）
+    final String nameEn = _drinkData!['name_en'] as String; // ドリンク名（英語）
+    final String brand = _drinkData!['brand'] as String; // ブランド名
+    final String area = _drinkData!['area'] as String; // 生産地域
+    final double abv = _drinkData!['abv'] as double; // アルコール度数
+    final String country = _countryName ?? '不明'; // 国名を表示
     
-    // ビールの場合の表示項目
-    if (type.contains('ビール') || type.contains('beer') || 
-        type == 'ラガー' || type == 'ipa' || type == 'スタウト' || 
-        type == 'エール' || type == 'ale') {
-      infoItems.add(_buildInfoItem('カテゴリ', category));
-      infoItems.add(_buildInfoItem('アルコール度数', '$abv%'));
-      infoItems.add(_buildInfoItem('生産国', country));
-      if (region.isNotEmpty) {
-        infoItems.add(_buildInfoItem('地域', region));
-      }
-      infoItems.add(_buildInfoItem('生産者', brand));
-    }
-    // ワインの場合の表示項目
-    else if (type.contains('ワイン') || type.contains('wine')) {
-      infoItems.add(_buildInfoItem('カテゴリー', category));
-      infoItems.add(_buildInfoItem('ブドウ品種', 'ピノ・ノワール')); // 仮データ
-      infoItems.add(_buildInfoItem('', brand));
-      infoItems.add(_buildInfoItem('アルコール度数', '15.5%')); // 仮データ
-      infoItems.add(_buildInfoItem('生産国', country));
-      if (region.isNotEmpty) {
-        infoItems.add(_buildInfoItem('', region));
-        infoItems.add(_buildInfoItem('地域', 'ナパ・バレー')); // 仮データ
-      }
-    }
-    // その他のお酒の場合のデフォルト表示
-    else {
-      infoItems.add(_buildInfoItem('カテゴリー', category));
-      infoItems.add(_buildInfoItem('アルコール度数', '$abv%'));
-      infoItems.add(_buildInfoItem('生産国', country));
-      if (region.isNotEmpty) {
-        infoItems.add(_buildInfoItem('地域', region));
-      }
-      infoItems.add(_buildInfoItem('生産者', brand));
-    }
+    // 基本情報を表示
+    infoItems.add(_buildInfoItem('名称', name));
+    infoItems.add(_buildInfoItem('名称（英語）', nameEn));
+    infoItems.add(_buildInfoItem('生産国', country));
+    infoItems.add(_buildInfoItem('生産エリア', area));
+    infoItems.add(_buildInfoItem('お酒カテゴリ', _drink!.type));
+    infoItems.add(_buildInfoItem('アルコール度数', '${abv}%'));
+    infoItems.add(_buildInfoItem('シリーズ', brand));
     
     return infoItems;
   }
