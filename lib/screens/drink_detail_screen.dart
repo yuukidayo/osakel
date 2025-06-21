@@ -5,6 +5,7 @@ import '../models/comment.dart';
 import '../models/user.dart';
 import '../models/shop.dart';
 import '../services/firestore_service.dart';
+import '../utils/safe_data_utils.dart';
 
 import 'pro_comments_screen.dart';
 
@@ -58,17 +59,14 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
           final countryDoc = await countryRef.get();
           if (countryDoc.exists) {
             setState(() {
-              _countryName = countryDoc.data()!['name'] as String?;
+              _countryName = SafeDataUtils.safeGetString(countryDoc.data() as Map<String, dynamic>?, 'name');
             });
           }
         } else {
           // countryRefが存在しない場合は既存のcountryフィールドを使用
-          final countryString = drinkData['country'] as String?;
-          if (countryString != null && countryString.isNotEmpty) {
-            setState(() {
-              _countryName = countryString;
-            });
-          }
+          setState(() {
+            _countryName = SafeDataUtils.safeGetString(drinkData, 'country');
+          });
         }
 
         // プロユーザーのコメントを取得
@@ -438,11 +436,11 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
     final List<Widget> infoItems = [];
     
     // Firestoreのデータを取得
-    final String name = _drinkData!['name'] as String; // ドリンク名（日本語）
-    final String nameEn = _drinkData!['name_en'] as String; // ドリンク名（英語）
-    final String brand = _drinkData!['brand'] as String; // ブランド名
-    final String area = _drinkData!['area'] as String; // 生産地域
-    final double abv = _drinkData!['abv'] as double; // アルコール度数
+    final String name = SafeDataUtils.safeGetString(_drinkData, 'name'); // ドリンク名（日本語）
+    final String nameEn = SafeDataUtils.safeGetString(_drinkData, 'name_en'); // ドリンク名（英語）
+    final String brand = SafeDataUtils.safeGetString(_drinkData, 'brand'); // ブランド名
+    final String area = SafeDataUtils.safeGetString(_drinkData, 'area'); // 生産地域
+    final double abv = SafeDataUtils.safeGetDouble(_drinkData, 'abv'); // アルコール度数として取得
     final String country = _countryName ?? '不明'; // 国名を表示
     
     // 基本情報を表示

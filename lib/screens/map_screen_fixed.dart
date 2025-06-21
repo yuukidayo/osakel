@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:osakel/models/shop.dart';
 import 'package:osakel/models/shop_with_price.dart';
 import 'package:osakel/models/drink_shop_link.dart';
-import 'package:osakel/screens/shop_detail_screen.dart';
+import 'package:osakel/screens/store_detail_screen.dart';
 import 'package:osakel/services/firestore_service.dart';
 import 'package:osakel/utils/custom_marker_generator.dart';
 import 'package:osakel/widgets/shop_card_widget.dart';
@@ -22,11 +22,12 @@ class _MapScreenState extends State<MapScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final Completer<GoogleMapController> _mapController = Completer();
   final ScrollController _scrollController = ScrollController();
-  final PageController _pageController = PageController(viewportFraction: 0.93);
+  final PageController _pageController = PageController(viewportFraction: 0.90);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   ShopWithPrice? _selectedShop;
   bool _isLoading = true;
+  bool _isInitialFocusComplete = false; // 初回フォーカス完了フラグ
   
   // Shop data
   List<ShopWithPrice> _shopsWithPrice = [];
@@ -98,6 +99,9 @@ class _MapScreenState extends State<MapScreen> {
         _isLoading = false;
       });
       
+      // 初回フォーカス処理
+      await _performInitialFocus();
+      
       // マーカーを更新
       _updateMarkerPositions();
       
@@ -108,8 +112,43 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
   
+  // 初回フォーカス処理
+  Future<void> _performInitialFocus() async {
+    if (_shopsWithPrice.isNotEmpty && !_isInitialFocusComplete) {
+      final firstShop = _shopsWithPrice.first;
+      
+      // 先頭店舗を選択状態にする
+      setState(() {
+        _selectedShop = firstShop;
+        _isInitialFocusComplete = true;
+      });
+      
+      // マップコントローラが利用可能になるまで待機
+      final controller = await _mapController.future;
+      
+      // 先頭店舗の位置にカメラを移動
+      await controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(firstShop.shop.lat, firstShop.shop.lng),
+            zoom: 15.0,
+          ),
+        ),
+      );
+      
+      // PageViewも先頭に設定
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+  
   // モックデータを生成
-  void _generateMockData() {
+  void _generateMockData() async {
     // print('モックデータを生成します');
     List<ShopWithPrice> mockShops = [];
     
@@ -127,8 +166,9 @@ class _MapScreenState extends State<MapScreen> {
         id: 'link_$i',
         drinkId: widget.drinkId ?? 'drink_1',
         shopId: shop.id,
-        price: 500 + (i * 50),
+        price: 500.0 + (i * 100),
         isAvailable: true,
+        note: '',
       );
       
       mockShops.add(ShopWithPrice(shop: shop, drinkShopLink: drinkShopLink));
@@ -138,6 +178,9 @@ class _MapScreenState extends State<MapScreen> {
       _shopsWithPrice = mockShops;
       _isLoading = false;
     });
+    
+    // 初回フォーカス処理
+    await _performInitialFocus();
     
     // マーカーを更新
     _updateMarkerPositions();
@@ -271,11 +314,13 @@ class _MapScreenState extends State<MapScreen> {
     for (int i = 0; i < _shopsWithPrice.length; i++) {
       final shop = _shopsWithPrice[i].shop;
       final price = _shopsWithPrice[i].drinkShopLink.price;
+      final isFirstShop = i == 0; // 先頭店舗かどうか
+      final isSelected = _selectedShop?.shop.id == shop.id;
       
       // カスタムマーカーを生成
       final BitmapDescriptor markerIcon = await CustomMarkerGenerator.createPriceMarker(
         price: price,
-        isSelected: _selectedShop?.shop.id == shop.id,
+        isSelected: isSelected || (isFirstShop && !_isInitialFocusComplete),
       );
       
       // マーカーを作成
@@ -302,6 +347,18 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       _markers = markers;
     });
+    
+    // 初回フォーカス完了後、先頭店舗のInfoWindowを表示
+    if (_isInitialFocusComplete && _shopsWithPrice.isNotEmpty && _selectedShop != null) {
+      Future.delayed(const Duration(milliseconds: 500), () async {
+        try {
+          final controller = await _mapController.future;
+          controller.showMarkerInfoWindow(MarkerId(_selectedShop!.shop.id));
+        } catch (e) {
+          // InfoWindow表示に失敗した場合は無視
+        }
+      });
+    }
   }
 
   // 店舗詳細画面に遷移
@@ -309,9 +366,8 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ShopDetailScreen(
-          shop: shopWithPrice.shop,
-          price: shopWithPrice.drinkShopLink.price.toInt(),
+        builder: (context) => StoreDetailScreen(
+          storeId: shopWithPrice.shop.id,
         ),
       ),
     );

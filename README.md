@@ -120,3 +120,55 @@ Document ID: link2
   isAvailable: true
 }
 ```
+
+## 📚 ドキュメント
+
+### 開発者向けドキュメント
+- [画面とファイルのマッピング](docs/screen_file_mapping_ja.md) - 各画面に対応するDartファイルの詳細マッピング
+- [アーキテクチャガイド](docs/ARCHITECTURE.md) - 数値型処理とnull安全性のベストプラクティス
+- [Firebaseスキーマ](docs/FIREBASE_SCHEMA.md) - Firestoreデータベース構造の詳細
+
+### 主要な画面構成
+- **認証**: ログイン、サインアップ、パスワードリセット
+- **メイン**: カテゴリ一覧、サブカテゴリ、ドリンク詳細
+- **マップ**: Google Maps統合、店舗位置表示、価格マーカー
+- **店舗**: 店舗一覧、店舗詳細、ストア詳細
+- **管理者**: ドリンク登録（管理者専用）
+
+詳細な画面とファイルの対応関係については、[画面ファイルマッピング](docs/screen_file_mapping_ja.md)を参照してください。
+
+## 🔧 開発環境
+
+### 必要な設定
+- Google Maps API キー
+- Firebase プロジェクト設定
+- Flutter SDK (最新安定版)
+- Xcode 15.3+ (iOS開発の場合)
+
+### ビルドコマンド
+```bash
+# 依存関係のインストール
+flutter pub get
+
+# iOS向けビルド
+flutter build ios --no-codesign
+
+# Android向けビルド
+flutter build apk
+
+# 開発用実行
+flutter run --debug
+```
+
+## 🚨 既知の問題と対策
+
+### null安全性
+- `lib/utils/safe_data_utils.dart`を使用してFirestoreからの安全なデータ取得を実装
+- 文字列フィールドには`SafeDataUtils.safeGetString()`を使用
+
+### カルーセル
+- `carousel_slider`パッケージ使用時は`import 'package:carousel_slider/carousel_slider.dart' as carousel;`でエイリアスを設定
+
+### Firebase認証
+- Firebase iOS SDK 11.13.0以上はXcode 15.3+が必要
+- minSdkVersion 23以上が必要（Android）
