@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>321867004635-b9u3lao65hhj3v9500jqsetu31efosc1.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.321867004635-b9u3lao65hhj3v9500jqsetu31efosc1</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAJBaWnxgCVBl3E2hxt-8pJVw-VI5tnHjI</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.osakel.testapp</string>
+	<string>com.osakel.app</string>
 	<key>PROJECT_ID</key>
 	<string>osakel-app</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:321867004635:ios:ae2bd097c1669ba37beafe</string>
+	<string>1:321867004635:ios:fc4979a04440ce9d7beafe</string>
 </dict>
 </plist>
