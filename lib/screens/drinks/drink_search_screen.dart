@@ -14,7 +14,7 @@ class DrinkSearchScreen extends StatefulWidget {
 
 class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   // Category state management
-  String _selectedCategory = 'all';
+  String _selectedCategory = 'すべてのカテゴリ';
   String? _selectedSubcategory;
   String _categoryDisplayName = 'すべてのカテゴリ';
   List<Map<String, dynamic>> _categories = [];
@@ -63,8 +63,25 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
         _categories = data;
         _isLoadingCategories = false;
       });
-      _updateSubcategories();
-      // _executeSearchは削除 - initStateのpostFrameCallbackで実行
+      
+      // カテゴリが「すべて」の時、カテゴリ一覧をサブカテゴリとして表示
+      if (_selectedCategory == 'すべてのカテゴリ' && data.isNotEmpty) {
+        setState(() {
+          _subcategories = data.map((c) => c['name']).toList();
+          // 自動選択しない - デフォルトはnull
+          _selectedSubcategory = null;
+          print('初期ロード時: サブカテゴリ自動選択なし');
+        });
+      } else {
+        _updateSubcategories();
+      }
+      
+      // ビルドサイクル完了後に検索実行
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _executeSearch();
+        }
+      });
     } catch (e) {
       setState(() {
         _isLoadingCategories = false;
@@ -76,10 +93,19 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
 
   /// カテゴリ選択時に _subcategories を更新
   void _updateSubcategories() {
-    if (_selectedCategory == 'all') {
-      setState(() {
-        _subcategories = _categories.map((c) => c['name']).toList();
-      });
+    print('_updateSubcategories 呼び出し: _selectedCategory=$_selectedCategory');
+    print('現在のカテゴリ一覧: ${_categories.map((c) => c['name']).toList()}');
+    
+    if (_selectedCategory == 'すべてのカテゴリ') {
+      // すべてのカテゴリが選択されている場合、カテゴリ一覧をサブカテゴリとして表示
+      if (_categories.isNotEmpty) {
+        setState(() {
+          _subcategories = _categories.map((c) => c['name']).toList();
+          print('サブカテゴリ更新 (all選択時): $_subcategories');
+        });
+      } else {
+        print('警告: カテゴリ一覧が空です。データロードに問題がある可能性があります。');
+      }
       return;
     }
 
@@ -98,29 +124,47 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   /// Firestore クエリを構築
   Query _buildQuery() {
     Query q = FirebaseFirestore.instance.collection('drinks');
-    if (_selectedCategory != 'all') {
-      // カテゴリ名を使用して検索（修正後）
+    
+    // 「すべてのカテゴリ」選択時の処理
+    if (_selectedCategory == 'すべてのカテゴリ') {
+      print('すべてのカテゴリモードでクエリ構築'); // デバッグログ
+      
+      if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
+        // サブカテゴリが選択されている場合はそのカテゴリのお酒を表示
+        print('サブカテゴリ($_selectedSubcategory)でフィルタリング');
+        q = q.where('category', isEqualTo: _selectedSubcategory);
+      } else {
+        // サブカテゴリが選択されていない場合はすべてのお酒を表示
+        print('すべてのお酒を表示');
+        // フィルタリングなし - すべてのドキュメントを取得
+      }
+      
+      // キーワード検索が指定されている場合
+      if (_searchKeyword.isNotEmpty) {
+        print('キーワード検索: $_searchKeyword');
+        q = q
+            .where('name', isGreaterThanOrEqualTo: _searchKeyword)
+            .where('name', isLessThan: _searchKeyword + '\uf8ff');
+      }
+      
+      // 並べ替え
+      q = q.orderBy('name');
+    } 
+    // 特定のカテゴリが選択されている場合
+    else {
+      // カテゴリ名で検索
       q = q.where('category', isEqualTo: _selectedCategory);
+      
+      // サブカテゴリでさらにフィルタリング
       if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
         q = q.where('type', isEqualTo: _selectedSubcategory);
-        q = q.orderBy('name');
       }
-    } else if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
-      // allモードでサブカテゴリをカテゴリ名として扱う（修正後）
-      // サブカテゴリの名前をそのままcategoryフィールドの値として検索
-      q = q.where('category', isEqualTo: _selectedSubcategory);
-    }
-    if (_searchKeyword.isNotEmpty &&
-        _selectedCategory == 'all' &&
-        (_selectedSubcategory == null || _selectedSubcategory!.isEmpty)) {
-      q = q
-          .where('name', isGreaterThanOrEqualTo: _searchKeyword)
-          .where('name', isLessThan: _searchKeyword + '\uf8ff');
-    }
-    if (_selectedCategory == 'all' &&
-        (_selectedSubcategory == null || _selectedSubcategory!.isEmpty)) {
+      
+      // 並べ替え
       q = q.orderBy('name');
     }
+    
+    // 結果数を制限
     return q.limit(20);
   }
 
@@ -150,19 +194,39 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   }
 
   void _selectCategory(String id, String name) {
-    setState(() {
-      _selectedCategory = name;  // カテゴリ名を使用
-      _selectedSubcategory = null;
-      _categoryDisplayName = name;
-    });
+    print('カテゴリ選択: id=$id, name=$name'); // デバッグログ追加
   
-    // ビルドサイクル完了後に実行
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _updateSubcategories();
-        _executeSearch();
-      }
-    });
+    if (name == 'すべてのカテゴリ') {
+      // 「すべてのカテゴリ」選択時の特別処理
+      setState(() {
+        _selectedCategory = name;
+        _categoryDisplayName = name;
+      });
+
+      // ビルドサイクル完了後にサブカテゴリ更新と検索実行
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // すべてのカテゴリの場合も明示的に_updateSubcategoriesを呼び出す
+          _updateSubcategories(); // これにより「すべて」→他→「すべて」の流れでも正しくカテゴリが表示される
+          _executeSearch();
+        }
+      });
+    } else {
+      // 通常のカテゴリ選択処理
+      setState(() {
+        _selectedCategory = name;
+        _selectedSubcategory = null;
+        _categoryDisplayName = name;
+      });
+
+      // ビルドサイクル完了後に実行
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _updateSubcategories();
+          _executeSearch();
+        }
+      });
+    }
   }
 
   void _selectSubcategory(String? name) {
@@ -247,10 +311,10 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               if (idx == 0) {
                 return ListTile(
                   title: const Text('すべてのカテゴリ'),
-                  selected: _selectedCategory == 'all',
+                  selected: _selectedCategory == 'すべてのカテゴリ',
                   onTap: () {
                     Navigator.pop(context);
-                    _selectCategory('all', 'すべてのカテゴリ');
+                    _selectCategory('すべてのカテゴリ', 'すべてのカテゴリ');
                   },
                 );
               }
@@ -293,7 +357,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           fillColor: Colors.white,
         ),
         onChanged: _onSearchChanged,
-        enabled: _selectedCategory == 'all' &&
+        enabled: _selectedCategory == 'すべてのカテゴリ' &&
             (_selectedSubcategory == null || _selectedSubcategory!.isEmpty),
       ),
     );
@@ -318,12 +382,47 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
         child: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_subcategories.isEmpty) {
+    
+    // 最優先：「すべてのカテゴリ」選択時は必ずカテゴリ一覧を表示
+    if (_selectedCategory == 'すべてのカテゴリ') {
+      print('すべてのカテゴリ選択時の特別表示を実行'); // デバッグログ
+      // カテゴリが空かどうかをチェック
+      if (_categories.isEmpty) {
+        return const SizedBox(
+          height: 50,
+          child: Center(child: Text('カテゴリが読み込まれていません', style: TextStyle(color: Colors.grey))),
+        );
+      }
+      
+      // カテゴリ一覧を表示
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            // すべてのカテゴリ選択中なので固有の表示方法
+            ..._categories.map((category) {
+              final name = category['name'].toString();
+              return _buildSubcategoryChip(
+                label: name,
+                isSelected: _selectedSubcategory == name,
+                onTap: () => _selectSubcategory(name),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+    
+    // 通常のサブカテゴリ表示（特定のカテゴリが選択されている場合）
+    // 「すべてのカテゴリ」以外の場合のみ「サブカテゴリはありません」を表示
+    if (_subcategories.isEmpty && _selectedCategory != 'すべてのカテゴリ') {
       return const SizedBox(
         height: 50,
         child: Center(child: Text('サブカテゴリはありません', style: TextStyle(color: Colors.grey))),
       );
     }
+    
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -483,7 +582,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '🔍 検索: ${_selectedCategory == 'all' ? 'すべて' : _selectedCategory}'  
+            '🔍 検索: ${_selectedCategory == 'すべてのカテゴリ' ? 'すべて' : _selectedCategory}'  
             '${_selectedSubcategory != null ? ' > $_selectedSubcategory' : ''}'
             '${_searchKeyword.isNotEmpty ? ' "$_searchKeyword"' : ''}',
             style: const TextStyle(color: Colors.white),
@@ -547,7 +646,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
-                  imageUrl: d['imageUrl'] ?? '',
+                  imageUrl: _isValidImageUrl(d['imageUrl']) ? d['imageUrl'] : 'https://placeholder.com/80x80',
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
@@ -622,10 +721,21 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
 
   String _formatPriceRange(int min, int max) {
     if (min == 0 && max == 0) return '価格情報なし';
-    String fn(int v) => v.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
-    if (min == max) return '¥${fn(min)}';
-    return '¥${fn(min)} ～ ¥${fn(max)}';
+    if (min == max) return '¥$min';
+    return '¥$min ~ ¥$max';
+  }
+
+  /// 画像URLが有効かどうかチェック
+  bool _isValidImageUrl(dynamic url) {
+    if (url == null) return false;
+    if (url is! String) return false;
+    if (url.isEmpty) return false;
+    if (!url.startsWith('http')) return false;
+    
+    // 例として無効なURLのパターンをチェック
+    if (url == 'https://example.com/ipa.jpg') return false;
+    
+    return true;
   }
 
   /// Firebase コンソールを開く（未実装ダイアログ表示）
