@@ -46,6 +46,14 @@ class SideMenu extends StatelessWidget {
                       badge: notificationCount,
                     ),
                     _buildMenuItem(
+                      Icons.search, 
+                      'お酒検索',
+                      onTap: () {
+                        onClose();
+                        Navigator.of(context).pushNamed('/drinks/search');
+                      },
+                    ),
+                    _buildMenuItem(
                       Icons.wine_bar_outlined, 
                       'お気に入り お酒',
                     ),

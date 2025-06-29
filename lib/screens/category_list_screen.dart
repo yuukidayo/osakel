@@ -68,6 +68,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final profileImageUrl = user?.photoURL;
     
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         onProfileTap: () {
           showSideMenu(
@@ -77,6 +78,10 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             notificationCount: 2, // 通知数は実際のデータに置き換え可能
           );
         },
+      ),
+      drawer: SideMenu(
+        userName: user?.displayName ?? 'ゲスト',
+        onClose: () => Navigator.pop(context),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
