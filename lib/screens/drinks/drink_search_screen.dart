@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:math' as math;
 
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';
-  
+
   const DrinkSearchScreen({Key? key}) : super(key: key);
 
   @override
@@ -17,16 +18,22 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   String? _selectedSubcategory;
   String _categoryDisplayName = 'すべてのカテゴリ';
   List<Map<String, dynamic>> _categories = [];
-  List<String> _subcategories = [];
+  List<dynamic> _subcategories = [];
   bool _isLoadingCategories = true;
-  
+
   // Search state management
   String _searchKeyword = '';
-  
-  // Query results
-  bool _isLoadingResults = false;
-  List<QueryDocumentSnapshot> _searchResults = [];
+
+  // Query results state
   String? _errorMessage;
+  bool _hasError = false;
+  
+  // デバッグ用の状態
+  bool _isDebugMode = false;
+
+  // Search input
+  final _searchController = TextEditingController();
+  Stream<QuerySnapshot>? _searchSnapshot;
 
   @override
   void initState() {
@@ -34,169 +41,145 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     _loadCategories();
   }
 
-  // Milestone 2: Load category data from Firestore
-  Future<void> _loadCategories() async {
-    setState(() {
-      _isLoadingCategories = true;
-    });
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
+  /// マイルストーン2：Firestore からカテゴリをロード
+  Future<void> _loadCategories() async {
     try {
-      final categoriesSnapshot = await FirebaseFirestore.instance.collection('categories').get();
-      
-      // Process categories data
-      final categoriesData = categoriesSnapshot.docs.map((doc) {
-        print('カテゴリデータ: ${doc.id} - ${doc.data()}'); // カテゴリデータの内容を確認
+      final snap = await FirebaseFirestore.instance.collection('categories').get();
+      final data = snap.docs.map((doc) {
         return {
           'id': doc.id,
           'name': doc['name'] as String,
           'subcategories': doc['subcategories'] ?? <String>[],
         };
       }).toList();
-      
+
       setState(() {
-        _categories = categoriesData;
+        _categories = data;
         _isLoadingCategories = false;
-        
-        // Initially show all categories as "subcategories" when in "all" mode
-        _updateSubcategories();
       });
-      
-      print('Loaded ${categoriesData.length} categories from Firestore');
-      for (var cat in categoriesData) {
-        var subcats = cat['subcategories'];
-        print('カテゴリ: ${cat['name']} - サブカテゴリ: $subcats (${subcats.runtimeType})');
-      }
-      
-      // Load initial results
-      _executeSearch();
+      _updateSubcategories();
+      // _executeSearchは削除 - initStateのpostFrameCallbackで実行
     } catch (e) {
-      print('Error loading categories: $e');
       setState(() {
         _isLoadingCategories = false;
+        _hasError = true;
         _errorMessage = 'カテゴリ情報の読み込みに失敗しました';
       });
     }
   }
 
-  // カテゴリ変更時にサブカテゴリを更新
+  /// カテゴリ選択時に _subcategories を更新
   void _updateSubcategories() {
-    print('カテゴリ更新: _selectedCategory = $_selectedCategory');
-    
     if (_selectedCategory == 'all') {
-      // 「すべてのカテゴリ」選択時はカテゴリ一覧を表示
       setState(() {
-        _subcategories = _categories.map((cat) => cat['name'] as String).toList();
-        _categoryDisplayName = 'すべてのカテゴリ';
-        print('すべてのカテゴリモード - カテゴリ一覧に更新: ${_subcategories.length}件');
+        _subcategories = _categories.map((c) => c['name']).toList();
       });
-    } else {
-      // 特定のカテゴリ選択時は、そのカテゴリに紐づくサブカテゴリを表示
-      print('カテゴリ一覧: ${_categories.map((c) => c['id']).toList()}');
-      final selectedCategoryData = _categories.firstWhere(
-        (cat) => cat['id'] == _selectedCategory,
-        orElse: () {
-          print('選択したカテゴリが見つかりません: $_selectedCategory');
-          return {'id': 'all', 'name': 'すべてのカテゴリ', 'subcategories': <String>[]};
-        },
-      );
-      
-      print('選択したカテゴリデータ: $selectedCategoryData');
-      final subcategories = selectedCategoryData['subcategories'];
-      print('サブカテゴリデータ: $subcategories (${subcategories.runtimeType})');
-      
-      List<String> subcategoryList = [];
-      try {
-        if (subcategories != null) {
-          if (subcategories is List) {
-            subcategoryList = List<String>.from(subcategories);
-          }
-        }
-      } catch (e) {
-        print('サブカテゴリ処理エラー: $e');
-      }
-      
-      setState(() {
-        _subcategories = subcategoryList;
-        _categoryDisplayName = selectedCategoryData['name'] as String;
-        _selectedSubcategory = null; // サブカテゴリ選択をリセット
-        print('カテゴリ「${_categoryDisplayName}」のサブカテゴリを更新: ${_subcategories.length}件 - $subcategoryList');
-      });
+      return;
     }
+
+    // カテゴリ名から対応するカテゴリ情報を取得
+    final cat = _categories.firstWhere(
+      (c) => c['name'] == _selectedCategory,
+      orElse: () => {'subcategories': [], 'name': _selectedCategory},
+    );
+    setState(() {
+      _subcategories = List<dynamic>.from(cat['subcategories'] ?? []);
+      _categoryDisplayName = cat['name'] as String;
+      _selectedSubcategory = null;
+    });
   }
 
-  // Milestone 3: Build the Firestore query
+  /// Firestore クエリを構築
   Query _buildQuery() {
-    Query query = FirebaseFirestore.instance.collection('drinks');
-    
-    // Apply category filter
+    Query q = FirebaseFirestore.instance.collection('drinks');
     if (_selectedCategory != 'all') {
-      query = query.where('category', isEqualTo: _selectedCategory);
+      // カテゴリ名を使用して検索（修正後）
+      q = q.where('category', isEqualTo: _selectedCategory);
+      if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
+        q = q.where('type', isEqualTo: _selectedSubcategory);
+        q = q.orderBy('name');
+      }
+    } else if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
+      // allモードでサブカテゴリをカテゴリ名として扱う（修正後）
+      // サブカテゴリの名前をそのままcategoryフィールドの値として検索
+      q = q.where('category', isEqualTo: _selectedSubcategory);
     }
-    
-    // Apply subcategory filter
-    if (_selectedSubcategory != null) {
-      query = query.where('subcategory', isEqualTo: _selectedSubcategory);
+    if (_searchKeyword.isNotEmpty &&
+        _selectedCategory == 'all' &&
+        (_selectedSubcategory == null || _selectedSubcategory!.isEmpty)) {
+      q = q
+          .where('name', isGreaterThanOrEqualTo: _searchKeyword)
+          .where('name', isLessThan: _searchKeyword + '\uf8ff');
     }
-    
-    // Apply keyword search if provided
-    if (_searchKeyword.isNotEmpty) {
-      // Japanese name search (prefix search)
-      query = query
-        .where('nameJa', isGreaterThanOrEqualTo: _searchKeyword)
-        .where('nameJa', isLessThan: _searchKeyword + '\uf8ff');
-      
-      // Note: For English name search, we would need to create a separate query and merge results
-      // This would be a more complex implementation using multiple queries or Cloud Functions
+    if (_selectedCategory == 'all' &&
+        (_selectedSubcategory == null || _selectedSubcategory!.isEmpty)) {
+      q = q.orderBy('name');
     }
-    
-    return query.limit(20); // Limit to 20 results for performance
+    return q.limit(20);
   }
 
-  // Execute search with current filters
-  Future<void> _executeSearch() async {
-    setState(() {
-      _isLoadingResults = true;
-      _errorMessage = null;
-    });
-    
+  /// 検索クエリを実行
+  void _executeSearch() {
     try {
-      final query = _buildQuery();
-      final querySnapshot = await query.get();
+      final q = _buildQuery();
+      // デバッグ用: クエリ情報をログ出力
+      print('🔍 検索クエリ実行: カテゴリ=$_selectedCategory, サブカテゴリ=$_selectedSubcategory, キーワード=$_searchKeyword');
       
       setState(() {
-        _searchResults = querySnapshot.docs;
-        _isLoadingResults = false;
+        _hasError = false;
+        _errorMessage = null;
+        _searchSnapshot = q.snapshots();
+        _isDebugMode = true; // デバッグモードを有効化
       });
-      
-      print('Found ${querySnapshot.docs.length} drinks matching query');
     } catch (e) {
-      print('Search error: $e');
+      print('❌ 検索エラー: ${e.toString()}');
       setState(() {
-        _errorMessage = '検索中にエラーが発生しました';
-        _isLoadingResults = false;
+        _hasError = true;
+        _errorMessage = e.toString().contains('requires an index')
+            ? 'Firestoreインデックスが必要です。Firebase Consoleで作成してください。'
+            : '検索中にエラーが発生しました';
+        _searchSnapshot = null;
       });
     }
   }
 
-  void _selectCategory(String categoryId, String categoryName) {
+  void _selectCategory(String id, String name) {
     setState(() {
-      _selectedCategory = categoryId;
-      _categoryDisplayName = categoryName;
-      _selectedSubcategory = null; // Reset subcategory when changing category
+      _selectedCategory = name;  // カテゴリ名を使用
+      _selectedSubcategory = null;
+      _categoryDisplayName = name;
     });
-    
-    _updateSubcategories(); // カテゴリに紐づくサブカテゴリを更新
-    _executeSearch(); // 検索結果を更新
+  
+    // ビルドサイクル完了後に実行
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateSubcategories();
+        _executeSearch();
+      }
+    });
   }
 
-  // サブカテゴリ選択処理
-  void _selectSubcategory(String? subcategory) {
-    print('サブカテゴリを選択: $subcategory');
+  void _selectSubcategory(String? name) {
     setState(() {
-      _selectedSubcategory = subcategory;
+      _selectedSubcategory = name;
+      if (name != null) {
+        _searchController.clear();
+        _searchKeyword = '';
+      }
     });
-    
-    _executeSearch(); // 検索結果を更新
+  
+    // ビルドサイクル完了後に実行
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _executeSearch();
+      }
+    });
   }
 
   @override
@@ -204,41 +187,29 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('お酒検索'),
-        automaticallyImplyLeading: false, // No back button for the main screen
+        centerTitle: true,
+        backgroundColor: Colors.black,
       ),
       body: Column(
         children: [
-          // Milestone 2: Category switcher bar
-          _buildCategoryTopBar(),
-          
-          // Milestone 3: Search box
-          _buildSearchBox(),
-          
-          // Milestone 4: Subcategory bar
-          _buildSubcategoryBar(),
-          
-          // Divider
-          const Divider(height: 1),
-          
-          // Milestone 5 & 6: Results area with loading/error states
-          Expanded(
-            child: _buildResultsArea(),
-          ),
+          _buildCategoryTopBar(),   // Milestone2
+          _buildSearchBar(),        // Milestone3
+          _buildSubcategoryBar(),   // Milestone4
+          Expanded(child: _buildSearchResultsList()), // Milestone5 & 6
         ],
       ),
     );
   }
 
-  // Milestone 2: Top bar with category selector
+  // Milestone2: カテゴリトップバー
   Widget _buildCategoryTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.grey[50],
       child: Row(
         children: [
-          // "すべてのカテゴリ" button
           ElevatedButton(
-            onPressed: () => _showCategoryModal(),
+            onPressed: _showCategoryModal,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black87,
@@ -249,7 +220,6 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               ),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(_categoryDisplayName),
                 const SizedBox(width: 4),
@@ -262,340 +232,371 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
-  // Show category selection modal
+  // カテゴリ選択ダイアログ
   void _showCategoryModal() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('カテゴリを選択'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _categories.length + 1, // +1 for "All" option
-              itemBuilder: (BuildContext context, int index) {
-                if (index == 0) {
-                  // "All categories" option
-                  return ListTile(
-                    title: const Text('すべてのカテゴリ'),
-                    selected: _selectedCategory == 'all',
-                    onTap: () {
-                      Navigator.pop(context);
-                      print('「すべてのカテゴリ」を選択');
-                      _selectCategory('all', 'すべてのカテゴリ');
-                    },
-                  );
-                } else {
-                  final category = _categories[index - 1];
-                  final categoryId = category['id'] as String;
-                  final categoryName = category['name'] as String;
-                  return ListTile(
-                    title: Text(categoryName),
-                    selected: _selectedCategory == categoryId,
-                    onTap: () {
-                      Navigator.pop(context);
-                      print('カテゴリを選択: $categoryName (ID: $categoryId)');
-                      _selectCategory(categoryId, categoryName);
-                    },
-                  );
-                }
-              },
+      builder: (_) => AlertDialog(
+        title: const Text('カテゴリを選択'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _categories.length + 1,
+            itemBuilder: (_, idx) {
+              if (idx == 0) {
+                return ListTile(
+                  title: const Text('すべてのカテゴリ'),
+                  selected: _selectedCategory == 'all',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectCategory('all', 'すべてのカテゴリ');
+                  },
+                );
+              }
+              final cat = _categories[idx - 1];
+              return ListTile(
+                title: Text(cat['name']),
+                selected: _selectedCategory == cat['name'],
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectCategory(cat['id'], cat['name']);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Milestone3: 検索ボックス
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'ドリンク名で検索',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchKeyword.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        onChanged: _onSearchChanged,
+        enabled: _selectedCategory == 'all' &&
+            (_selectedSubcategory == null || _selectedSubcategory!.isEmpty),
+      ),
+    );
+  }
+
+  void _onSearchChanged(String v) {
+    setState(() => _searchKeyword = v);
+  
+    // ビルドサイクル完了後に実行
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _executeSearch();
+      }
+    });
+  }
+
+  // Milestone4: サブカテゴリバー
+  Widget _buildSubcategoryBar() {
+    if (_isLoadingCategories) {
+      return const SizedBox(
+        height: 50,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_subcategories.isEmpty) {
+      return const SizedBox(
+        height: 50,
+        child: Center(child: Text('サブカテゴリはありません', style: TextStyle(color: Colors.grey))),
+      );
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          _buildSubcategoryChip(
+            label: 'すべて',
+            isSelected: _selectedSubcategory == null,
+            onTap: () => _selectSubcategory(null),
+          ),
+          ..._subcategories.map((s) {
+            final name = s is String ? s : s['name'].toString();
+            return _buildSubcategoryChip(
+              label: name,
+              isSelected: _selectedSubcategory == name,
+              onTap: () => _selectSubcategory(name),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubcategoryChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.teal : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
+        ),
+      );
+
+  // Milestone5＆6: 検索結果リスト
+  Widget _buildSearchResultsList() {
+    if (_searchSnapshot == null) {
+      if (_hasError) {
+        return _buildErrorWidget();
+      }
+      return const Center(
+        child: Text('検索条件を選択してください', style: TextStyle(fontSize: 16)),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _searchSnapshot,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snap.hasError) {
+          print('❌ StreamBuilderエラー: ${snap.error}');
+          return Center(
+            child: Text('エラーが発生しました: ${snap.error}',
+                style: const TextStyle(color: Colors.red)),
+          );
+        }
+
+        final docs = snap.data?.docs ?? [];
+        
+        // ビルド中にデバッグ情報を表示（setState呼び出しなし）
+        if (_isDebugMode) {
+          _updateDebugInfo(docs);
+        }
+        
+        // ビルド中のsetState()呼び出しを完全に排除
+        // 代わりにUIコンポーネントに直接ドキュメント数を渡す
+        
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text('検索結果が見つかりません',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text('検索条件を変更してお試しください',
+                    style: TextStyle(color: Colors.grey[600])),
+                if (_isDebugMode) _buildDebugPanel(docs.length),
+              ],
+            ),
+          );
+        }
+        
+        return Column(
+          children: [
+            if (_isDebugMode) _buildDebugPanel(docs.length),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: docs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                itemBuilder: (_, i) => _buildDrinkItem(docs[i]),
+              ),
+            ),
+          ],
         );
       },
     );
   }
 
-  // Milestone 3: Search box
-  Widget _buildSearchBox() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'キーワードで検索',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: Colors.grey[300]!),
+  // デバッグ情報を更新
+  void _updateDebugInfo(List<QueryDocumentSnapshot> docs) {
+    if (!_isDebugMode) return;
+    
+    // 先頭5件のデータ構造をログに出力
+    if (docs.isNotEmpty) {
+      print('📊 検索結果: ${docs.length}件');
+      for (int i = 0; i < math.min(5, docs.length); i++) {
+        final data = docs[i].data() as Map<String, dynamic>;
+        print('📄 結果[$i]: ${data['name']} (${data['category']}/${data['type'] ?? 'N/A'})');
+      }
+    }
+  }
+  
+  // デバッグパネルを構築（ドキュメント数を引数で受け取る）
+  Widget _buildDebugPanel(int resultCount) {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('📊 デバッグ情報', 
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _isDebugMode = false),
+                child: const Icon(Icons.close, color: Colors.white, size: 20),
+              ),
+            ],
           ),
-          filled: true,
-          fillColor: Colors.grey[50],
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-        ),
-        onChanged: (value) {
-          setState(() {
-            _searchKeyword = value;
-          });
-          _executeSearch(); // Real-time search as user types
-        },
-      ),
-    );
-  }
-
-  // Milestone 4: Subcategory bar
-  Widget _buildSubcategoryBar() {
-    if (_isLoadingCategories) {
-      return const SizedBox(height: 50, child: Center(child: CircularProgressIndicator()));
-    }
-    
-    // サブカテゴリがない場合の処理
-    if (_subcategories.isEmpty) {
-      return const SizedBox(height: 50, child: Center(
-        child: Text('サブカテゴリはありません', style: TextStyle(color: Colors.grey)),
-      ));
-    }
-    
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _subcategories.length + 1, // +1 for 'All' option
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            // "All" option
-            return _buildSubcategoryChip(
-              'すべて',
-              _selectedSubcategory == null,
-              () => _selectSubcategory(null),
-            );
-          } else {
-            final subcategory = _subcategories[index - 1];
-            
-            // 「すべてのカテゴリ」モード時はカテゴリ名をタップするとそのカテゴリに切り替える
-            if (_selectedCategory == 'all') {
-              // カテゴリ名からカテゴリIDを検索
-              final categoryData = _categories.firstWhere(
-                (cat) => cat['name'] == subcategory,
-                orElse: () => {'id': 'all', 'name': subcategory},
-              );
-              final categoryId = categoryData['id'] as String;
-              
-              return _buildSubcategoryChip(
-                subcategory,
-                false,
-                () {
-                  print('カテゴリ切り替え: $subcategory (ID: $categoryId)');
-                  _selectCategory(categoryId, subcategory);
-                },
-              );
-            } else {
-              // 通常のサブカテゴリ選択
-              return _buildSubcategoryChip(
-                subcategory,
-                _selectedSubcategory == subcategory,
-                () => _selectSubcategory(subcategory),
-              );
-            }
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildSubcategoryChip(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.teal : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          const SizedBox(height: 8),
+          Text(
+            '🔍 検索: ${_selectedCategory == 'all' ? 'すべて' : _selectedCategory}'  
+            '${_selectedSubcategory != null ? ' > $_selectedSubcategory' : ''}'
+            '${_searchKeyword.isNotEmpty ? ' "$_searchKeyword"' : ''}',
+            style: const TextStyle(color: Colors.white),
           ),
-        ),
+          Text('📄 結果: $resultCount 件', style: const TextStyle(color: Colors.white)),
+        ],
       ),
     );
   }
 
-  // Milestone 5 & 6: Results area
-  Widget _buildResultsArea() {
-    // Show loading indicator
-    if (_isLoadingResults) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    
-    // Show error message if any
-    if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _errorMessage!,
-              style: const TextStyle(color: Colors.red),
+  /// エラー時の UI
+  Widget _buildErrorWidget() {
+    final needsIndex = _errorMessage?.contains('インデックスが必要') ?? false;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _errorMessage ?? '検索中にエラーが発生しました',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 16),
+          if (needsIndex)
+            TextButton(
+              onPressed: _openFirebaseConsole,
+              child: const Text('Firebase Consoleを開く'),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _executeSearch,
-              child: const Text('再試行'),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    // Show empty state
-    if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text('検索結果が見つかりませんでした'),
-            const SizedBox(height: 8),
-            Text(
-              '検索条件を変更してお試しください',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    // Show results list
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _searchResults.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) => _buildDrinkItem(_searchResults[index]),
+          ElevatedButton(
+            onPressed: _executeSearch,
+            child: const Text('再試行'),
+          ),
+        ],
+      ),
     );
   }
 
-  // Milestone 5: Drink list item
+  // Milestone5: ドリンクアイテム
   Widget _buildDrinkItem(QueryDocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final drinkId = doc.id;
-    
-    // Extract drink data
-    final nameJa = data['nameJa'] as String? ?? '名称なし';
-    final nameEn = data['nameEn'] as String? ?? '';
-    final category = data['category'] as String? ?? '';
-    final subcategory = data['subcategory'] as String? ?? '';
-    final imageUrl = data['imageUrl'] as String? ?? '';
-    
-    // Price range
-    final minPrice = data['minPrice'] as int? ?? 0;
-    final maxPrice = data['maxPrice'] as int? ?? 0;
-    final priceRange = _formatPriceRange(minPrice, maxPrice);
-    
+    final d = doc.data()! as Map<String, dynamic>;
+    String categoryName;
+    try {
+      final cat = _categories.firstWhere((c) => c['id'] == d['category']);
+      categoryName = cat['name'];
+    } catch (_) {
+      categoryName = d['category'];
+    }
+
     return Card(
-      margin: EdgeInsets.zero,
-      elevation: 1,
+      elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () => Navigator.pushNamed(
-          context,
-          '/drink_detail',
-          arguments: {'drinkId': drinkId},
-        ),
+        onTap: () {
+          Navigator.pushNamed(context, '/drink_detail', arguments: {'drinkId': doc.id});
+        },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Thumbnail
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
+                child: CachedNetworkImage(
+                  imageUrl: d['imageUrl'] ?? '',
                   width: 80,
                   height: 80,
-                  child: imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.local_bar, color: Colors.grey),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.error, color: Colors.grey),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.local_bar, color: Colors.grey),
-                      ),
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => const SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[200],
+                    child: Icon(Icons.local_bar, color: Colors.grey[400]),
+                  ),
                 ),
               ),
-              const SizedBox(width: 16),
-              
-              // Drink details
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name
-                    Text(
-                      nameJa,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Text(d['name'] ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        _buildCategoryLabel(categoryName),
+                        _buildSubcategoryLabel(d['type'] ?? ''),
+                      ],
                     ),
-                    if (nameEn.isNotEmpty)
-                      Text(
-                        nameEn,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     const SizedBox(height: 8),
-                    
-                    // Category and subcategory
-                    if (category.isNotEmpty || subcategory.isNotEmpty)
-                      Wrap(
-                        spacing: 4,
-                        children: [
-                          if (category.isNotEmpty)
-                            _buildCategoryLabel(category),
-                          if (subcategory.isNotEmpty)
-                            _buildCategoryLabel(subcategory, isSubcategory: true),
-                        ],
-                      ),
-                    const SizedBox(height: 8),
-                    
-                    // Price range
-                    Text(
-                      priceRange,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.payments_outlined, size: 16, color: Colors.green[700]),
+                        const SizedBox(width: 4),
+                        Text(_formatPriceRange(d['minPrice'] ?? 0, d['maxPrice'] ?? 0)),
+                      ],
                     ),
                   ],
                 ),
               ),
-              
-              // Bookmark button
               IconButton(
                 icon: const Icon(Icons.bookmark_border),
                 onPressed: () {
-                  // Bookmark functionality would be implemented here
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('お気に入り機能は準備中です')),
                   );
                 },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                iconSize: 24,
               ),
             ],
           ),
@@ -604,36 +605,40 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
-  // Helper for price formatting
-  String _formatPriceRange(int minPrice, int maxPrice) {
-    if (minPrice == 0 && maxPrice == 0) {
-      return '価格情報なし';
-    }
-    
-    if (minPrice == maxPrice) {
-      return '¥${minPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]},")}';
-    }
-    
-    final minFormatted = minPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]},");
-    final maxFormatted = maxPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]},");
-    
-    return '¥$minFormatted ～ ¥$maxFormatted';
+  Widget _buildCategoryLabel(String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: Colors.blue[100], borderRadius: BorderRadius.circular(4)),
+        child: Text(label, style: TextStyle(fontSize: 12, color: Colors.blue[900])),
+      );
+
+  Widget _buildSubcategoryLabel(String label) {
+    if (label.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: Colors.amber[100], borderRadius: BorderRadius.circular(4)),
+      child: Text(label, style: TextStyle(fontSize: 12, color: Colors.amber[900])),
+    );
   }
 
-  // Helper for category label
-  Widget _buildCategoryLabel(String label, {bool isSubcategory = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isSubcategory ? Colors.blue[50] : Colors.teal[50],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          color: isSubcategory ? Colors.blue[700] : Colors.teal[700],
-        ),
+  String _formatPriceRange(int min, int max) {
+    if (min == 0 && max == 0) return '価格情報なし';
+    String fn(int v) => v.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+    if (min == max) return '¥${fn(min)}';
+    return '¥${fn(min)} ～ ¥${fn(max)}';
+  }
+
+  /// Firebase コンソールを開く（未実装ダイアログ表示）
+  void _openFirebaseConsole() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Firebase コンソール'),
+        content: const Text(
+            '機能未実装のため手動で Firebase Console のインデックス設定を行ってください。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる')),
+        ],
       ),
     );
   }
