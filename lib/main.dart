@@ -77,7 +77,7 @@ class AuthWrapper extends StatelessWidget {
           final user = snapshot.data;
           // メール認証が完了しているかチェック
           if (user != null && user.emailVerified) {
-            // メール認証完了済み → お酒検索画面へ
+            // メール認証完了済み → お酒検索画面へ変更
             return const DrinkSearchScreen();
           } else {
             // メール認証未完了 → ログイン画面に戻して、そこでダイアログ表示

@@ -249,46 +249,73 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('お酒検索'),
-        centerTitle: true,
-        backgroundColor: Colors.black,
-      ),
-      body: Column(
-        children: [
-          _buildCategoryTopBar(),   // Milestone2
-          _buildSearchBar(),        // Milestone3
-          _buildSubcategoryBar(),   // Milestone4
-          Expanded(child: _buildSearchResultsList()), // Milestone5 & 6
-        ],
+      // 背景色を白に設定
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCategoryTopBar(),   // カスタムヘッダー
+            _buildSearchBar(),        // 検索バー
+            _buildSubcategoryBar(),   // サブカテゴリ選択
+            Expanded(child: _buildSearchResultsList()), // 検索結果
+          ],
+        ),
       ),
     );
   }
 
-  // Milestone2: カテゴリトップバー
+  // カテゴリトップバー
   Widget _buildCategoryTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.grey[50],
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      color: Colors.white,
       child: Row(
         children: [
-          ElevatedButton(
-            onPressed: _showCategoryModal,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black87,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: Colors.grey[300]!),
+          // 左側のプロフィールアイコン
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.person, color: Colors.grey[400]),
+          ),
+          
+          // 中央のカテゴリ選択
+          Expanded(
+            child: Center(
+              child: InkWell(
+                onTap: _showCategoryModal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _categoryDisplayName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
               ),
             ),
-            child: Row(
-              children: [
-                Text(_categoryDisplayName),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, size: 20),
-              ],
+          ),
+          
+          // 右側のカートアイコン
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: const Icon(
+              Icons.receipt_long,
+              size: 20,
             ),
           ),
         ],
@@ -394,12 +421,28 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
         );
       }
       
-      // カテゴリ一覧を表示
+      // カテゴリ一覧を表示 + フィルターアイコン追加
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: [
+            // フィルターアイコン (最左端に配置)
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.filter_list, size: 20),
+                onPressed: _showFilterBottomSheet,
+                tooltip: '詳細検索',
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                padding: EdgeInsets.zero,
+              ),
+            ),
             // すべてのカテゴリ選択中なので固有の表示方法
             ..._categories.map((category) {
               final name = category['name'].toString();
@@ -425,9 +468,26 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
+          // フィルターアイコン (最左端に配置)
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.filter_list, size: 20),
+              onPressed: _showFilterBottomSheet,
+              tooltip: '詳細検索',
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          // サブカテゴリチップ
           _buildSubcategoryChip(
             label: 'すべて',
             isSelected: _selectedSubcategory == null,
@@ -443,6 +503,188 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           }),
         ],
       ),
+    );
+  }
+
+  // 詳細検索用のボトムシート表示
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // フルスクリーンモーダルを可能に
+      backgroundColor: Colors.transparent, // 透明背景
+      builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.5, // 画面の50%の高さ
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // ハンドル部分
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // ヘッダー
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '詳細検索',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            // 検索フォーム
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 国
+                    const Text('国', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['日本', 'スコットランド', 'アイルランド', 'アメリカ', 'その他'].map((country) => FilterChip(
+                        label: Text(country),
+                        selected: false,
+                        onSelected: (selected) {
+                          // 後で実装
+                        },
+                      )).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // 地域
+                    const Text('地域', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['東京', '大阪', '北海道', '九州', '四国', '中国', '関東', '関西'].map((region) => FilterChip(
+                        label: Text(region),
+                        selected: false,
+                        onSelected: (selected) {
+                          // 後で実装
+                        },
+                      )).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // アルコール度数
+                    const Text('アルコール度数', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    RangeSlider(
+                      values: const RangeValues(20, 45),
+                      min: 0,
+                      max: 100,
+                      divisions: 20,
+                      labels: const RangeLabels('20%', '45%'),
+                      onChanged: (values) {
+                        // 後で実装
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // シリーズ
+                    const Text('シリーズ', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      value: 'すべて',
+                      items: ['すべて', 'シングルモルト', 'ブレンデッド', 'バーボン', 'ライ'].map((series) => 
+                        DropdownMenuItem<String>(
+                          value: series,
+                          child: Text(series),
+                        )
+                      ).toList(),
+                      onChanged: (value) {
+                        // 後で実装
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // メーカー
+                    const Text('メーカー', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'メーカー名で検索',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // ボタン
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('リセット'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('適用'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      // 背景を半透明にする
+      barrierColor: Colors.black54,
     );
   }
 
