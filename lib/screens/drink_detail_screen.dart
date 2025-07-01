@@ -140,7 +140,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('戻る', style: TextStyle(color: Colors.black, fontSize: 16)),
+        //title: const Text('戻る', style: TextStyle(color: Colors.black, fontSize: 16)),
         centerTitle: false,
         actions: [
           IconButton(
