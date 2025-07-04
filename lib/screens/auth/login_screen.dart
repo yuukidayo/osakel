@@ -99,9 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
         
-        // Navigate to categories screen
+        // Navigate to drink search screen
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/categories');
+        Navigator.pushReplacementNamed(context, '/drink_search');
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage;
