@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase credential files
+*-firebase-adminsdk-*.json
+
+# Node.js related
+node_modules/
+package-lock.json
