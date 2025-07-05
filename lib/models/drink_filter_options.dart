@@ -8,11 +8,13 @@ enum FilterOptionType {
   series,       // シリーズ
   type,         // タイプ
   grape,        // ぶどう品種（ワイン用）
-  vintage,      // 製造年（ワイン用）
+  vintage,      // 製造年（ワイン・ウイスキー用）
   aging,        // 熟成期間
   taste,        // 味わい
   price,        // 価格帯
   brewery,      // 醸造所・蒸溜所
+  material,     // 原料（ウイスキー用）
+  oldBottle,    // オールドボトル（ウイスキー用）
 }
 
 /// 単一のフィルターオプション設定
@@ -163,9 +165,36 @@ class DrinkFilterOptions {
         ),
       ),
       FilterOption(
+        type: FilterOptionType.material,
+        label: '原料',
+        buildWidget: (context, values, onChange) => _buildMaterialChips(
+          context, 
+          values, 
+          onChange,
+        ),
+      ),
+      FilterOption(
         type: FilterOptionType.aging,
         label: '熟成年数',
         buildWidget: (context, values, onChange) => _buildAgingDropdown(
+          context, 
+          values, 
+          onChange,
+        ),
+      ),
+      FilterOption(
+        type: FilterOptionType.vintage,
+        label: 'ビンテージ',
+        buildWidget: (context, values, onChange) => _buildVintageDropdown(
+          context, 
+          values, 
+          onChange,
+        ),
+      ),
+      FilterOption(
+        type: FilterOptionType.oldBottle,
+        label: 'オールドボトル',
+        buildWidget: (context, values, onChange) => _buildOldBottleSwitch(
           context, 
           values, 
           onChange,
@@ -204,6 +233,25 @@ class DrinkFilterOptions {
       ...commonOptions(context, filterValues, onFilterChanged),
     ];
   }
+
+  // リキュール用のフィルターオプション
+  static List<FilterOption> liqueurOptions(BuildContext context, Map<String, dynamic> filterValues, Function(String, dynamic) onFilterChanged) {
+    return [
+      // リキュール固有のオプション
+      FilterOption(
+        type: FilterOptionType.taste,
+        label: 'テイスト',
+        buildWidget: (context, values, onChange) => _buildTasteChips(
+          context, 
+          values, 
+          onChange,
+          tastes: ['フルーツ系', 'ハーブ系', 'スパイス系', 'ナッツ系', '甘口', '辛口', 'クリーミー', '酸味', 'ビター', 'チョコレート系'],
+        ),
+      ),
+      // 共通オプションを追加
+      ...commonOptions(context, filterValues, onFilterChanged),
+    ];
+  }
   
   // カテゴリ名から適切なフィルターオプションを取得
   static List<FilterOption> getOptionsForCategory(
@@ -221,6 +269,8 @@ class DrinkFilterOptions {
         return whiskyOptions(context, filterValues, onFilterChanged);
       case '日本酒':
         return sakeOptions(context, filterValues, onFilterChanged);
+      case 'リキュール':
+        return liqueurOptions(context, filterValues, onFilterChanged);
       case 'すべてのカテゴリ':
       default:
         // すべての共通オプションを返す
@@ -515,6 +565,56 @@ class DrinkFilterOptions {
               Text('¥10,000+'),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  // ウイスキーの原料選択用UIビルダー
+  static Widget _buildMaterialChips(
+    BuildContext context, 
+    Map<String, dynamic> values, 
+    Function(String, dynamic) onChange,
+  ) {
+    final materials = ['モルト', 'グレーン', 'ライ麦', 'トウモロコシ', '大麦', '小麦', '希少種穀', 'その他'];
+    final selectedMaterials = values['material'] as List<String>? ?? [];
+    
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: materials.map((material) => FilterChip(
+        label: Text(material),
+        selected: selectedMaterials.contains(material),
+        onSelected: (selected) {
+          final newList = List<String>.from(selectedMaterials);
+          if (selected) {
+            newList.add(material);
+          } else {
+            newList.remove(material);
+          }
+          onChange('material', newList);
+        },
+      )).toList(),
+    );
+  }
+
+  // ウイスキーのオールドボトル選択用UIビルダー
+  static Widget _buildOldBottleSwitch(
+    BuildContext context, 
+    Map<String, dynamic> values, 
+    Function(String, dynamic) onChange,
+  ) {
+    final isOldBottle = values['oldBottle'] as bool? ?? false;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('オールドボトルのみ'),
+        Switch(
+          value: isOldBottle,
+          onChanged: (value) {
+            onChange('oldBottle', value);
+          },
         ),
       ],
     );
