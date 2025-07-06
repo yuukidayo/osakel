@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../models/drink_filter_options.dart';
 import '../../widgets/side_menu.dart' show showSideMenu;
 import '../store/shop_list_screen.dart';
+import '../../widgets/filters/drink_filter_bottom_sheet.dart';
 
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';
@@ -787,153 +787,35 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
-  // 詳細検索用フィルター値の更新
-  void _updateFilterValue(String key, dynamic value) {
-    setState(() {
-      _filterValues[key] = value;
-      _isFiltersApplied = true;
-    });
-  }
-  
   // 詳細検索ボトムシートを表示
+  // この関数はコンポーネント化により不要になりました
+
   void _showFilterBottomSheet() {
-    // カテゴリに対応するフィルターオプションを取得
+    // 新しいフィルターコンポーネントを使用
     print('_showFilterBottomSheet: カテゴリ = $_selectedCategory');
-    final filterOptions = DrinkFilterOptions.getOptionsForCategory(
-      _selectedCategory,
-      context,
-      _filterValues,
-      _updateFilterValue
-    );
-    if (filterOptions.isEmpty) {
-      print('フィルターオプションがありません');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('このカテゴリには詳細検索オプションがありません')),
-      );
-      return;
-    }
     
-    showModalBottomSheet(
+    DrinkFilterBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.75,
-        child: Column(
-          children: [
-            // ハンドル部分
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // ヘッダー
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_selectedCategory}の詳細検索',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            // 検索フォーム
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 動的にフィルターオプションを生成
-                    ...filterOptions.map((option) => _buildFilterOptionItem(option)),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // 検索ボタン
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _executeSearch(); // 検索を実行
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('この条件で検索', style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // リセットボタン (フィルターが適用されている場合のみ表示)
-                    if (_isFiltersApplied)
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              _filterValues.clear();
-                              _isFiltersApplied = false;
-                            });
-                            Navigator.pop(context);
-                            _executeSearch(); // 検索を実行
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: Colors.grey),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('フィルターをリセット', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      barrierColor: Colors.black54,
+      category: _selectedCategory,
+      filterValues: _filterValues,
+      onApplyFilters: (Map<String, dynamic> updatedFilters) {
+        setState(() {
+          _filterValues.clear();
+          _filterValues.addAll(updatedFilters);
+          _isFiltersApplied = updatedFilters.isNotEmpty;
+        });
+        _executeSearch();
+      },
+      onClearFilters: () {
+        setState(() {
+          _filterValues.clear();
+          _isFiltersApplied = false;
+        });
+        _executeSearch();
+      },
     );
   }
   
-  // フィルターオプションのウィジェットを生成
-  Widget _buildFilterOptionItem(FilterOption option) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(option.label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        option.buildWidget(context, _filterValues, _updateFilterValue),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
   Widget _buildSubcategoryChip({
     required String label,
     required bool isSelected,
