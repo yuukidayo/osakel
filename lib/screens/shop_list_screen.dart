@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/shop.dart';
 import 'dart:developer' as developer;
 import 'store_detail_screen.dart';
+import '../widgets/side_menu.dart' show showSideMenu;
+import 'drinks/drink_search_screen.dart';
 
 class ShopListScreen extends StatefulWidget {
   final String? categoryId;
@@ -229,70 +231,160 @@ class _ShopListScreenState extends State<ShopListScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          // デバッグ用のボタン（drink_shop_linksコレクションにカテゴリIDを追加するボタン）
-          IconButton(
-            icon: const Icon(Icons.sync),
-            onPressed: _updateLinksCategoryId,
-            tooltip: 'カテゴリIDを更新',
+  // カスタムトップバーを构築
+  Widget _buildCategoryTopBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      color: Colors.white,
+      child: Row(
+        children: [
+          // 左側のプロフィールアイコン
+          GestureDetector(
+            onTap: () {
+              // サイドメニューを表示
+              showSideMenu(context);
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, color: Colors.grey[400]),
+            ),
           ),
-          // フィルターボタン
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: (filter) {
-              setState(() {
-                _selectedFilter = filter;
-              });
+          
+          // 中央のタイトル
+          Expanded(
+            child: Center(
+              child: Text(
+                widget.title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          
+          // 右側のドリンク検索に切り替えボタン
+          GestureDetector(
+            onTap: () {
+              // ドリンク検索画面に遷移（新しい画面を積み重ねるのではなく入れ替え）
+              Navigator.pushReplacement(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => const DrinkSearchScreen(),
+                ),
+              );
             },
-            itemBuilder: (context) {
-              return _filters.map((filter) {
-                return PopupMenuItem<String>(
-                  value: filter,
-                  child: Row(
-                    children: [
-                      _selectedFilter == filter
-                          ? const Icon(Icons.check, color: Colors.blue)
-                          : const SizedBox(width: 24),
-                      const SizedBox(width: 8),
-                      Text(filter),
-                    ],
-                  ),
-                );
-              }).toList();
-            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: const Icon(
+                Icons.local_bar,
+                size: 20,
+                color: Color(0xFF525252),
+              ),
+            ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _shops.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.store_mall_directory, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text('お店が見つかりませんでした'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadShops,
-                        child: const Text('再読み込み'),
-                      ),
-                    ],
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildCategoryTopBar(), // カスタムトップバー
+            
+            // フィルターリスト
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              height: 40,
+              child: Row(
+                children: [
+                  const Text('フィルター:', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<String>(
+                    child: Chip(
+                      label: Text(_selectedFilter),
+                      padding: const EdgeInsets.all(0),
+                      backgroundColor: Colors.grey[200],
+                    ),
+                    onSelected: (filter) {
+                      setState(() {
+                        _selectedFilter = filter;
+                      });
+                    },
+                    itemBuilder: (context) {
+                      return _filters.map((filter) {
+                        return PopupMenuItem<String>(
+                          value: filter,
+                          child: Row(
+                            children: [
+                              _selectedFilter == filter
+                                  ? const Icon(Icons.check, color: Colors.blue)
+                                  : const SizedBox(width: 24),
+                              const SizedBox(width: 8),
+                              Text(filter),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
                   ),
-                )
-              : ListView.builder(
-                  itemCount: _shops.length,
-                  itemBuilder: (context, index) {
-                    final shop = _shops[index];
-                    return _buildShopItem(shop);
-                  },
-                ),
+                  const Spacer(),
+                  // デバッグ用の更新ボタン
+                  IconButton(
+                    icon: const Icon(Icons.sync, size: 20),
+                    onPressed: _updateLinksCategoryId,
+                    tooltip: 'カテゴリIDを更新',
+                  ),
+                ],
+              ),
+            ),
+            
+            const Divider(height: 1),
+            
+            // 店舗一覧
+            Expanded(
+              child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _shops.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.store_mall_directory, size: 64, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          const Text('お店が見つかりませんでした'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadShops,
+                            child: const Text('再読み込み'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _shops.length,
+                      itemBuilder: (context, index) {
+                        final shop = _shops[index];
+                        return _buildShopItem(shop);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

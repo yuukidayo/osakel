@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/drink_filter_options.dart';
-
+import '../../widgets/side_menu.dart' show showSideMenu;
+import '../shop_list_screen.dart';
 
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';
@@ -451,7 +452,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
-  // カテゴリトップバー
+  // 画面上部のプロフィールアイコンや
   Widget _buildCategoryTopBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -459,14 +460,20 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       child: Row(
         children: [
           // 左側のプロフィールアイコン
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              shape: BoxShape.circle,
+          GestureDetector(
+            onTap: () {
+              // サイドメニューを表示
+              showSideMenu(context);
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, color: Colors.grey[400]),
             ),
-            child: Icon(Icons.person, color: Colors.grey[400]),
           ),
           
           // 中央のカテゴリ選択
@@ -491,18 +498,32 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             ),
           ),
           
-          // 右側のカートアイコン
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: const Icon(
-              Icons.receipt_long,
-              size: 20,
+          // 右側の店舗表示への切り替えアイコン
+          GestureDetector(
+            onTap: () {
+              // 店舗リスト画面へ同じレベルで遷移（画面の積み重ねではなく入れ替え）
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShopListScreen(
+                    title: 'お店を探す',
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: const Icon(
+                Icons.storefront,
+                size: 20,
+                color: Color(0xFF525252),
+              ),
             ),
           ),
         ],
