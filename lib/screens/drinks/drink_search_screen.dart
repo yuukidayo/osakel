@@ -41,7 +41,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   Stream<QuerySnapshot>? _searchSnapshot;
 
   // 詳細フィルター関連
-  final Map<String, dynamic> _filterValues = {};
+  final Map<String, dynamic> _filterValues = {}; // _showFilterBottomSheetと_updateFilterValueメソッドで使用
   bool _isFiltersApplied = false;
 
   @override
@@ -57,6 +57,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   }
   
   // お店検索画面への遷移（右から左へのスライドアニメーション）
+  // 右側のアイコンタップ時の遷移処理
   void _navigateToShopSearch() {
     Navigator.push(
       context,
@@ -473,7 +474,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
-  // 画面上部のプロフィールアイコンや
+  // 画面上部のバー（左：プロフィールアイコン、中央：カテゴリ選択、右：店舗検索アイコン）
   Widget _buildCategoryTopBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -538,7 +539,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                     size: 20,
                     color: Color(0xFF525252),
                   ),
-                  // 右下に青い丸と右矢印を表示
+                  // 右下に青い丸と右矢印を表示 (ショップリスト画面と統一感を持たせる)
                   Positioned(
                     bottom: 0,
                     right: 0,
