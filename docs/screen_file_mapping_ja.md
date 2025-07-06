@@ -56,12 +56,6 @@
 - **サイズ**: 15KB
 - **依存関係**: `carousel_slider` パッケージ
 
-## 🏢 施設関連画面
-
-### 9. 施設詳細画面
-- **ファイル**: `lib/screens/facility_detail_screen.dart`
-- **説明**: サウナ施設などの詳細情報を表示
-- **関連モデル**: `lib/models/sauna_facility.dart`
 
 ## 💬 コメント関連画面
 
@@ -84,6 +78,14 @@
 ### 13. パスワードリセット画面
 - **ファイル**: `lib/screens/auth/forgot_password_screen.dart`
 - **説明**: パスワード忘れ対応
+
+### 14. ドリンク検索画面
+- **ファイル**: `lib/screens/drinks/drink_search_screen.dart`
+- **説明**: お酒の検索機能を提供する画面
+- **機能**:
+  - カテゴリとサブカテゴリによるフィルタリング
+  - 詳細検索ボトムシート
+  - Firestoreからのドリンクデータの取得と表示
 
 ## 👑 管理者画面
 
@@ -142,9 +144,6 @@
 - **ファイル**: `lib/models/comment.dart`
 - **説明**: ユーザーコメント
 
-### サウナ施設モデル
-- **ファイル**: `lib/models/sauna_facility.dart`
-- **説明**: サウナ施設情報
 
 ### ドリンク-店舗リンクモデル
 - **ファイル**: `lib/models/drink_shop_link.dart`
@@ -182,6 +181,7 @@
 ## 🔄 画面遷移の流れ
 
 ```
+ログイン → ドリンク検索画面
 カテゴリ一覧 → サブカテゴリ → ドリンク詳細
               ↓
            メインのマップ画面 → 店舗詳細
