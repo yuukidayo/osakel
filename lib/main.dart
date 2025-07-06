@@ -12,7 +12,8 @@ import 'screens/drinks/drink_search_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
-// HomeScreen import removed as we now use DrinkSearchScreen as main screen
+import 'screens/main_screen.dart';
+// MainScreenをメイン画面として使用するように変更
 
 void main() async {
   // This must be called first
@@ -78,8 +79,8 @@ class AuthWrapper extends StatelessWidget {
           final user = snapshot.data;
           // メール認証が完了しているかチェック
           if (user != null && user.emailVerified) {
-            // メール認証完了済み → DrinkSearchScreen画面へ変更
-            return const DrinkSearchScreen();
+            // メール認証完了済み → MainScreen画面へ変更
+            return const MainScreen();
           } else {
             // メール認証未完了 → ログイン画面に戻して、そこでダイアログ表示
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -114,11 +115,92 @@ class MyApp extends StatelessWidget {
       title: 'OSAKEL',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        // モノトーンデザインのベースカラー定義
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF000000),     // メインブラック
+          onPrimary: Color(0xFFFFFFFF),   // ホワイト（プライマリ上のテキスト等）
+          secondary: Color(0xFF333333),   // ダークグレー
+          onSecondary: Color(0xFFFFFFFF), // ダークグレー上のテキスト
+          surface: Color(0xFFFFFFFF),     // 表面の色（カード背景等）
+          onSurface: Color(0xFF000000),   // 表面上のテキスト
+          background: Color(0xFFFFFFFF),  // 背景色
+          onBackground: Color(0xFF000000),// 背景上のテキスト
+          error: Color(0xFF000000),       // エラーカラー（モノトーンに合わせて黒に）
+          onError: Color(0xFFFFFFFF),     // エラーカラー上のテキスト
+          outline: Color(0xFF8A8A8A),     // アウトライン（グレー）
+        ),
+        // Material 3を有効化
         useMaterial3: true,
+        // アプリバーのテーマ設定
         appBarTheme: const AppBarTheme(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.teal,
+          foregroundColor: Color(0xFFFFFFFF),  // テキスト・アイコンは白
+          backgroundColor: Color(0xFF000000),  // 背景は黒
+          elevation: 0,                        // 影なし（フラットデザイン）
+        ),
+        // ボタンテーマ（ElevatedButton）
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF000000),     // 黒背景
+            foregroundColor: const Color(0xFFFFFFFF),     // 白テキスト
+            elevation: 0,                                 // 影なし
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+            ),
+          ),
+        ),
+        // テキストボタン
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF000000),     // 黒テキスト
+          ),
+        ),
+        // アウトラインボタン
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF000000),     // 黒テキスト
+            side: const BorderSide(color: Color(0xFF000000)), // 黒い枠線
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+            ),
+          ),
+        ),
+        // 入力フィールド
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[100],                    // 薄いグレー背景
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide.none,                  // 枠線なし
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: const BorderSide(color: Color(0xFF000000)), // フォーカス時は黒枠
+          ),
+        ),
+        // テキストテーマ
+        textTheme: const TextTheme(
+          // 見出し
+          headlineLarge: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+          headlineMedium: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+          headlineSmall: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+          // 本文
+          bodyLarge: TextStyle(color: Color(0xFF000000)),
+          bodyMedium: TextStyle(color: Color(0xFF000000)),
+          bodySmall: TextStyle(color: Color(0xFF8A8A8A)),  // 小さいテキストは薄いグレー
+        ),
+        // ダイアログ関連の設定
+        // Flutter バージョンによりDialogThemeとDialogThemeDataの互換性の問題があるため、
+        // 個別のプロパティとして設定
+        dialogBackgroundColor: const Color(0xFFFFFFFF),
+        // ボトムシートテーマ
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Color(0xFFFFFFFF),
+          surfaceTintColor: Color(0xFFFFFFFF),
+        ),
+        // スナックバーテーマ
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Color(0xFF000000),
+          contentTextStyle: TextStyle(color: Color(0xFFFFFFFF)),
         ),
       ),
       // 認証状態に基づいてホーム画面を表示
@@ -163,6 +245,10 @@ class MyApp extends StatelessWidget {
         } else if (settings.name == DrinkSearchScreen.routeName) {
           return MaterialPageRoute(
             builder: (context) => const DrinkSearchScreen(),
+          );
+        } else if (settings.name == MainScreen.routeName) {
+          return MaterialPageRoute(
+            builder: (context) => const MainScreen(),
           );
         }
         return null;

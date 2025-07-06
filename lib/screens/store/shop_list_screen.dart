@@ -11,12 +11,16 @@ class ShopListScreen extends StatefulWidget {
   final String? categoryId;
   final String? drinkId;
   final String title;
+  
+  /// お酒検索画面への切り替えコールバック
+  final VoidCallback? onSwitchToDrinkSearch;
 
   const ShopListScreen({
     Key? key,
     this.categoryId,
     this.drinkId,
     this.title = 'お店を表示',
+    this.onSwitchToDrinkSearch,
   }) : super(key: key);
 
   @override
@@ -243,6 +247,13 @@ class _ShopListScreenState extends State<ShopListScreen> {
 
   // お酒検索画面に切り替えるメソッド
   void _navigateToDrinkSearch() {
+    // IndexedStackによる切り替えが設定されている場合はそれを使用
+    if (widget.onSwitchToDrinkSearch != null) {
+      widget.onSwitchToDrinkSearch!();
+      return;
+    }
+    
+    // 従来のナビゲーション方法（後方互換性のため残す）
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -277,10 +288,10 @@ class _ShopListScreenState extends State<ShopListScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: const Color(0xFFF5F5F5), // 薄いグレー背景
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person, color: Colors.grey[400]),
+              child: Icon(Icons.person, color: const Color(0xFF8A8A8A)), // グレーアイコン
             ),
           ),
           
@@ -304,9 +315,9 @@ class _ShopListScreenState extends State<ShopListScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: const Color(0xFFFAFAFA), // 非常に薄いグレー背景
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFDDDDDD)), // 薄いグレー枠線
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -314,7 +325,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
                   const Icon(
                     Icons.local_drink,
                     size: 20,
-                    color: Color(0xFF525252),
+                    color: const Color(0xFF333333), // ダークグレー
                   ),
                   // 左下に青い丸と左矢印を表示
                   Positioned(
@@ -324,13 +335,13 @@ class _ShopListScreenState extends State<ShopListScreen> {
                       width: 16,
                       height: 16,
                       decoration: const BoxDecoration(
-                        color: Colors.blue,
+                        color: const Color(0xFF000000), // 黒色背景
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.arrow_back,
                         size: 10,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF), // 白色アイコン
                       ),
                     ),
                   ),
@@ -351,7 +362,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFFAFAFA), // 薄いグレー背景
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -362,7 +373,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
               ),
               child: Text(
                 'メニュー',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(color: const Color(0xFFFFFFFF), fontSize: 24), // 白色テキスト
               ),
             ),
             ListTile(
@@ -537,8 +548,8 @@ class _ShopListScreenState extends State<ShopListScreen> {
               Container(
                 height: 200,
                 width: double.infinity,
-                color: Colors.grey[300],
-                child: const Icon(Icons.image, color: Colors.grey, size: 50),
+                color: const Color(0xFFEEEEEE), // 薄いグレープレースホルダー
+                child: const Icon(Icons.image, color: Color(0xFF8A8A8A), size: 50), // グレーアイコン
               ),
             
             // 店舗情報（住所、料金、営業時間）
@@ -550,7 +561,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
                   // 住所と距離
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      const Icon(Icons.location_on, size: 16, color: Color(0xFF8A8A8A)), // グレー位置アイコン
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
@@ -565,7 +576,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
                   // 営業時間
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                      const Icon(Icons.access_time, size: 16, color: Color(0xFF8A8A8A)), // グレー時間アイコン
                       const SizedBox(width: 4),
                       Text(
                         '営業開始 ${shop.openTime ?? '17:00'}',

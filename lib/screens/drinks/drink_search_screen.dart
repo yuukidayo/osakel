@@ -11,7 +11,10 @@ import '../../widgets/filters/drink_filter_bottom_sheet.dart';
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';
 
-  const DrinkSearchScreen({Key? key}) : super(key: key);
+  /// お店検索画面への切り替えコールバック
+  final VoidCallback? onSwitchToShopSearch;
+
+  const DrinkSearchScreen({Key? key, this.onSwitchToShopSearch}) : super(key: key);
 
   @override
   State<DrinkSearchScreen> createState() => _DrinkSearchScreenState();
@@ -59,6 +62,13 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   // お店検索画面への遷移（右から左へのスライドアニメーション）
   // 右側のアイコンタップ時の遷移処理
   void _navigateToShopSearch() {
+    // IndexedStackによる切り替えが設定されている場合はそれを使用
+    if (widget.onSwitchToShopSearch != null) {
+      widget.onSwitchToShopSearch!();
+      return;
+    }
+  
+    // 従来のナビゲーション方法（後方互換性のため残す）
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -460,7 +470,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 背景色を白に設定
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.background, // 白色背景
       body: SafeArea(
         child: Column(
           children: [
@@ -494,7 +504,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                 color: Colors.grey[200],
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person, color: Colors.grey[400]),
+              child: Icon(Icons.person, color: const Color(0xFF8A8A8A)), // グレーアイコン
             ),
           ),
           
@@ -527,9 +537,9 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: const Color(0xFFFAFAFA), // 非常に薄いグレー背景
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFDDDDDD)), // 薄いグレー枠線
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -537,7 +547,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                   const Icon(
                     Icons.storefront,
                     size: 20,
-                    color: Color(0xFF525252),
+                    color: const Color(0xFF333333), // ダークグレー
                   ),
                   // 右下に青い丸と右矢印を表示 (ショップリスト画面と統一感を持たせる)
                   Positioned(
@@ -547,13 +557,13 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                       width: 16,
                       height: 16,
                       decoration: const BoxDecoration(
-                        color: Colors.blue,
+                        color: const Color(0xFF000000), // 黒色背景
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.arrow_forward,
                         size: 10,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF), // 白色アイコン
                       ),
                     ),
                   ),
@@ -657,7 +667,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFFFAFAFA), // 薄いグレー背景
         ),
         onChanged: _onSearchChanged,
         enabled: _selectedCategory == 'すべてのカテゴリ' &&
@@ -693,7 +703,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       if (_categories.isEmpty) {
         return const SizedBox(
           height: 50,
-          child: Center(child: Text('カテゴリが読み込まれていません', style: TextStyle(color: Colors.grey))),
+          child: Center(child: Text('カテゴリが読み込まれていません', style: const TextStyle(color: Color(0xFF8A8A8A)))), // グレーテキスト
         );
       }
       
@@ -707,9 +717,9 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             Container(
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFFFFFFF), // 白色背景
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: const Color(0xFFDDDDDD)), // 薄いグレー枠線
               ),
               child: IconButton(
                 icon: const Icon(Icons.filter_list, size: 20),
@@ -743,7 +753,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     if (_subcategories.isEmpty && _selectedCategory != 'すべてのカテゴリ') {
       return const SizedBox(
         height: 50,
-        child: Center(child: Text('サブカテゴリはありません', style: TextStyle(color: Colors.grey))),
+        child: Center(child: Text('サブカテゴリはありません', style: const TextStyle(color: Color(0xFF8A8A8A)))), // グレーテキスト
       );
     }
     
@@ -756,9 +766,9 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFFFFFF), // 白色背景
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: const Color(0xFFDDDDDD)), // 薄いグレー枠線
             ),
             child: IconButton(
               icon: const Icon(Icons.filter_list, size: 20),
@@ -827,14 +837,14 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.teal : Colors.white,
+            color: isSelected ? const Color(0xFF000000) : const Color(0xFFFFFFFF), // 選択時黒、非選択時白
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: const Color(0xFFDDDDDD)), // 薄いグレー枠線
           ),
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black87,
+              color: isSelected ? const Color(0xFFFFFFFF) : const Color(0xFF000000), // 選択時白、非選択時黒
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -863,7 +873,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           print('❌ StreamBuilderエラー: ${snap.error}');
           return Center(
             child: Text('エラーが発生しました: ${snap.error}',
-                style: const TextStyle(color: Colors.red)),
+                style: const TextStyle(color: Color(0xFF000000))), // 黒色テキスト
           );
         }
 
@@ -882,13 +892,13 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                const Icon(Icons.search_off, size: 48, color: Color(0xFF8A8A8A)), // グレーアイコン
                 const SizedBox(height: 16),
                 const Text('検索結果が見つかりません',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text('検索条件を変更してお試しください',
-                    style: TextStyle(color: Colors.grey[600])),
+                    style: const TextStyle(color: Color(0xFF8A8A8A))), // グレーテキスト
                 if (_isDebugMode) _buildDebugPanel(docs.length),
               ],
             ),
@@ -932,7 +942,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: const Color(0xFF000000).withOpacity(0.8), // 黒背景（半透明）
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -942,11 +952,11 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('📊 デバッグ情報', 
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Color(0xFFFFFFFF), fontWeight: FontWeight.bold), // 白テキスト
               ),
               GestureDetector(
                 onTap: () => setState(() => _isDebugMode = false),
-                child: const Icon(Icons.close, color: Colors.white, size: 20),
+                child: const Icon(Icons.close, color: Color(0xFFFFFFFF), size: 20), // 白アイコン
               ),
             ],
           ),
@@ -955,9 +965,9 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             '🔍 検索: ${_selectedCategory == 'すべてのカテゴリ' ? 'すべて' : _selectedCategory}'  
             '${_selectedSubcategory != null ? ' > $_selectedSubcategory' : ''}'
             '${_searchKeyword.isNotEmpty ? ' "$_searchKeyword"' : ''}',
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Color(0xFFFFFFFF)), // 白テキスト
           ),
-          Text('📄 結果: $resultCount 件', style: const TextStyle(color: Colors.white)),
+          Text('📄 結果: $resultCount 件', style: const TextStyle(color: Color(0xFFFFFFFF))), // 白テキスト
         ],
       ),
     );
@@ -973,7 +983,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           Text(
             _errorMessage ?? '検索中にエラーが発生しました',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: Color(0xFF000000)), // 黒テキスト
           ),
           const SizedBox(height: 16),
           if (needsIndex)
@@ -1028,8 +1038,8 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                   errorWidget: (_, __, ___) => Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey[200],
-                    child: Icon(Icons.local_bar, color: Colors.grey[400]),
+                    color: const Color(0xFFF5F5F5), // 薄いグレー背景
+                    child: const Icon(Icons.local_bar, color: Color(0xFF8A8A8A)), // グレーアイコン
                   ),
                 ),
               ),
@@ -1051,7 +1061,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.payments_outlined, size: 16, color: Colors.green[700]),
+                        const Icon(Icons.payments_outlined, size: 16, color: Color(0xFF333333)), // ダークグレーアイコン
                         const SizedBox(width: 4),
                         Text(_formatPriceRange(d['minPrice'] ?? 0, d['maxPrice'] ?? 0)),
                       ],
@@ -1076,16 +1086,16 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
 
   Widget _buildCategoryLabel(String label) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: Colors.blue[100], borderRadius: BorderRadius.circular(4)),
-        child: Text(label, style: TextStyle(fontSize: 12, color: Colors.blue[900])),
+        decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(4)), // 薄いグレー背景
+        child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF333333))), // ダークグレーテキスト
       );
 
   Widget _buildSubcategoryLabel(String label) {
     if (label.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.amber[100], borderRadius: BorderRadius.circular(4)),
-      child: Text(label, style: TextStyle(fontSize: 12, color: Colors.amber[900])),
+      decoration: BoxDecoration(color: const Color(0xFFEEEEEE), borderRadius: BorderRadius.circular(4)), // やや濃いめのグレー背景
+      child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF333333))), // ダークグレーテキスト
     );
   }
 
