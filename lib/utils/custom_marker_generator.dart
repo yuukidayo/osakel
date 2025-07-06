@@ -19,10 +19,10 @@ class CustomMarkerGenerator {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     
-    // Airbnb風のマーカーの背景色を設定
+    // モノトーンのマーカーの背景色を設定
     final Color markerColor = isSelected
-        ? Colors.blue
-        : (isCluster ? const Color(0xFF008489) : const Color(0xFFFF385C)); // Airbnbの赤色
+        ? const Color(0xFF000000) // 選択時: 黒背景
+        : (isCluster ? const Color(0xFF333333) : const Color(0xFFFFFFFF)); // 未選択時: 白背景
     
     final Paint paint = Paint()
       ..color = markerColor
@@ -32,7 +32,7 @@ class CustomMarkerGenerator {
     const shadowOffset = Offset(0, 4); // 7 * 0.6 ≈ 4
     const shadowBlur = 8.0; // 14 * 0.6 ≈ 8
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = const Color(0xFF8A8A8A).withOpacity(0.3) // グレーの影
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, shadowBlur);
     
     // 影を描画 (Airbnb風の丸みを帯びた長方形)
@@ -51,7 +51,7 @@ class CustomMarkerGenerator {
     
     // 金額テキストのスタイル (パディングを半分にするためフォントサイズを大きく)
     final textStyle = TextStyle(
-      color: Colors.white,
+      color: isSelected ? Colors.white : const Color(0xFF000000), // 選択時: 白テキスト、未選択時: 黒テキスト
       fontSize: isCluster ? 40 : 46, // パディングを半分にするためサイズを大きく調整
       fontWeight: FontWeight.bold,
       letterSpacing: -1.0, // Airbnb風のテキスト間隔を維持
@@ -85,7 +85,7 @@ class CustomMarkerGenerator {
     if (isCluster && clusterCount != null) {
       // クラスター数を示す円を右上に描画 (バランスを調整)
       final circlePaint = Paint()
-        ..color = Colors.white
+        ..color = const Color(0xFFFFFFFF) // 白色の円
         ..style = PaintingStyle.fill;
       
       const double circleRadius = 24; // 円のサイズを少し大きく調整
@@ -96,7 +96,7 @@ class CustomMarkerGenerator {
       
       // 円の中に数字を描画 (バランスを調整)
       final countTextStyle = TextStyle(
-        color: markerColor,
+        color: isSelected ? Colors.white : const Color(0xFF000000), // 選択状態に応じたテキスト色
         fontSize: 24, // フォントサイズを円の大きさに合わせて調整
         fontWeight: FontWeight.bold,
       );
