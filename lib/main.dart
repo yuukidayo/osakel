@@ -12,6 +12,7 @@ import 'screens/drinks/drink_search_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
+// HomeScreen import removed as we now use DrinkSearchScreen as main screen
 
 void main() async {
   // This must be called first
@@ -77,7 +78,7 @@ class AuthWrapper extends StatelessWidget {
           final user = snapshot.data;
           // メール認証が完了しているかチェック
           if (user != null && user.emailVerified) {
-            // メール認証完了済み → お酒検索画面へ変更
+            // メール認証完了済み → DrinkSearchScreen画面へ変更
             return const DrinkSearchScreen();
           } else {
             // メール認証未完了 → ログイン画面に戻して、そこでダイアログ表示

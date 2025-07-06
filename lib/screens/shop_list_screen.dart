@@ -4,7 +4,6 @@ import '../models/shop.dart';
 import 'dart:developer' as developer;
 import 'store_detail_screen.dart';
 import '../widgets/side_menu.dart' show showSideMenu;
-import 'drinks/drink_search_screen.dart';
 
 class ShopListScreen extends StatefulWidget {
   final String? categoryId;
@@ -45,8 +44,23 @@ class _ShopListScreenState extends State<ShopListScreen> {
     try {
       List<Shop> shops = [];
       
+      // タブ切り替えで表示した場合（カテゴリID、ドリンクIDなし）
+      if (widget.categoryId == null && widget.drinkId == null) {
+        // デフォルトで全ての店舗を取得
+        developer.log('すべてのお店を取得します');
+        
+        final shopsSnapshot = await FirebaseFirestore.instance
+            .collection('shops')
+            .limit(20) // 最初は20件に制限
+            .get();
+            
+        for (var doc in shopsSnapshot.docs) {
+          final shop = Shop.fromFirestore(doc);
+          shops.add(shop);
+        }
+      }
       // カテゴリIDがあれば、drink_shop_linksコレクションからカテゴリIDに関連する店舗を取得
-      if (widget.categoryId != null) {
+      else if (widget.categoryId != null) {
         developer.log('カテゴリID: ${widget.categoryId} に基づいてお店を取得します');
         
         // 1. まず、カテゴリIDに関連するドリンクを取得
@@ -230,81 +244,16 @@ class _ShopListScreenState extends State<ShopListScreen> {
       });
     }
   }
+  // _buildCategoryTopBar method removed as requested
 
-  // カスタムトップバーを构築
-  Widget _buildCategoryTopBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      color: Colors.white,
-      child: Row(
-        children: [
-          // 左側のプロフィールアイコン
-          GestureDetector(
-            onTap: () {
-              // サイドメニューを表示
-              showSideMenu(context);
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.person, color: Colors.grey[400]),
-            ),
-          ),
-          
-          // 中央のタイトル
-          Expanded(
-            child: Center(
-              child: Text(
-                widget.title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          
-          // 右側のドリンク検索に切り替えボタン
-          GestureDetector(
-            onTap: () {
-              // ドリンク検索画面に遷移（新しい画面を積み重ねるのではなく入れ替え）
-              Navigator.pushReplacement(
-                context, 
-                MaterialPageRoute(
-                  builder: (context) => const DrinkSearchScreen(),
-                ),
-              );
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: const Icon(
-                Icons.local_bar,
-                size: 20,
-                color: Color(0xFF525252),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
+      // AppBarを削除しました - 不要なため
       body: SafeArea(
         child: Column(
           children: [
-            _buildCategoryTopBar(), // カスタムトップバー
-            
             // フィルターリスト
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -313,33 +262,33 @@ class _ShopListScreenState extends State<ShopListScreen> {
                 children: [
                   const Text('フィルター:', style: TextStyle(fontSize: 14)),
                   const SizedBox(width: 8),
-                  PopupMenuButton<String>(
-                    child: Chip(
-                      label: Text(_selectedFilter),
-                      padding: const EdgeInsets.all(0),
-                      backgroundColor: Colors.grey[200],
+                  // フィルターボタン
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: SizedBox(
+                      height: 36,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _filters.map((filter) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: FilterChip(
+                              label: Text(filter),
+                              selected: _selectedFilter == filter,
+                              onSelected: (isSelected) {
+                                if (isSelected) {
+                                  setState(() {
+                                    _selectedFilter = filter;
+                                  });
+                                  // フィルター適用時に店舗を再読み込み
+                                  _loadShops();
+                                }
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                    onSelected: (filter) {
-                      setState(() {
-                        _selectedFilter = filter;
-                      });
-                    },
-                    itemBuilder: (context) {
-                      return _filters.map((filter) {
-                        return PopupMenuItem<String>(
-                          value: filter,
-                          child: Row(
-                            children: [
-                              _selectedFilter == filter
-                                  ? const Icon(Icons.check, color: Colors.blue)
-                                  : const SizedBox(width: 24),
-                              const SizedBox(width: 8),
-                              Text(filter),
-                            ],
-                          ),
-                        );
-                      }).toList();
-                    },
                   ),
                   const Spacer(),
                   // デバッグ用の更新ボタン
@@ -359,32 +308,21 @@ class _ShopListScreenState extends State<ShopListScreen> {
               child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _shops.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.store_mall_directory, size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('お店が見つかりませんでした'),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadShops,
-                            child: const Text('再読み込み'),
-                          ),
-                        ],
-                      ),
-                    )
+                  ? const Center(child: Text('該当するお店がありません'))
                   : ListView.builder(
                       itemCount: _shops.length,
-                      itemBuilder: (context, index) {
-                        final shop = _shops[index];
-                        return _buildShopItem(shop);
-                      },
+                      itemBuilder: (context, index) => _buildShopItem(_shops[index]),
                     ),
             ),
           ],
         ),
       ),
+      floatingActionButton: widget.categoryId != null
+          ? FloatingActionButton(
+              onPressed: _updateLinksCategoryId,
+              child: const Icon(Icons.update),
+            )
+          : null,
     );
   }
 

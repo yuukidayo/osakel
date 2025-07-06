@@ -498,7 +498,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
             ),
           ),
           
-          // 右側の店舗表示への切り替えアイコン
+          // 店舗検索画面へ表示切り替え
           GestureDetector(
             onTap: () {
               // 店舗リスト画面へ同じレベルで遷移（画面の積み重ねではなく入れ替え）
