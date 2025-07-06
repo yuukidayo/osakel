@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/category.dart';
 import '../models/drink.dart';
 import 'drink_detail_screen.dart';
-import 'shop_list_screen.dart';
+import '../screens/store/shop_list_screen.dart';
 
 class SubcategoryScreen extends StatefulWidget {
   final Category category;

@@ -6,7 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/drink_filter_options.dart';
 import '../../widgets/side_menu.dart' show showSideMenu;
-import '../shop_list_screen.dart';
+import '../store/shop_list_screen.dart';
 
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';
@@ -54,6 +54,27 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+  
+  // お店検索画面への遷移（右から左へのスライドアニメーション）
+  void _navigateToShopSearch() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const ShopListScreen(
+          title: 'お店を探す',
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
   }
 
   /// マイルストーン2：Firestore からカテゴリをロード
@@ -493,24 +514,14 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                     ),
                     const Icon(Icons.arrow_drop_down),
                   ],
+                  ),
                 ),
               ),
             ),
-          ),
           
-          // 店舗検索画面へ表示切り替え
+          // 右側の店舗表示への切り替えアイコン
           GestureDetector(
-            onTap: () {
-              // 店舗リスト画面へ同じレベルで遷移（画面の積み重ねではなく入れ替え）
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ShopListScreen(
-                    title: 'お店を探す',
-                  ),
-                ),
-              );
-            },
+            onTap: _navigateToShopSearch,
             child: Container(
               width: 40,
               height: 40,
@@ -519,10 +530,33 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.grey[300]!),
               ),
-              child: const Icon(
-                Icons.storefront,
-                size: 20,
-                color: Color(0xFF525252),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.storefront,
+                    size: 20,
+                    color: Color(0xFF525252),
+                  ),
+                  // 右下に青い丸と右矢印を表示
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -531,6 +565,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     );
   }
 
+  
   // カテゴリ選択ダイアログ
   void _showCategoryModal() {
     // デバッグ情報の出力

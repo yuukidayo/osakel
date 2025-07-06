@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/shop.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:developer' as developer;
-import 'store_detail_screen.dart';
-import '../widgets/side_menu.dart' show showSideMenu;
+
+import '../../models/shop.dart';
+import 'store_detail_screen.dart' show StoreDetailScreen;
+import '../drinks/drink_search_screen.dart';
 
 class ShopListScreen extends StatefulWidget {
   final String? categoryId;
@@ -29,6 +31,10 @@ class _ShopListScreenState extends State<ShopListScreen> {
   final List<String> _filters = ['バー', 'ひとり歓迎', '試飲可', '静か'];
   int _updatedCount = 0;
   int _errorCount = 0;
+  
+  // お酒/お店切替用の状態変数
+  // トグルモード管理用フラグ（将来的に使用予定）
+  // bool _isCurrentlyShopMode = true; // true: お店検索モード, false: お酒検索モード
 
   @override
   void initState() {
@@ -134,16 +140,6 @@ class _ShopListScreenState extends State<ShopListScreen> {
           }
         }
       }
-      // どちらもなければ、全ての店舗を取得
-      else {
-        developer.log('全てのお店を取得します');
-        
-        final snapshot = await FirebaseFirestore.instance.collection('shops').get();
-        for (var doc in snapshot.docs) {
-          final shop = Shop.fromFirestore(doc);
-          shops.add(shop);
-        }
-      }
       
       setState(() {
         _shops.clear();
@@ -244,16 +240,160 @@ class _ShopListScreenState extends State<ShopListScreen> {
       });
     }
   }
-  // _buildCategoryTopBar method removed as requested
+
+  // お酒検索画面に切り替えるメソッド
+  void _navigateToDrinkSearch() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const DrinkSearchScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(-1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  // お酒検索画面と同じトップバーの実装
+  Widget _buildCategoryTopBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      color: Colors.white,
+      child: Row(
+        children: [
+          // 左側のプロフィールアイコン
+          GestureDetector(
+            onTap: () {
+              // サイドメニューを表示
+              showSideMenu(context);
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, color: Colors.grey[400]),
+            ),
+          ),
+          
+          // 中央のタイトル
+          Expanded(
+            child: Center(
+              child: Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          
+          // 右側のお酒検索への切り替えアイコン
+          GestureDetector(
+            onTap: _navigateToDrinkSearch,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.local_drink,
+                    size: 20,
+                    color: Color(0xFF525252),
+                  ),
+                  // 左下に青い丸と左矢印を表示
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // サイドメニューを表示するメソッド
+  void showSideMenu(BuildContext context) {
+    Scaffold.of(context).openDrawer();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      // AppBarを削除しました - 不要なため
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'メニュー',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('ホーム'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('プロフィール'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('設定'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
+            // カスタムトップバー
+            _buildCategoryTopBar(),
             // フィルターリスト
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -263,8 +403,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
                   const Text('フィルター:', style: TextStyle(fontSize: 14)),
                   const SizedBox(width: 8),
                   // フィルターボタン
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  Expanded(
                     child: SizedBox(
                       height: 36,
                       child: ListView(
@@ -290,7 +429,6 @@ class _ShopListScreenState extends State<ShopListScreen> {
                       ),
                     ),
                   ),
-                  const Spacer(),
                   // デバッグ用の更新ボタン
                   IconButton(
                     icon: const Icon(Icons.sync, size: 20),
@@ -383,47 +521,25 @@ class _ShopListScreenState extends State<ShopListScreen> {
               ),
             ),
             
-            // 店舗画像グリッド
-            SizedBox(
-              height: 200,
-              child: GridView.count(
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                childAspectRatio: 1.0,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: List.generate(
-                  6,
-                  (i) => ClipRRect(
-                    borderRadius: i == 0
-                        ? const BorderRadius.only(topLeft: Radius.circular(8))
-                        : i == 2
-                            ? const BorderRadius.only(topRight: Radius.circular(8))
-                            : i == 3
-                                ? const BorderRadius.only(bottomLeft: Radius.circular(8))
-                                : i == 5
-                                    ? const BorderRadius.only(bottomRight: Radius.circular(8))
-                                    : BorderRadius.zero,
-                    child: (imageUrl != null && imageUrl.isNotEmpty)
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.image, color: Colors.grey),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image, color: Colors.grey),
-                          ),
+            // 店舗画像
+            if (imageUrl != null && imageUrl.isNotEmpty)
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(imageUrl),
+                    fit: BoxFit.cover,
                   ),
                 ),
+              )
+            else
+              Container(
+                height: 200,
+                width: double.infinity,
+                color: Colors.grey[300],
+                child: const Icon(Icons.image, color: Colors.grey, size: 50),
               ),
-            ),
             
             // 店舗情報（住所、料金、営業時間）
             Padding(
@@ -436,9 +552,12 @@ class _ShopListScreenState extends State<ShopListScreen> {
                     children: [
                       const Icon(Icons.location_on, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text(
-                        '${shop.address} ${shop.distance != null ? '${shop.distance}m' : ''}',
-                        style: const TextStyle(fontSize: 14),
+                      Flexible(
+                        child: Text(
+                          '${shop.address} ${shop.distance != null ? '${shop.distance}m' : ''}',
+                          style: const TextStyle(fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -456,13 +575,6 @@ class _ShopListScreenState extends State<ShopListScreen> {
                   ),
                 ],
               ),
-            ),
-            
-            // 区切り線
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: Colors.grey[200],
             ),
           ],
         ),

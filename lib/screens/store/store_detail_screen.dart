@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart' as carousel;
-import '../models/shop.dart';
+import '../../models/shop.dart';
 
 class StoreDetailScreen extends StatefulWidget {
   final String storeId;

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:osakel/models/shop.dart';
 import 'package:osakel/models/shop_with_price.dart';
 import 'package:osakel/models/drink_shop_link.dart';
-import 'package:osakel/screens/store_detail_screen.dart';
+import 'store_detail_screen.dart';
 import 'package:osakel/services/firestore_service.dart';
 import 'package:osakel/utils/custom_marker_generator.dart';
 
