@@ -3,17 +3,30 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:provider/provider.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
 import 'screens/drink_detail_screen.dart';
 import 'screens/store/map_screen_fixed.dart' as map_screen;
 import 'screens/store/shop_detail_screen.dart';
 import 'screens/drinks/drink_search_screen.dart';
+import 'screens/drinks/providers/drink_search_notifier.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/main_screen.dart';
+import 'services/push_notification_service.dart';
+import 'utils/global_navigator.dart';
 // MainScreenをメイン画面として使用するように変更
+
+// バックグラウンドでのプッシュ通知処理用ハンドラー
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // バックグラウンド通知受信時の先行処理
+  await Firebase.initializeApp();
+  print('Handling a background message: ${message.messageId}');
+}
 
 void main() async {
   // This must be called first
@@ -26,6 +39,12 @@ void main() async {
   try {
     await Firebase.initializeApp();
     print('Firebase initialized successfully');
+    
+    // Firebase Messagingバックグラウンドハンドラーの設定
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    // プッシュ通知サービスの初期化を同期的に行わず、アプリ起動後に実行
+    // PushNotificationServiceの初期化はアプリ起動後にFutureBuilderで実行
     
     // Firebaseの接続状態を確認
     final firestore = FirebaseFirestore.instance;
@@ -106,14 +125,42 @@ class AuthWrapper extends StatelessWidget {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // プッシュ通知サービスの初期化
+    _initializePushNotifications();
+  }
+  
+  // プッシュ通知の初期化処理
+  Future<void> _initializePushNotifications() async {
+    try {
+      await PushNotificationService().init();
+      print('Push notification service initialized successfully');
+    } catch (e) {
+      print('Error initializing push notifications: $e');
+      // プッシュ通知の初期化に失敗してもアプリは継続
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OSAKEL',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DrinkSearchNotifier()),
+      ],
+      child: MaterialApp(
+        title: 'OSAKEL',
       debugShowCheckedModeBanner: false,
+      navigatorKey: GlobalNavigator.navigatorKey, // グローバルナビゲーションキー設定
       theme: ThemeData(
         // モノトーンデザインのベースカラー定義
         colorScheme: const ColorScheme.light(
@@ -253,6 +300,7 @@ class MyApp extends StatelessWidget {
         }
         return null;
       },
+      ),
     );
   }
 }
