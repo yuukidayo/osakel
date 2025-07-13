@@ -362,7 +362,7 @@ class _ShopListScreenState extends State<ShopListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA), // 薄いグレー背景
+      backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,

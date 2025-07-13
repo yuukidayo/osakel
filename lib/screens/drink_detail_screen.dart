@@ -132,7 +132,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFFFFF), // 純白背景(#FFFFFF)に統一
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

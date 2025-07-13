@@ -88,7 +88,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     return Consumer<DrinkSearchNotifier>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
+          backgroundColor: Colors.white, // 純白(#FFFFFF)に設定
           body: SafeArea(
             child: Column(
               children: [

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/category.dart';
 import '../models/drink.dart';
 import 'drink_detail_screen.dart';
-import '../screens/store/shop_list_screen.dart';
+import '../screens/store/shop_list_screen.dart' as shop_screen;
 
 class SubcategoryScreen extends StatefulWidget {
   final Category category;
@@ -296,6 +296,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+    backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20),
@@ -307,7 +308,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ShopListScreen(
+                builder: (context) => shop_screen.ShopListScreen(
                   categoryId: widget.category.id,
                   title: '${widget.category.name}のお店',
                 ),
@@ -338,8 +339,9 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           Stack(
             alignment: Alignment.topRight,
             children: [
-              IconButton(
-                icon: const Icon(Icons.menu),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, backgroundColor: Colors.transparent, elevation: 0),
+              child: const Icon(Icons.menu),
                 onPressed: () {},
               ),
               Positioned(

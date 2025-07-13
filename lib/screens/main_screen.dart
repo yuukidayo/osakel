@@ -47,7 +47,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background, // 白色背景
+      backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
       body: IndexedStack(
         index: _currentIndex,
         children: [
