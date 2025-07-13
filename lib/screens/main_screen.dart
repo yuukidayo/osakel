@@ -64,27 +64,8 @@ class _MainScreenState extends State<MainScreen> {
           const NotificationTestScreen(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: switchToIndex,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: const Color(0xFF8A8A8A),
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.local_bar),
-            label: 'お酒を探す',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.store),
-            label: 'お店を探す',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: '通知テスト',
-          ),
-        ],
-      ),
+      // bottomNavigationBarを削除して非表示化
+      // 画面切り替えは別の方法で行う必要があります
     );
   }
 }

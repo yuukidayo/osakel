@@ -63,20 +63,74 @@ class SearchResultsList extends StatelessWidget {
           );
         }
         
+        // PRアイテム（最大3つ）と通常アイテムに分割
+        final prItems = docs.take(3).toList(); // 先頭3つをPRアイテムとして扱う
+        final regularItems = docs.skip(3).toList(); // 残りを通常アイテムとして扱う
+        
         return Column(
           children: [
             if (isDebugMode) buildDebugPanel(docs.length),
+            
+            // PR商品セクション（横3列）
+            if (prItems.isNotEmpty) _buildPrSection(context, prItems),
+            
+            // 通常商品リスト
             Expanded(
-              child: ListView.separated(
+              child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: docs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (_, i) => DrinkItem(document: docs[i], categories: categories),
+                itemCount: regularItems.length,
+                itemBuilder: (_, i) => DrinkItem(
+                  document: regularItems[i], 
+                  categories: categories,
+                ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  /// PRセクションの構築（3列固定グリッド - スクロールなし）
+  Widget _buildPrSection(BuildContext context, List<QueryDocumentSnapshot> prItems) {
+    // 最大3つのアイテムに制限
+    final limitedPrItems = prItems.take(3).toList();
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(), 
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // PRアイテムの3列固定グリッド - 常に均等配置にする
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              // 常にspaceEvenlyで均等配置
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (int i = 0; i < limitedPrItems.length; i++)
+                  SizedBox(
+                    width: (MediaQuery.of(context).size.width - 32) / 3.5, // 画面幅に基づいて適切なサイズを設定
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/drink_detail', arguments: {'drinkId': limitedPrItems[i].id});
+                        },
+                        child: DrinkItem(
+                          document: limitedPrItems[i], 
+                          categories: categories, 
+                          isPr: true,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
