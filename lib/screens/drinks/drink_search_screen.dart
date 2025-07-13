@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer' as developer;
 
 import '../store/shop_list_screen.dart';
 import '../../widgets/filters/drink_filter_bottom_sheet.dart';
@@ -44,12 +45,17 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   // お店検索画面への遷移（右から左へのスライドアニメーション）
   // 右側のアイコンタップ時の遷移処理
   void _navigateToShopSearch() {
+    developer.log('DrinkSearchScreen: お店検索画面への遷移を試みます');
     // IndexedStackによる切り替えが設定されている場合はそれを使用
     if (widget.onSwitchToShopSearch != null) {
+      developer.log('DrinkSearchScreen: IndexedStackでの切り替えを使用');
       widget.onSwitchToShopSearch!();
       return;
     }
   
+    // コールバックがない場合のフォールバック処理（デバッグ用）
+    developer.log('DrinkSearchScreen: コールバックがないため通常ナビゲーションを使用');
+    
     // 従来のナビゲーション方法（後方互換性のため残す）
     Navigator.push(
       context,

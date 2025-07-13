@@ -247,11 +247,16 @@ class _ShopListScreenState extends State<ShopListScreen> {
 
   // お酒検索画面に切り替えるメソッド
   void _navigateToDrinkSearch() {
+    developer.log('ShopListScreen: お酒検索画面への遷移を試みます');
     // IndexedStackによる切り替えが設定されている場合はそれを使用
     if (widget.onSwitchToDrinkSearch != null) {
+      developer.log('ShopListScreen: IndexedStackでの切り替えを使用');
       widget.onSwitchToDrinkSearch!();
       return;
     }
+    
+    // コールバックがない場合のフォールバック処理（デバッグ用）
+    developer.log('ShopListScreen: コールバックがないため通常ナビゲーションを使用');
     
     // 従来のナビゲーション方法（後方互換性のため残す）
     Navigator.push(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 
 import 'drinks/drink_search_screen.dart';
 import 'store/shop_list_screen.dart';
@@ -23,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   // 画面切り替えメソッド
   void switchToIndex(int index) {
     if (_currentIndex != index) {
+      developer.log('画面切り替え: $_currentIndex → $index');
       setState(() {
         _currentIndex = index;
       });
@@ -31,11 +33,13 @@ class _MainScreenState extends State<MainScreen> {
 
   // お酒検索画面に切り替え
   void switchToDrinkSearch() {
+    developer.log('お酒検索画面へ切り替え');
     switchToIndex(0);
   }
 
   // お店検索画面に切り替え
   void switchToShopSearch() {
+    developer.log('お店検索画面へ切り替え');
     switchToIndex(1);
   }
   
