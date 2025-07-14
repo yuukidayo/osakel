@@ -30,36 +30,59 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 /// アプリケーションのエントリーポイント
 Future<void> main() async {
-  // Flutter初期化（必須の最初のステップ）
-  WidgetsFlutterBinding.ensureInitialized();
-  print('Flutter binding initialized');
-  
-  // 画面の向きを縦に固定
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  print('Screen orientation set to portrait');
-  
-  // Firebaseの初期化（アプリ全体で使用するため先に初期化）
-  bool firebaseInitialized = false;
-  
+  // チャネル通信の安定化のための処理順序が重要
   try {
-    // Firebase初期化（プラットフォーム固有の設定を使用）
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    firebaseInitialized = true;
-    print('✅ Firebase initialized successfully');
+    // Flutter初期化（必須の最初のステップ）
+    WidgetsFlutterBinding.ensureInitialized();
+    print('Flutter binding initialized');
     
-    // バックグラウンドメッセージハンドラーの設定
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    print('✅ Firebase background message handler set');
+    // 画面の向きを縦に固定
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    print('Screen orientation set to portrait');
+    
+    // Firebaseの初期化
+    bool firebaseInitialized = false;
+    
+    // Firebaseがすでに初期化されているか確認
+    if (Firebase.apps.isNotEmpty) {
+      print('✅ Firebase apps already initialized: ${Firebase.apps.length}');
+      firebaseInitialized = true;
+    } else {
+      // Firebase初期化をリトライメカニズムで実行
+      for (int attempt = 1; attempt <= 3; attempt++) {
+        try {
+          print('ℹ️ Attempt $attempt to initialize Firebase...');
+          // Firebase初期化（プラットフォーム固有の設定を使用）
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          );
+          firebaseInitialized = true;
+          print('✅ Firebase initialized successfully on attempt $attempt');
+          break; // 成功したらループを抜ける
+        } catch (e) {
+          print('❌ Error initializing Firebase (attempt $attempt): $e');
+          // 最後の試行でなければ少し待機
+          if (attempt < 3) {
+            await Future.delayed(Duration(milliseconds: 500 * attempt));
+          }
+        }
+      }
+    }
+    
+    // Firebase初期化に成功した場合のみバックグラウンドハンドラーを設定
+    if (firebaseInitialized) {
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      print('✅ Firebase background message handler set');
+    }
+    
+    // アプリを起動し、初期化状態を渡す
+    runApp(MyApp(firebaseInitialized: firebaseInitialized));
     
   } catch (e) {
-    print('❌ Error initializing Firebase: $e');
-    // Firebaseの初期化に失敗しても、アプリの起動は継続
+    print('❌ Fatal error in main: $e');
+    // アプリ起動を継続する
+    runApp(const MyApp(firebaseInitialized: false));
   }
-  
-  // アプリを起動し、初期化状態を渡す
-  runApp(MyApp(firebaseInitialized: firebaseInitialized));
 }
 
 // Function removed as we now initialize Firebase directly in main()
@@ -125,36 +148,61 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final Future<bool> _firebaseReady;
+  
   @override
   void initState() {
     super.initState();
     
-    // Firebaseが正しく初期化された場合のみ、プッシュ通知サービスを初期化
-    if (widget.firebaseInitialized) {
-      print('Firebase is initialized, setting up push notifications');
+    // Firebase初期化をFutureとして扱い、UIの済み後に非同期処理を実行
+    _firebaseReady = _ensureFirebaseInitialized();
+    
+    // UI描画後に非同期処理を開始
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeServices();
+    });
+  }
+  
+  // Firebaseが確実に初期化されていることを確認するFuture
+  Future<bool> _ensureFirebaseInitialized() async {
+    // すでに成功していればそのまま返す
+    if (widget.firebaseInitialized && Firebase.apps.isNotEmpty) {
+      print('✅ Firebase is already properly initialized');
+      return true;
+    }
+    
+    // まだ初期化されていなければ再試行
+    print('⚠️ Firebase needs initialization, attempting setup');
+    try {
+      // アプリが一つもなければ初期化
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        print('✅ Firebase initialized in _ensureFirebaseInitialized');
+      } 
+      return true;
+    } catch (e) {
+      print('❌ Failed to initialize Firebase in _ensureFirebaseInitialized: $e');
+      return false;
+    }
+  }
+  
+  // 各種サービスの非同期初期化
+  Future<void> _initializeServices() async {
+    // Firebase初期化の完了を待つ
+    final firebaseReady = await _firebaseReady;
+    
+    if (firebaseReady) {
+      print('✅ Firebase is ready, initializing push notifications');
       _initializePushNotifications();
     } else {
-      print('⚠️ Firebase is not initialized, skipping push notifications setup');
+      print('❌ Firebase initialization failed, skipping push notifications');
     }
   }
   
   // プッシュ通知の初期化処理
   Future<void> _initializePushNotifications() async {
-    // Firebaseの初期化を確認
-    if (!Firebase.apps.isNotEmpty) {
-      print('⚠️ Firebase apps not found, trying to initialize again');
-      try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        print('✅ Firebase re-initialized successfully in MyApp');
-      } catch (e) {
-        print('❌ Failed to initialize Firebase in MyApp: $e');
-        return; // Firebaseの初期化に失敗した場合は、通知初期化をスキップ
-      }
-    }
-    
-    // プッシュ通知サービスの初期化を実行
     try {
       await PushNotificationService().init();
       print('✅ Push notification service initialized successfully');
