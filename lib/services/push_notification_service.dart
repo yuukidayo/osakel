@@ -26,19 +26,56 @@ class PushNotificationService {
     
     debugPrint('User granted permission: ${settings.authorizationStatus}');
     
-    // FCMトークンの取得
-    String? token = await _fcm.getToken();
-    debugPrint('FCM Token: $token');
+    // FCMトークンの取得を試行
+    try {
+      // iOSシミュレータではトークンを取得できないため、エラー処理を追加
+      String? token = await _fcm.getToken();
+      if (token != null) {
+        debugPrint('✅ FCM Token: $token');
+      } else {
+        debugPrint('⚠️ FCM Token is null');
+      }
+    } catch (e) {
+      // iOSシミュレータではエラーが発生する場合がある
+      debugPrint('❌ Error getting FCM token: $e');
+      if (e.toString().contains('apns-token-not-set')) {
+        debugPrint('ℹ️ Note: iOS simulators cannot receive push notifications.');
+      }
+    }
     
     // バックグラウンド通知を処理するための設定
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     
     if (Platform.isIOS) {
-      await _fcm.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      try {
+        // iOSシミュレータでも設定自体は正常に行える
+        await _fcm.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint('✅ iOS notification presentation options set');
+        
+        // シミュレータか実機かを確認して表示
+        bool isSimulator = !await _isPhysicalDevice();
+        if (isSimulator) {
+          debugPrint('⚠️ Running on iOS simulator - push notifications will not work');
+        } else {
+          try {
+            // APNSトークンを引き出す試行 - 実機でのみ取得可能
+            String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+            if (apnsToken != null) {
+              debugPrint('✅ APNS token: $apnsToken');
+            } else {
+              debugPrint('⚠️ APNS token is null');
+            }
+          } catch (e) {
+            debugPrint('❌ Error getting APNS token: $e');
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Error setting iOS notification options: $e');
+      }
     }
     
     // ローカル通知の初期化
@@ -131,6 +168,33 @@ class PushNotificationService {
   // FCMトークンの取得
   Future<String?> getToken() async {
     return await _fcm.getToken();
+  }
+  
+  /// 実機かシミュレータかを判別する
+  Future<bool> _isPhysicalDevice() async {
+    if (Platform.isIOS) {
+      // iOSの場合、特定のパターンをデバイス名で判断
+      try {
+        final deviceInfo = await _getDeviceInfo();
+        // シミュレータでは "simulator" や "Simulator" が含まれることが多い
+        return !(deviceInfo.toLowerCase().contains('simulator'));
+      } catch (_) {
+        // 判定できない場合は安全策でシミュレータとみなす
+        return false;
+      }
+    }
+    // iOS以外はとりあえず実機とみなす
+    return true;
+  }
+  
+  /// デバイス情報を取得する簡易的な方法
+  Future<String> _getDeviceInfo() async {
+    try {
+      // シミュレータか判別する簡易的な方法
+      return Platform.operatingSystemVersion;
+    } catch (_) {
+      return 'unknown';
+    }
   }
 }
 
