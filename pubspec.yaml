@@ -41,7 +41,11 @@ dependencies:
   firebase_auth: ^5.6.0
   cloud_firestore: ^5.6.9
   firebase_messaging: ^15.2.8  # プッシュ通知用FCM
-  # 注意: 他の必要な依存関係(プラットフォーム & web)は自動解決されます
+  
+  # 状態管理パッケージ
+  provider: ^6.1.1
+  
+  # 注意: 他の必要な依存関係(platforms & web)は自動解決されます
   
   # Map and UI dependencies
   google_maps_flutter: ^2.5.3
