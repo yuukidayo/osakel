@@ -16,65 +16,105 @@ class PushNotificationService {
   
   // 通知の初期化
   Future<void> init() async {
-    // FCMからの通知権限をリクエスト
-    NotificationSettings settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
-    
-    debugPrint('User granted permission: ${settings.authorizationStatus}');
-    
-    // FCMトークンの取得を試行
-    try {
-      // iOSシミュレータではトークンを取得できないため、エラー処理を追加
-      String? token = await _fcm.getToken();
-      if (token != null) {
-        debugPrint('✅ FCM Token: $token');
-      } else {
-        debugPrint('⚠️ FCM Token is null');
-      }
-    } catch (e) {
-      // iOSシミュレータではエラーが発生する場合がある
-      debugPrint('❌ Error getting FCM token: $e');
-      if (e.toString().contains('apns-token-not-set')) {
-        debugPrint('ℹ️ Note: iOS simulators cannot receive push notifications.');
-      }
-    }
-    
-    // バックグラウンド通知を処理するための設定
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
+    // iOS向けの初期設定 - 先に行うことでAPNSTokenの取得成功率が上がる
     if (Platform.isIOS) {
       try {
-        // iOSシミュレータでも設定自体は正常に行える
+        // iOS通知設定 - トークン取得前に行う
         await _fcm.setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
           sound: true,
         );
         debugPrint('✅ iOS notification presentation options set');
-        
-        // シミュレータか実機かを確認して表示
-        bool isSimulator = !await _isPhysicalDevice();
-        if (isSimulator) {
-          debugPrint('⚠️ Running on iOS simulator - push notifications will not work');
-        } else {
-          try {
-            // APNSトークンを引き出す試行 - 実機でのみ取得可能
-            String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-            if (apnsToken != null) {
-              debugPrint('✅ APNS token: $apnsToken');
-            } else {
-              debugPrint('⚠️ APNS token is null');
-            }
-          } catch (e) {
-            debugPrint('❌ Error getting APNS token: $e');
-          }
-        }
       } catch (e) {
         debugPrint('❌ Error setting iOS notification options: $e');
+      }
+    }
+
+    // 通知権限をリクエスト - 必ず最初に行う
+    try {
+      NotificationSettings settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+        criticalAlert: true, // 重要通知も許可する
+      );
+      debugPrint('✅ User notification permission status: ${settings.authorizationStatus}');
+      
+      // 権限の確認
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('✅ User granted full notification permission');
+      } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+        debugPrint('✅ User granted provisional notification permission');
+      } else {
+        debugPrint('⚠️ User declined notification permission');
+      }
+    } catch (e) {
+      debugPrint('❌ Error requesting notification permission: $e');
+    }
+    
+    // バックグラウンド通知を処理するための設定
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    // 少し待機してからFCMトークン取得を試行
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // FCMトークンの取得を試行
+    try {
+      String? token = await _fcm.getToken();
+      if (token != null) {
+        debugPrint('✅ FCM Token: $token');
+      } else {
+        debugPrint('⚠️ FCM Token is null - waiting and trying again');
+        
+        // 再度待機して再試行
+        await Future.delayed(const Duration(seconds: 1));
+        token = await _fcm.getToken();
+        if (token != null) {
+          debugPrint('✅ FCM Token on second attempt: $token');
+        } else {
+          debugPrint('❌ FCM Token still null after retry');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error getting FCM token: $e');
+      if (e.toString().contains('apns-token-not-set')) {
+        debugPrint('ℹ️ On iOS devices, check the following:');
+        debugPrint('ℹ️ 1. Ensure FirebaseAppDelegateProxyEnabled is set to true in Info.plist');
+        debugPrint('ℹ️ 2. Verify you have a valid provisioning profile with push capability');
+        debugPrint('ℹ️ 3. iOS simulators cannot receive push notifications');
+      }
+    }
+    
+    if (Platform.isIOS) {
+      // シミュレータか実機かを確認して表示
+      bool isSimulator = !await _isPhysicalDevice();
+      if (isSimulator) {
+        debugPrint('⚠️ Running on iOS simulator - push notifications will not work properly');
+      } else {
+        debugPrint('✅ Running on iOS physical device - attempting to get APNS token directly');
+        // 実機の場合は直接APNSトークンを試行
+        try {
+          // APNSトークン取得を再試行
+          String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+          if (apnsToken != null) {
+            debugPrint('✅ APNS token successfully retrieved: $apnsToken');
+            // APNSトークン取得後に再度FCMトークンを取得し直すと成功する可能性が高い
+            try {
+              String? fcmToken = await _fcm.getToken();
+              if (fcmToken != null) {
+                debugPrint('✅ FCM Token after APNS token retrieval: $fcmToken');
+              }
+            } catch (e) {
+              debugPrint('❌ Still could not get FCM token after APNS token: $e');
+            }
+          } else {
+            debugPrint('⚠️ APNS token is null - check provisioning profile');
+          }
+        } catch (e) {
+          debugPrint('❌ Error getting APNS token: $e');
+        }
       }
     }
     
