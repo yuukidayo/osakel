@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
 import 'screens/drink_detail_screen.dart';
@@ -35,9 +36,11 @@ void main() async {
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
-  // Initialize Firebase - simplified approach
+  // Initialize Firebase with platform specific options
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     print('Firebase initialized successfully');
     
     // Firebase Messagingバックグラウンドハンドラーの設定
