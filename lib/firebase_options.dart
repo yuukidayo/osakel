@@ -50,8 +50,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAJBaWnxgCVBl3E2hxt-8pJVw-VI5tnHjI',
-    appId: '1:321867004635:android:00000000000000',  // 実際のAndroid appIdに更新が必要
+    apiKey: 'AIzaSyAwCZa2Sw4Uib-yS7OmnoPRvCesZcxnBT4',
+    appId: '1:321867004635:android:8853b90dab1155ac7beafe',
     messagingSenderId: '321867004635',
     projectId: 'osakel-app',
     storageBucket: 'osakel-app.firebasestorage.app',
@@ -59,10 +59,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAJBaWnxgCVBl3E2hxt-8pJVw-VI5tnHjI',
-    appId: '1:321867004635:ios:00000000000000',  // appIdは完全な値が必要です
+    appId: '1:321867004635:ios:fc4979a04440ce9d7beafe',
     messagingSenderId: '321867004635',
     projectId: 'osakel-app',
     storageBucket: 'osakel-app.firebasestorage.app',
+    iosClientId: '321867004635-b9u3lao65hhj3v9500jqsetu31efosc1.apps.googleusercontent.com',
     iosBundleId: 'com.osakel.app',
   );
+
 }
