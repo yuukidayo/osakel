@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
@@ -17,41 +18,52 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/main_screen.dart';
 import 'utils/global_navigator.dart';
 import 'widgets/firebase_debug_widget.dart';
+import 'services/fcm_service.dart';
+
+/// バックグラウンド通知を処理するグローバルハンドラ
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase Core初期化を必要とする処理は避ける
+  print('📱 バックグラウンドメッセージ受信: ${message.messageId}');
+}
 
 /// アプリケーションのエントリーポイント - シンプルに標準的な初期化順序に修正
 Future<void> main() async {
   // 1. Flutter初期化（必須の最初のステップ）
   WidgetsFlutterBinding.ensureInitialized();
-  print('🔍 DEBUG: Flutter binding initialized');
+  print('Flutter binding initialized');
   
   // 2. 画面の向きを縦に固定
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  print('🔍 DEBUG: Screen orientation set to portrait');
   
-  // 3. Firebaseを初期化 - 最もシンプルな形式で
+  // 3. FCMバックグラウンドハンドラを登録 (Firebase初期化前に必要)
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  
+  // 4. Firebaseを初期化
   bool firebaseInitialized = false;
   try {
-    print('🔍 DEBUG: Starting Firebase initialization...');
-    print('🔍 DEBUG: Current Firebase options: ${DefaultFirebaseOptions.currentPlatform}');
-    
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     
     // 初期化成功の確認
-    final apps = Firebase.apps;
-    print('🔍 DEBUG: Firebase apps count after init: ${apps.length}');
-    print('🔍 DEBUG: Firebase app names: ${apps.map((app) => app.name).toList()}');
+    firebaseInitialized = Firebase.apps.isNotEmpty;
+    print('Firebase initialized: $firebaseInitialized');
     
-    firebaseInitialized = true;
-    print('✅ Firebase initialized successfully');
+    // 5. FCMサービスの初期化
+    if (firebaseInitialized) {
+      try {
+        await FCMService().initialize();
+        print('FCM service initialized');
+      } catch (e) {
+        print('FCM service initialization error: $e');
+      }
+    }
   } catch (e) {
-    print('❌ Error initializing Firebase: $e');
-    print('❌ Error stack trace: ${StackTrace.current}');
+    print('Firebase initialization error: $e');
   }
   
-  // 4. アプリを起動
-  print('🔍 DEBUG: Starting app with firebaseInitialized=$firebaseInitialized');
+  // 6. アプリを起動
   runApp(MyApp(firebaseInitialized: firebaseInitialized));
 }
 
@@ -116,45 +128,30 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _firebaseInitialized = false;
-
   @override
   void initState() {
     super.initState();
     _initializeApp();
+    
+    // FCMトークン更新リスナーの設定
+    if (widget.firebaseInitialized) {
+      FCMService().setupTokenRefreshListener((token) {
+        print('FCMトークン更新: $token');
+        // ここでトークンをFirestoreなどに保存するロジックを追加可能
+      });
+    }
   }
 
   Future<void> _initializeApp() async {
-    _firebaseInitialized = widget.firebaseInitialized;
-
-    if (!_firebaseInitialized) {
-      try {
-        _firebaseInitialized = await _ensureFirebaseInitialized();
-        if (mounted) setState(() {});
-      } catch (e) {
-        print('❌ Failed to initialize Firebase in _initializeApp: $e');
-      }
-    }
-  }
-
-  // / Firebaseが初期化されていることを確認し、そうでなければ初期化する
-  Future<bool> _ensureFirebaseInitialized() async {
-    if (widget.firebaseInitialized && Firebase.apps.isNotEmpty) {
-      print('✅ Firebase is already properly initialized');
-      return true;
-    }
-    try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        print('✅ Firebase initialized in _ensureFirebaseInitialized');
-      }
-      return true;
-    } catch (e) {
-      print('❌ Failed to initialize Firebase in _ensureFirebaseInitialized: $e');
-      return false;
-    }
+    // システム全体のUI設定のみ - Firebaseは初期化済みなのでここでは不要
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   @override

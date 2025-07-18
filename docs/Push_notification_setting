@@ -1,0 +1,77 @@
+# プッシュ通知実装で行うべき操作まとめ
+
+以下は、Flutter＋Firebase の FCM プッシュ通知を動かすために必要な **Firebase コンソール**、**Apple Developer ポータル**、**Xcode** のそれぞれの操作一覧です。
+
+---
+
+## 1. Firebase コンソール
+
+1. **アプリ登録 & 設定ファイル生成**  
+   - Android／iOS アプリを登録  
+   - `flutterfire configure --project=<ID> --out=lib/firebase_options.dart --platforms=ios,android` 実行  
+   - 生成された `firebase_options.dart` をコミット  
+
+2. **APNs 認証キーの登録（iOS）**  
+   - **Key ID**／**Team ID** と `.p8` ファイルを Firebase → **プロジェクト設定 → Cloud Messaging** → **iOS アプリの構成** でアップロード  
+   - 登録後「APNs 認証キー：登録済み」を確認  
+
+3. **Android 用設定ファイル**  
+   - `google-services.json` をダウンロードし、`android/app/` に配置  
+
+4. **クラウドメッセージング設定**  
+   - 必要に応じてサーバキーや OAuth クライアント、テスト用デバイス登録など  
+
+---
+
+## 2. Apple Developer ポータル
+
+1. **APNs Authentication Key（.p8）作成**  
+   - **Certificates, IDs & Profiles → Keys** → 「＋」→ 名前入力 → **APNs** にチェック → Register  
+   - `.p8` をダウンロード（**再取得不可**）し、Key ID／Team ID をメモ  
+
+2. **App ID の編集**  
+   - **Identifiers → App IDs** → 対象のバンドルID を Edit  
+   - **Push Notifications** を有効化 → Save  
+
+3. **プロビジョニングプロファイル作成**  
+   - **Profiles → ＋Generate a profile** → **iOS App Development**  
+   - App ID（プッシュ有効化済み）→ iOS Development 証明書 → テスト実機デバイスを選択  
+   - 名前を付けて生成 → `.mobileprovision` ダウンロード → Xcode にインポート  
+
+---
+
+## 3. Xcode 側設定
+
+1. **ワークスペースを開く**  
+   - `ios/Runner.xcworkspace` をダブルクリック  
+
+2. **GoogleService-Info.plist の配置**  
+   - `ios/Runner/` に配置済みか確認  
+   - **Copy Bundle Resources** に重複なく含まれていること  
+
+3. **Capabilities タブで以下を追加**  
+   - **Push Notifications**  
+   - **Background Modes → Remote notifications**  
+
+4. **Entitlements ファイルの確認**  
+   - `Runner/Runner.entitlements` に  
+     ```xml
+     <key>aps-environment</key>
+     <string>development</string>
+     ```  
+     が含まれること  
+
+5. **Info.plist の権限説明**  
+   - `NSUserNotificationsUsageDescription` に通知の利用目的を明記  
+
+6. **AppDelegate.swift の実装**  
+   ```swift
+   UNUserNotificationCenter.current().delegate = self
+   application.registerForRemoteNotifications()
+   Messaging.messaging().delegate = self
+
+   override func application(... didRegisterForRemoteNotificationsWithDeviceToken token: Data) {
+     Messaging.messaging().apnsToken = token
+     super...
+   }
+   func messaging(... didReceiveRegistrationToken fcmToken: String?) { … }

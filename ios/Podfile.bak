@@ -1,18 +1,25 @@
+# Flutter CocoaPodsプラグインのロード
+require File.join(File.dirname(`cd .. && pwd`.strip), '.flutter-plugins-dependencies')
+
 platform :ios, '15.0'  # 16.0から15.0に変更（推奨）
 
 # Firebase SDKバージョンを互換性のあるものに設定
-ENV['FIREBASE_SDK_VERSION'] = '11.5.0'  # または '10.15.0' (互換性の問題がある場合)
+ENV['FIREBASE_SDK_VERSION'] = '10.15.0'  # より互換性のある安定版を使用
 
-# CocoaPodsの警告を抑制するフラグ
+# CocoaPodsの警告を抑制
 install! 'cocoapods', :warn_for_unused_master_specs_repo => false
 
-# グローバルな use_modular_headers! はコメントアウト
+# グローバルなuse_modular_headersをコメントアウト
 # use_modular_headers!
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
+  # Flutterポッドをインストール
+  flutter_install_ios_engine_pod
+  
+  # プロジェクト内のFlutterプラグインをインストール
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   
   # FirebaseMessagingに特別な設定を追加
@@ -21,7 +28,7 @@ target 'Runner' do
   post_install do |installer|
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'  # 16.0から15.0に変更
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
         
         # FirebaseMessaging特有のビルド設定
         if target.name == 'FirebaseMessaging'
