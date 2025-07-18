@@ -40,42 +40,6 @@
           ]
         }
       }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:321867004635:android:28ffdfac72751c947beafe",
-        "android_client_info": {
-          "package_name": "com.osakel.testapp"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "321867004635-totibcc3chqm3s5g8dp1qmrv777unl50.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAwCZa2Sw4Uib-yS7OmnoPRvCesZcxnBT4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "321867004635-totibcc3chqm3s5g8dp1qmrv777unl50.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "321867004635-b9u3lao65hhj3v9500jqsetu31efosc1.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.osakel.app"
-              }
-            }
-          ]
-        }
-      }
     }
   ],
   "configuration_version": "1"

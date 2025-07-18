@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
@@ -16,76 +15,45 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/main_screen.dart';
-import 'services/push_notification_service.dart';
 import 'utils/global_navigator.dart';
-// MainScreenをメイン画面として使用するように変更
+import 'widgets/firebase_debug_widget.dart';
 
-// バックグラウンドでのプッシュ通知処理用ハンドラー
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // バックグラウンド通知受信時の先行処理
-  await Firebase.initializeApp();
-  print('Handling a background message: ${message.messageId}');
-}
-
-/// アプリケーションのエントリーポイント
+/// アプリケーションのエントリーポイント - シンプルに標準的な初期化順序に修正
 Future<void> main() async {
-  // チャネル通信の安定化のための処理順序が重要
+  // 1. Flutter初期化（必須の最初のステップ）
+  WidgetsFlutterBinding.ensureInitialized();
+  print('🔍 DEBUG: Flutter binding initialized');
+  
+  // 2. 画面の向きを縦に固定
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  print('🔍 DEBUG: Screen orientation set to portrait');
+  
+  // 3. Firebaseを初期化 - 最もシンプルな形式で
+  bool firebaseInitialized = false;
   try {
-    // Flutter初期化（必須の最初のステップ）
-    WidgetsFlutterBinding.ensureInitialized();
-    print('Flutter binding initialized');
+    print('🔍 DEBUG: Starting Firebase initialization...');
+    print('🔍 DEBUG: Current Firebase options: ${DefaultFirebaseOptions.currentPlatform}');
     
-    // 画面の向きを縦に固定
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    print('Screen orientation set to portrait');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     
-    // Firebaseの初期化
-    bool firebaseInitialized = false;
+    // 初期化成功の確認
+    final apps = Firebase.apps;
+    print('🔍 DEBUG: Firebase apps count after init: ${apps.length}');
+    print('🔍 DEBUG: Firebase app names: ${apps.map((app) => app.name).toList()}');
     
-    // Firebaseがすでに初期化されているか確認
-    if (Firebase.apps.isNotEmpty) {
-      print('✅ Firebase apps already initialized: ${Firebase.apps.length}');
-      firebaseInitialized = true;
-    } else {
-      // Firebase初期化をリトライメカニズムで実行
-      for (int attempt = 1; attempt <= 3; attempt++) {
-        try {
-          print('ℹ️ Attempt $attempt to initialize Firebase...');
-          // Firebase初期化（プラットフォーム固有の設定を使用）
-          await Firebase.initializeApp(
-            options: DefaultFirebaseOptions.currentPlatform,
-          );
-          firebaseInitialized = true;
-          print('✅ Firebase initialized successfully on attempt $attempt');
-          break; // 成功したらループを抜ける
-        } catch (e) {
-          print('❌ Error initializing Firebase (attempt $attempt): $e');
-          // 最後の試行でなければ少し待機
-          if (attempt < 3) {
-            await Future.delayed(Duration(milliseconds: 500 * attempt));
-          }
-        }
-      }
-    }
-    
-    // Firebase初期化に成功した場合のみバックグラウンドハンドラーを設定
-    if (firebaseInitialized) {
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-      print('✅ Firebase background message handler set');
-    }
-    
-    // アプリを起動し、初期化状態を渡す
-    runApp(MyApp(firebaseInitialized: firebaseInitialized));
-    
+    firebaseInitialized = true;
+    print('✅ Firebase initialized successfully');
   } catch (e) {
-    print('❌ Fatal error in main: $e');
-    // アプリ起動を継続する
-    runApp(const MyApp(firebaseInitialized: false));
+    print('❌ Error initializing Firebase: $e');
+    print('❌ Error stack trace: ${StackTrace.current}');
   }
+  
+  // 4. アプリを起動
+  print('🔍 DEBUG: Starting app with firebaseInitialized=$firebaseInitialized');
+  runApp(MyApp(firebaseInitialized: firebaseInitialized));
 }
-
-// Function removed as we now initialize Firebase directly in main()
 
 /// 認証状態を監視し、適切な画面にルーティングするためのラッパー
 class AuthWrapper extends StatelessWidget {
@@ -131,7 +99,7 @@ class AuthWrapper extends StatelessWidget {
           }
         }
         
-        // ユーザーがログインしていない場合はログイン画面へ
+        // 未ログイン状態
         return const LoginScreen();
       },
     );
@@ -140,227 +108,216 @@ class AuthWrapper extends StatelessWidget {
 
 class MyApp extends StatefulWidget {
   final bool firebaseInitialized;
-  
-  const MyApp({super.key, required this.firebaseInitialized});
+
+  const MyApp({Key? key, required this.firebaseInitialized}) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  late final Future<bool> _firebaseReady;
-  
+  bool _firebaseInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    
-    // Firebase初期化をFutureとして扱い、UIの済み後に非同期処理を実行
-    _firebaseReady = _ensureFirebaseInitialized();
-    
-    // UI描画後に非同期処理を開始
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeServices();
-    });
+    _initializeApp();
   }
-  
-  // Firebaseが確実に初期化されていることを確認するFuture
+
+  Future<void> _initializeApp() async {
+    _firebaseInitialized = widget.firebaseInitialized;
+
+    if (!_firebaseInitialized) {
+      try {
+        _firebaseInitialized = await _ensureFirebaseInitialized();
+        if (mounted) setState(() {});
+      } catch (e) {
+        print('❌ Failed to initialize Firebase in _initializeApp: $e');
+      }
+    }
+  }
+
+  // / Firebaseが初期化されていることを確認し、そうでなければ初期化する
   Future<bool> _ensureFirebaseInitialized() async {
-    // すでに成功していればそのまま返す
     if (widget.firebaseInitialized && Firebase.apps.isNotEmpty) {
       print('✅ Firebase is already properly initialized');
       return true;
     }
-    
-    // まだ初期化されていなければ再試行
-    print('⚠️ Firebase needs initialization, attempting setup');
     try {
-      // アプリが一つもなければ初期化
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
         print('✅ Firebase initialized in _ensureFirebaseInitialized');
-      } 
+      }
       return true;
     } catch (e) {
       print('❌ Failed to initialize Firebase in _ensureFirebaseInitialized: $e');
       return false;
     }
   }
-  
-  // 各種サービスの非同期初期化
-  Future<void> _initializeServices() async {
-    // Firebase初期化の完了を待つ
-    final firebaseReady = await _firebaseReady;
-    
-    if (firebaseReady) {
-      print('✅ Firebase is ready, initializing push notifications');
-      _initializePushNotifications();
-    } else {
-      print('❌ Firebase initialization failed, skipping push notifications');
-    }
-  }
-  
-  // プッシュ通知の初期化処理
-  Future<void> _initializePushNotifications() async {
-    try {
-      await PushNotificationService().init();
-      print('✅ Push notification service initialized successfully');
-    } catch (e) {
-      print('❌ Error initializing push notifications: $e');
-      // プッシュ通知の初期化に失敗してもアプリは継続
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    // アプリの基本設定とデザイン
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => DrinkSearchNotifier()),
       ],
       child: MaterialApp(
         title: 'OSAKEL',
-      debugShowCheckedModeBanner: false,
-      navigatorKey: GlobalNavigator.navigatorKey, // グローバルナビゲーションキー設定
-      theme: ThemeData(
-        // モノトーンデザインのベースカラー定義
-        colorScheme: const ColorScheme.light(
-          primary: Color(0xFF000000),     // メインブラック
-          onPrimary: Color(0xFFFFFFFF),   // ホワイト（プライマリ上のテキスト等）
-          secondary: Color(0xFF333333),   // ダークグレー
-          onSecondary: Color(0xFFFFFFFF), // ダークグレー上のテキスト
-          surface: Color(0xFFFFFFFF),     // 表面の色（カード背景等）
-          onSurface: Color(0xFF000000),   // 表面上のテキスト
-          background: Color(0xFFFFFFFF),  // 背景色
-          onBackground: Color(0xFF000000),// 背景上のテキスト
-          error: Color(0xFF000000),       // エラーカラー（モノトーンに合わせて黒に）
-          onError: Color(0xFFFFFFFF),     // エラーカラー上のテキスト
-          outline: Color(0xFF8A8A8A),     // アウトライン（グレー）
-        ),
-        // Material 3を有効化
-        useMaterial3: true,
-        // アプリバーのテーマ設定
-        appBarTheme: const AppBarTheme(
-          foregroundColor: Color(0xFFFFFFFF),  // テキスト・アイコンは白
-          backgroundColor: Color(0xFF000000),  // 背景は黒
-          elevation: 0,                        // 影なし（フラットデザイン）
-        ),
-        // ボタンテーマ（ElevatedButton）
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF000000),     // 黒背景
-            foregroundColor: const Color(0xFFFFFFFF),     // 白テキスト
-            elevation: 0,                                 // 影なし
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+        debugShowCheckedModeBanner: false,
+        navigatorKey: GlobalNavigator.navigatorKey, // グローバルナビゲーションキー設定
+        theme: ThemeData(
+          // モノトーンデザインのベースカラー定義
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF000000),     // メインブラック
+            onPrimary: Color(0xFFFFFFFF),   // ホワイト（プライマリ上のテキスト等）
+            secondary: Color(0xFF333333),   // ダークグレー
+            onSecondary: Color(0xFFFFFFFF), // ダークグレー上のテキスト
+            surface: Color(0xFFFFFFFF),     // 表面の色（カード背景等）
+            onSurface: Color(0xFF000000),   // 表面上のテキスト
+            background: Color(0xFFFFFFFF),  // 背景色
+            onBackground: Color(0xFF000000),// 背景上のテキスト
+            error: Color(0xFF000000),       // エラーカラー（モノトーンに合わせて黒に）
+            onError: Color(0xFFFFFFFF),     // エラーカラー上のテキスト
+            outline: Color(0xFF8A8A8A),     // アウトライン（グレー）
+          ),
+          // Material 3を有効化
+          useMaterial3: true,
+          // アプリバーのテーマ設定
+          appBarTheme: const AppBarTheme(
+            foregroundColor: Color(0xFFFFFFFF),  // テキスト・アイコンは白
+            backgroundColor: Color(0xFF000000),  // 背景は黒
+            elevation: 0,                        // 影なし（フラットデザイン）
+          ),
+          // ボタンテーマ（ElevatedButton）
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF000000),     // 黒背景
+              foregroundColor: const Color(0xFFFFFFFF),     // 白テキスト
+              elevation: 0,                                 // 影なし
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+              ),
             ),
           ),
-        ),
-        // テキストボタン
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF000000),     // 黒テキスト
-          ),
-        ),
-        // アウトラインボタン
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF000000),     // 黒テキスト
-            side: const BorderSide(color: Color(0xFF000000)), // 黒い枠線
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+          // テキストボタン
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF000000),     // 黒テキスト
             ),
           ),
-        ),
-        // 入力フィールド
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.grey[100],                    // 薄いグレー背景
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide.none,                  // 枠線なし
+          // アウトラインボタン
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF000000),     // 黒テキスト
+              side: const BorderSide(color: Color(0xFF000000)), // 黒い枠線
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),      // 角を少し丸く
+              ),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: const BorderSide(color: Color(0xFF000000)), // フォーカス時は黒枠
+          // 入力フィールド
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.grey[100],                    // 薄いグレー背景
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide.none,                  // 枠線なし
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: Color(0xFF000000)), // フォーカス時は黒枠
+            ),
+          ),
+          // テキストテーマ
+          textTheme: const TextTheme(
+            // 見出し
+            headlineLarge: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+            headlineMedium: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+            headlineSmall: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
+            // 本文
+            bodyLarge: TextStyle(color: Color(0xFF000000)),
+            bodyMedium: TextStyle(color: Color(0xFF000000)),
+            bodySmall: TextStyle(color: Color(0xFF8A8A8A)),  // 小さいテキストは薄いグレー
+          ),
+          // ダイアログ関連の設定
+          // Flutter バージョンによりDialogThemeとDialogThemeDataの互換性の問題があるため、
+          // 個別のプロパティとして設定
+          dialogBackgroundColor: const Color(0xFFFFFFFF),
+          // ボトムシートテーマ
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: Color(0xFFFFFFFF),
+            surfaceTintColor: Color(0xFFFFFFFF),
+          ),
+          // スナックバーテーマ
+          snackBarTheme: const SnackBarThemeData(
+            backgroundColor: Color(0xFF000000),
+            contentTextStyle: TextStyle(color: Color(0xFFFFFFFF)),
           ),
         ),
-        // テキストテーマ
-        textTheme: const TextTheme(
-          // 見出し
-          headlineLarge: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
-          headlineMedium: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
-          headlineSmall: TextStyle(color: Color(0xFF000000), fontWeight: FontWeight.w500),
-          // 本文
-          bodyLarge: TextStyle(color: Color(0xFF000000)),
-          bodyMedium: TextStyle(color: Color(0xFF000000)),
-          bodySmall: TextStyle(color: Color(0xFF8A8A8A)),  // 小さいテキストは薄いグレー
-        ),
-        // ダイアログ関連の設定
-        // Flutter バージョンによりDialogThemeとDialogThemeDataの互換性の問題があるため、
-        // 個別のプロパティとして設定
-        dialogBackgroundColor: const Color(0xFFFFFFFF),
-        // ボトムシートテーマ
-        bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Color(0xFFFFFFFF),
-          surfaceTintColor: Color(0xFFFFFFFF),
-        ),
-        // スナックバーテーマ
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Color(0xFF000000),
-          contentTextStyle: TextStyle(color: Color(0xFFFFFFFF)),
-        ),
-      ),
-      // 認証状態に基づいてホーム画面を表示
-      home: const AuthWrapper(),
-      onGenerateRoute: (settings) {
-        if (settings.name == '/login') {
-          return MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          );
-        } else if (settings.name == '/signup') {
-          return MaterialPageRoute(
-            builder: (context) => const SignUpScreen(),
-          );
-        } else if (settings.name == '/forgot_password') {
-          return MaterialPageRoute(
-            builder: (context) => const ForgotPasswordScreen(),
-          );
-        } else if (settings.name == '/categories') {
-          return MaterialPageRoute(
-            builder: (context) => const CategoryListScreen(),
-          );
-        } else if (settings.name == '/subcategory') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => SubcategoryScreen(category: args['category']),
-          );
-        } else if (settings.name == '/drink_detail') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => DrinkDetailScreen(drinkId: args['drinkId']),
-          );
-        } else if (settings.name == '/map') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => map_screen.MapScreen(drinkId: args['drinkId']),
-          );
-        } else if (settings.name == '/shop_detail') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => ShopDetailScreen(shop: args['shop'], price: args['price']),
-          );
-        } else if (settings.name == DrinkSearchScreen.routeName) {
-          return MaterialPageRoute(
-            builder: (context) => const DrinkSearchScreen(),
-          );
-        } else if (settings.name == MainScreen.routeName) {
-          return MaterialPageRoute(
-            builder: (context) => const MainScreen(),
-          );
-        }
-        return null;
-      },
+        // FirebaseDebugWidgetをbuilderパターンで統合
+        builder: (context, child) {
+          // FirebaseDebugWidgetを一時的に無効化
+          return child ?? const SizedBox();
+          
+          // 元のコード (問題解決後に復活可能)
+          // return FirebaseDebugWidget(
+          //   child: child ?? const SizedBox(),
+          //   showInProduction: false, // 本番環境では表示しない
+          // );
+        },
+        // 認証状態に基づいてホーム画面を表示
+        home: const AuthWrapper(),
+        onGenerateRoute: (settings) {
+          if (settings.name == '/login') {
+            return MaterialPageRoute(
+              builder: (context) => const LoginScreen(),
+            );
+          } else if (settings.name == '/signup') {
+            return MaterialPageRoute(
+              builder: (context) => const SignUpScreen(),
+            );
+          } else if (settings.name == '/forgot_password') {
+            return MaterialPageRoute(
+              builder: (context) => const ForgotPasswordScreen(),
+            );
+          } else if (settings.name == '/categories') {
+            return MaterialPageRoute(
+              builder: (context) => const CategoryListScreen(),
+            );
+          } else if (settings.name == '/subcategory') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => SubcategoryScreen(category: args['category']),
+            );
+          } else if (settings.name == '/drink_detail') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => DrinkDetailScreen(drinkId: args['drinkId']),
+            );
+          } else if (settings.name == '/map') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => map_screen.MapScreen(drinkId: args['drinkId']),
+            );
+          } else if (settings.name == '/shop_detail') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => ShopDetailScreen(shop: args['shop'], price: args['price']),
+            );
+          } else if (settings.name == DrinkSearchScreen.routeName) {
+            return MaterialPageRoute(
+              builder: (context) => const DrinkSearchScreen(),
+            );
+          } else if (settings.name == MainScreen.routeName) {
+            return MaterialPageRoute(
+              builder: (context) => const MainScreen(),
+            );
+          }
+          return null;
+        },
       ),
     );
   }
