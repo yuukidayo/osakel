@@ -5,12 +5,14 @@ class CategoryTopBar extends StatelessWidget {
   final String categoryDisplayName;
   final VoidCallback onCategoryTap;
   final VoidCallback onSwitchToShopSearch;
+  final IconData switchIcon;
 
   const CategoryTopBar({
     Key? key,
     required this.categoryDisplayName,
     required this.onCategoryTap,
     required this.onSwitchToShopSearch,
+    this.switchIcon = Icons.storefront,
   }) : super(key: key);
 
   @override
@@ -73,10 +75,10 @@ class CategoryTopBar extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Icon(
-                    Icons.storefront,
+                  Icon(
+                    switchIcon,
                     size: 20,
-                    color: Color(0xFF333333), // ダークグレー
+                    color: const Color(0xFF333333), // ダークグレー
                   ),
                   // 右下に青い丸と右矢印を表示 (ショップリスト画面と統一感を持たせる)
                   Positioned(

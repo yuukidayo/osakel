@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/category.dart';
 import '../models/drink.dart';
 import 'drink_detail_screen.dart';
-import '../screens/store/shop_list_screen.dart' as shop_screen;
+import '../screens/store/shop_search_screen.dart' as shop_screen;
 
 class SubcategoryScreen extends StatefulWidget {
   final Category category;
@@ -308,10 +308,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => shop_screen.ShopListScreen(
-                  categoryId: widget.category.id,
-                  title: '${widget.category.name}のお店',
-                ),
+                builder: (context) => const shop_screen.ShopSearchScreen(),
               ),
             );
           },

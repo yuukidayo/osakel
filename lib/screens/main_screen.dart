@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 
 import 'drinks/drink_search_screen.dart';
-import 'store/shop_list_screen.dart';
+import 'store/shop_search_screen.dart';
 import 'notification/notification_test_screen.dart';
 
 /// メイン画面コンテナ
@@ -60,9 +60,8 @@ class _MainScreenState extends State<MainScreen> {
             onSwitchToShopSearch: switchToShopSearch,
           ),
           // お店検索画面
-          ShopListScreen(
-            title: 'お店を探す',
-            onSwitchToDrinkSearch: switchToDrinkSearch,
+          ShopSearchScreen(
+            onSwitchToDrinkSearch: () => switchToIndex(0),
           ),
           // 通知テスト画面
           const NotificationTestScreen(),

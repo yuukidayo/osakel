@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../store/shop_list_screen.dart';
+import '../store/shop_search_screen.dart';
 import '../../widgets/filters/drink_filter_bottom_sheet.dart';
 import './components/category_top_bar.dart';
 import './components/search_bar.dart';
@@ -74,9 +74,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const ShopListScreen(
-          title: 'お店を探す',
-        ),
+        pageBuilder: (context, animation, secondaryAnimation) => const ShopSearchScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
