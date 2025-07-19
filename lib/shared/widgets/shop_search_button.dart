@@ -83,9 +83,17 @@ class ShopSearchButton extends StatelessWidget {
   }
 
   void _defaultOnTap(BuildContext context) {
-    Navigator.of(context).pushNamed(
-      '/map',
-      arguments: {'drinkId': drink.id},
-    );
+    print('🍺 ShopSearchButton: タップされました - drinkId: ${drink.id}');
+    print('🍺 ShopSearchButton: マップ画面へナビゲート開始');
+    
+    try {
+      Navigator.of(context).pushNamed(
+        '/map',
+        arguments: {'drinkId': drink.id},
+      );
+      print('🍺 ShopSearchButton: ナビゲート完了');
+    } catch (e) {
+      print('❌ ShopSearchButton: ナビゲートエラー - $e');
+    }
   }
 }

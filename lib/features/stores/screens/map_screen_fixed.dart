@@ -68,25 +68,37 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   // 店舗データを読み込む
   Future<void> _loadShopsData() async {
+    print('🗺️ MapScreen: _loadShopsData開始 - drinkId: ${widget.drinkId}');
+    
     setState(() {
       _isLoading = true;
     });
     
     try {
+      print('🗺️ MapScreen: MapDataServiceでデータ取得開始');
       final shops = await _mapDataService.loadShopsData(drinkId: widget.drinkId);
+      print('🗺️ MapScreen: データ取得完了 - 店舗数: ${shops.length}');
       
       setState(() {
         _shopsWithPrice = shops;
         _isLoading = false;
       });
+      print('🗺️ MapScreen: setState完了');
       
       // 初回フォーカス処理
+      print('🗺️ MapScreen: 初回フォーカス処理開始');
       await _performInitialFocus();
+      print('🗺️ MapScreen: 初回フォーカス処理完了');
       
       // マーカーを更新
+      print('🗺️ MapScreen: マーカー更新開始');
       _updateMarkerPositions();
+      print('🗺️ MapScreen: マーカー更新完了');
+      
+      print('🗺️ MapScreen: _loadShopsData完了');
       
     } catch (e) {
+      print('❌ MapScreen: エラー発生 - $e');
       // エラー時はモックデータを生成
       _generateMockData();
     }

@@ -12,28 +12,50 @@ class MapDataService {
 
   /// 店舗データを読み込み
   Future<List<ShopWithPrice>> loadShopsData({String? drinkId}) async {
+    print('🗺️ MapDataService: loadShopsData開始 - drinkId: $drinkId');
+    
     try {
       List<ShopWithPrice> shops = [];
       
       if (drinkId != null) {
-        // ドリンクIDから関連する店舗を取得
-        final drinkShopLinks = await _firestoreService.getDrinkShopLinks(drinkId);
+        print('🗺️ MapDataService: ドリンクIDから関連店舗を取得開始');
+        
+        // タイムアウトを設定してFirestoreクエリを実行
+        final drinkShopLinks = await _firestoreService.getDrinkShopLinks(drinkId)
+            .timeout(const Duration(seconds: 10), onTimeout: () {
+          print('⚠️ MapDataService: getDrinkShopLinksがタイムアウト');
+          return [];
+        });
+        
+        print('🗺️ MapDataService: 取得したリンク数: ${drinkShopLinks.length}');
         
         for (var link in drinkShopLinks) {
-          final shop = await _firestoreService.getShop(link.shopId);
+          print('🗺️ MapDataService: 店舗情報取得中 - shopId: ${link.shopId}');
+          final shop = await _firestoreService.getShop(link.shopId)
+              .timeout(const Duration(seconds: 5), onTimeout: () {
+            print('⚠️ MapDataService: getShopがタイムアウト - shopId: ${link.shopId}');
+            return null;
+          });
+          
           if (shop != null) {
             shops.add(ShopWithPrice(shop: shop, drinkShopLink: link));
+            print('🗺️ MapDataService: 店舗追加完了 - ${shop.name}');
           }
         }
       }
       
+      print('🗺️ MapDataService: 取得した店舗数: ${shops.length}');
+      
       // データが取得できなかった場合はモックデータを返す
       if (shops.isEmpty) {
+        print('🗺️ MapDataService: モックデータを生成');
         return MockDataService.generateMockShops(drinkId: drinkId);
       }
       
+      print('🗺️ MapDataService: loadShopsData完了');
       return shops;
     } catch (e) {
+      print('❌ MapDataService: エラー発生 - $e');
       // エラー時はモックデータを返す
       return MockDataService.generateMockShops(drinkId: drinkId);
     }
