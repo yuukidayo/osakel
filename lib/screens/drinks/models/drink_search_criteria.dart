@@ -7,14 +7,20 @@ class DrinkSearchCriteria {
   
   /// 価格のデフォルト範囲
   static final RangeValues defaultPriceRange = const RangeValues(0, 50000);
-  /// 選択されたカテゴリ
+  /// 選択されたカテゴリ（表示用の名前）
   String selectedCategory;
+  
+  /// 選択されたカテゴリのID（検索用）
+  String selectedCategoryId;
   
   /// カテゴリの表示名
   String categoryDisplayName;
   
-  /// 選択されたサブカテゴリ
+  /// 選択されたサブカテゴリ（表示用の名前）
   String? selectedSubcategory;
+  
+  /// 選択されたサブカテゴリID（検索用）
+  String? selectedSubcategoryId;
   
   /// 検索キーワード
   String searchKeyword;
@@ -27,8 +33,10 @@ class DrinkSearchCriteria {
 
   DrinkSearchCriteria({
     this.selectedCategory = 'すべてのカテゴリ',
+    this.selectedCategoryId = 'all',
     this.categoryDisplayName = 'すべてのカテゴリ',
     this.selectedSubcategory,
+    this.selectedSubcategoryId,
     this.searchKeyword = '',
     this.isFiltersApplied = false,
     Map<String, dynamic>? filterValues,
@@ -37,18 +45,24 @@ class DrinkSearchCriteria {
   /// 深いコピーを作成
   DrinkSearchCriteria copyWith({
     String? selectedCategory,
+    String? selectedCategoryId,
     String? categoryDisplayName,
     String? Function()? selectedSubcategory,
+    String? Function()? selectedSubcategoryId,
     String? searchKeyword,
     bool? isFiltersApplied,
     Map<String, dynamic>? filterValues,
   }) {
     return DrinkSearchCriteria(
       selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       categoryDisplayName: categoryDisplayName ?? this.categoryDisplayName,
       selectedSubcategory: selectedSubcategory != null
           ? selectedSubcategory()
           : this.selectedSubcategory,
+      selectedSubcategoryId: selectedSubcategoryId != null
+          ? selectedSubcategoryId()
+          : this.selectedSubcategoryId,
       searchKeyword: searchKeyword ?? this.searchKeyword,
       isFiltersApplied: isFiltersApplied ?? this.isFiltersApplied,
       filterValues: filterValues ?? Map<String, dynamic>.from(this.filterValues),
@@ -58,13 +72,16 @@ class DrinkSearchCriteria {
   /// カテゴリ選択を更新
   void updateCategory(String id, String name) {
     selectedCategory = name;
+    selectedCategoryId = id;
     categoryDisplayName = name;
     selectedSubcategory = null;
+    selectedSubcategoryId = null;
   }
 
-  /// サブカテゴリを更新
-  void updateSubcategory(String? name) {
-    selectedSubcategory = name;
+  /// サブカテゴリを更新（名前とIDを別々に管理）
+  void updateSubcategory(String? name, String? id) {
+    selectedSubcategory = name; // 表示用
+    selectedSubcategoryId = id;  // 検索用
   }
 
   /// 検索キーワードを更新
@@ -100,6 +117,7 @@ class DrinkSearchCriteria {
   String toString() {
     return 'DrinkSearchCriteria(category: $selectedCategory, '
         'subcategory: $selectedSubcategory, '
+        'subcategoryId: $selectedSubcategoryId, '
         'keyword: $searchKeyword, '
         'filtersApplied: $isFiltersApplied, '
         'filterValues: $filterValues)';

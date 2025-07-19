@@ -132,8 +132,10 @@ class DrinkSearchNotifier extends ChangeNotifier {
   }
 
   /// サブカテゴリを選択
-  void selectSubcategory(String? subcategory) {
-    _searchCriteria.updateSubcategory(subcategory);
+  /// @param subcategoryName サブカテゴリの表示名
+  /// @param subcategoryId サブカテゴリID（検索用）
+  void selectSubcategory(String? subcategoryName, String? subcategoryId) {
+    _searchCriteria.updateSubcategory(subcategoryName, subcategoryId);
     executeSearch();
     notifyListeners();
   }
@@ -176,8 +178,55 @@ class DrinkSearchNotifier extends ChangeNotifier {
       // 検索実行時刻を記録
       _lastSearchTime = DateTime.now();
       
-      // 検索結果を取得
-      _searchSnapshot = query.snapshots();
+      // 検索結果を取得（エラーハンドリング付き）
+      _searchSnapshot = query.snapshots().map((snapshot) {
+        // 🍺 デバッグ: 検索結果を出力
+        print('\n🍺 === SEARCH RESULTS DEBUG ===');
+        print('📊 Total drinks found: ${snapshot.docs.length}');
+        
+        if (snapshot.docs.isEmpty) {
+          print('⚠️  No drinks found with current search criteria');
+        } else {
+          print('📋 Found drinks:');
+          for (int i = 0; i < snapshot.docs.length && i < 5; i++) {
+            final doc = snapshot.docs[i];
+            final data = doc.data();
+            print('  ${i + 1}. "${data['name'] ?? 'Unknown'}" (ID: ${doc.id})');
+            print('     - Category ID: "${data['categoryId'] ?? 'N/A'}"');
+            print('     - Subcategories: ${data['subcategories'] ?? 'N/A'}');
+          }
+          if (snapshot.docs.length > 5) {
+            print('  ... and ${snapshot.docs.length - 5} more drinks');
+          }
+        }
+        print('=== END SEARCH RESULTS DEBUG ===\n');
+        
+        return snapshot;
+      }).handleError((error) {
+        print('🔥 Firestore Query Error: $error');
+        
+        // Firestoreのインデックスエラーの場合、リンクを抽出して出力
+        if (error.toString().contains('index')) {
+          final errorMessage = error.toString();
+          print('📋 Full Error Message:');
+          print(errorMessage);
+          
+          // インデックス作成リンクを抽出
+          final linkRegex = RegExp(r'https://console\.firebase\.google\.com[^\s]+');
+          final match = linkRegex.firstMatch(errorMessage);
+          
+          if (match != null) {
+            final indexLink = match.group(0);
+            print('🔗 Index Creation Link:');
+            print(indexLink);
+            print('\n📱 Copy this link and open it in your browser to create the required index.');
+          }
+        }
+        
+        _hasError = true;
+        notifyListeners();
+      });
+      
       _isInitialSearchPerformed = true;
       
       notifyListeners();

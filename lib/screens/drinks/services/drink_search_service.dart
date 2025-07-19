@@ -105,22 +105,40 @@ class DrinkSearchService {
   Query<Map<String, dynamic>> _buildQueryFromCriteria(DrinkSearchCriteria criteria) {
     Query<Map<String, dynamic>> query = _firestore.collection('drinks');
     
+    // 🔍 デバッグ: 検索条件を出力
+    print('\n🔍 === SEARCH DEBUG INFO ===');
+    print('📋 Selected Category: "${criteria.selectedCategory}"');
+    print('🆔 Selected Category ID: "${criteria.selectedCategoryId}"');
+    print('🏷️  Selected Subcategory: "${criteria.selectedSubcategory}"');
+    print('🆔 Selected Subcategory ID: "${criteria.selectedSubcategoryId}"');
+    print('🔤 Search Keyword: "${criteria.searchKeyword}"');
+    print('🎛️  Filters Applied: ${criteria.isFiltersApplied}');
+    
     // 「すべてのカテゴリ」選択時の処理
     if (criteria.selectedCategory == 'すべてのカテゴリ') {
-      if (criteria.selectedSubcategory != null && criteria.selectedSubcategory!.isNotEmpty) {
-        // サブカテゴリが選択されている場合はそのカテゴリのお酒を表示
-        query = query.where('category', isEqualTo: criteria.selectedSubcategory);
+      print('🌍 Query Mode: ALL CATEGORIES');
+      if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
+        // サブカテゴリＩＤが選択されている場合は、配列にそのＩＤを含むドリンクを検索
+        query = query.where('subcategories', arrayContains: criteria.selectedSubcategoryId);
+        print('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
+      } else {
+        print('🔎 No subcategory filter - showing all drinks');
       }
       // サブカテゴリが選択されていない場合はすべてのお酒を表示（フィルタリングなし）
     }
     // 特定のカテゴリが選択されている場合
     else {
-      // カテゴリ名で検索
-      query = query.where('category', isEqualTo: criteria.selectedCategory);
+      print('🏷️ Query Mode: SPECIFIC CATEGORY');
+      // カテゴリＩＤで検索
+      query = query.where('categoryId', isEqualTo: criteria.selectedCategoryId);
+      print('🔎 Adding category filter: categoryId == "${criteria.selectedCategoryId}"');
       
-      // サブカテゴリでさらにフィルタリング
-      if (criteria.selectedSubcategory != null && criteria.selectedSubcategory!.isNotEmpty) {
-        query = query.where('type', isEqualTo: criteria.selectedSubcategory);
+      // サブカテゴリＩＤでさらにフィルタリング
+      if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
+        query = query.where('subcategories', arrayContains: criteria.selectedSubcategoryId);
+        print('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
+      } else {
+        print('🔎 No subcategory filter for this category');
       }
     }
     
@@ -351,5 +369,80 @@ class DrinkSearchService {
     }
     
     return query.where('inStock', isEqualTo: true);
+  }
+  
+  /// デバッグ用: 既存のdrinksコレクションを複製し、subcategories配列を追加する
+  Future<String> migrateAndDuplicateDrinksForTesting() async {
+    try {
+      // カテゴリとサブカテゴリの情報を取得
+      final categoriesSnapshot = await _firestore.collection('categories').get();
+      final categoryMap = <String, List<dynamic>>{};
+      
+      for (var doc in categoriesSnapshot.docs) {
+        final data = doc.data();
+        categoryMap[doc.id] = data['subcategories'] ?? [];
+      }
+      
+      // 既存のドリンクを取得
+      final drinksSnapshot = await _firestore.collection('drinks').get();
+      var batch = _firestore.batch(); // finalではなくvarに変更
+      int count = 0;
+      
+      for (var doc in drinksSnapshot.docs) {
+        final drink = doc.data();
+        final categoryId = drink['categoryId'] ?? drink['category'] ?? '';
+        
+        final availableSubcategories = categoryMap[categoryId] ?? [];
+        List<String> selectedSubcategories = [];
+        
+        if (availableSubcategories.length >= 2) {
+          // ランダムに2つ選択
+          final shuffled = List.from(availableSubcategories)..shuffle();
+          selectedSubcategories = shuffled.take(2).map<String>((sub) {
+            return sub is Map ? sub['id'] ?? '' : sub.toString();
+          }).toList();
+        } else if (availableSubcategories.isNotEmpty) {
+          selectedSubcategories = availableSubcategories.map<String>((sub) {
+            return sub is Map ? sub['id'] ?? '' : sub.toString();
+          }).toList();
+        }
+        
+        // 既存のsubcategoryIdがあれば配列に追加（重複しないように）
+        if (drink['subcategoryId'] != null && 
+            !selectedSubcategories.contains(drink['subcategoryId'])) {
+          selectedSubcategories.add(drink['subcategoryId'].toString());
+        }
+        
+        // 新しいドキュメントIDを生成
+        final newDocId = '${doc.id}_duplicated';
+        final newDocRef = _firestore.collection('drinks').doc(newDocId);
+        
+        // 複製したドキュメントを作成
+        final Map<String, dynamic> newDrink = Map.from(drink);
+        newDrink['subcategories'] = selectedSubcategories;
+        
+        // バッチに追加
+        batch.set(newDocRef, newDrink);
+        
+        count++;
+        
+        // Firestoreのバッチ制限（500）に達したらコミット
+        if (count % 400 == 0) {
+          await batch.commit();
+          print('Committed batch of $count documents.');
+          batch = _firestore.batch(); // 新しいバッチを作成
+        }
+      }
+      
+      // 残りをコミット
+      if (count % 400 != 0) {
+        await batch.commit();
+      }
+      
+      return 'Successfully migrated and duplicated $count drinks.';
+    } catch (error) {
+      print('Error during migration: $error');
+      return 'Migration failed: ${error.toString()}';
+    }
   }
 }

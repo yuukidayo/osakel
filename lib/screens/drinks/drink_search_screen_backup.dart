@@ -402,9 +402,10 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     }
   }
 
-  void _selectSubcategory(String? name) {
+  void _selectSubcategory(String? name, String? id) {
     setState(() {
-      _selectedSubcategory = name;
+      _selectedSubcategory = name; // 表示用には名前を使用
+      // バックアップファイルなのでIDは保存しない
       if (name != null) {
         _searchController.clear();
         _searchKeyword = '';
@@ -548,7 +549,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       selectedCategory: _selectedCategory,
       selectedSubcategory: _selectedSubcategory,
       onCategorySelected: _selectCategory,
-      onSubcategorySelected: _selectSubcategory,
+      onSubcategorySelected: (name, id) => _selectSubcategory(name, id),
       onShowFilterBottomSheet: _showFilterBottomSheet,
       buildSubcategoryChip: _buildSubcategoryChip,
     );

@@ -175,7 +175,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'macallan12',
           name: 'イチローズモルト&グレーン 20thアニバーサリー',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -185,7 +185,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'hakushu',
           name: '獺祭 磨き その先へ',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1579619168343-e9633bad7e74',
           price: 3200,
@@ -195,7 +195,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'portcharlotte',
           name: 'モンプロポス エスパディン',
           categoryId: 'whisky',
-          subcategoryId: 'islay',
+          subcategories: ['islay'],
           type: 'islay',
           imageUrl: 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b',
           price: 3200,
@@ -205,7 +205,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'hakushu12',
           name: '白州 NV',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -215,7 +215,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'dalmore',
           name: 'デイロン トレヴィユー VSOP マルティニーク',
           categoryId: 'whisky',
-          subcategoryId: 'single_malt',
+          subcategories: ['single_malt'],
           type: 'single_malt',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -225,7 +225,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'yamazaki',
           name: 'イチローズモルト 20th アニバーサリー',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -235,7 +235,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'michters',
           name: 'ミシク アイリッシュ ジン',
           categoryId: 'whisky',
-          subcategoryId: 'bourbon',
+          subcategories: ['bourbon'],
           type: 'bourbon',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -245,7 +245,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'ichiros',
           name: 'イチローズ・モルト&グレーン・ホワイトラベル',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -255,7 +255,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
           id: 'yamazaki18',
           name: '山崎 18年',
           categoryId: 'whisky',
-          subcategoryId: 'japanese',
+          subcategories: ['japanese'],
           type: 'japanese',
           imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8',
           price: 3200,
@@ -273,7 +273,7 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
     
     // ドリンクのタイプを確認
     // for (var drink in _drinks) {
-    //   // print('ドリンク: ${drink.name}, タイプ: ${drink.type}, サブカテゴリ: ${drink.subcategoryId}');
+    //   // print('ドリンク: ${drink.name}, タイプ: ${drink.type}, サブカテゴリ: ${drink.subcategories}');
     // }
     
     setState(() {

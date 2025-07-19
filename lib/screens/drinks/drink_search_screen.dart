@@ -77,9 +77,9 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   }
 
   // カテゴリ読み込みはProviderに移行済み  // サブカテゴリ選択処理
-  void _selectSubcategory(String? name) {
+  void _selectSubcategory(String? name, String? id) {
     final provider = Provider.of<DrinkSearchNotifier>(context, listen: false);
-    provider.selectSubcategory(name);
+    provider.selectSubcategory(name, id);
   }
 
   // カテゴリ選択処理
@@ -87,6 +87,8 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     final provider = Provider.of<DrinkSearchNotifier>(context, listen: false);
     provider.selectCategory(id, name);
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +107,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
               ],
             ),
           ),
+
         );
       },
     );
@@ -276,7 +279,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       selectedCategory: provider.selectedCategory,
       selectedSubcategory: provider.selectedSubcategory,
       onCategorySelected: _selectCategory,
-      onSubcategorySelected: _selectSubcategory,
+      onSubcategorySelected: (name, id) => _selectSubcategory(name, id),
       onShowFilterBottomSheet: _showFilterBottomSheet,
       buildSubcategoryChip: ({required String label, required bool isSelected, required VoidCallback onTap}) {
         return Padding(

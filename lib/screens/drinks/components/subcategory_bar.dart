@@ -10,7 +10,7 @@ class SubcategoryBar extends StatelessWidget {
   
   // コールバック関数
   final Function(String id, String name) onCategorySelected;
-  final Function(String?) onSubcategorySelected;
+  final Function(String? name, String? id) onSubcategorySelected;
   final VoidCallback onShowFilterBottomSheet;
   
   // カテゴリチップを生成する関数
@@ -99,14 +99,15 @@ class SubcategoryBar extends StatelessWidget {
           buildSubcategoryChip(
             label: 'すべて',
             isSelected: selectedSubcategory == null,
-            onTap: () => onSubcategorySelected(null),
+            onTap: () => onSubcategorySelected(null, null),
           ),
           ...subcategories.map((s) {
             final name = s is String ? s : s['name'].toString();
+            final id = s is String ? s : s['id']?.toString() ?? name; // IDが無い場合は名前をIDとして使用
             return buildSubcategoryChip(
               label: name,
               isSelected: selectedSubcategory == name,
-              onTap: () => onSubcategorySelected(name),
+              onTap: () => onSubcategorySelected(name, id),
             );
           }),
         ],
