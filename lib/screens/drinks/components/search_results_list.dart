@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'drink_item.dart';
+import './drink_item.dart';
 
 class SearchResultsList extends StatelessWidget {
   final Stream<QuerySnapshot>? searchSnapshot;

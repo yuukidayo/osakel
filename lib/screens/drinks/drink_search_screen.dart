@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 
-import '../store/shop_search_screen.dart';
-import '../../widgets/filters/drink_filter_bottom_sheet.dart';
-import '../../widgets/modals/category_selection_modal.dart';
+import '../../features/stores/screens/shop_search_screen.dart';
+import '../../shared/widgets/filters/drink_filter_bottom_sheet.dart';
+import '../../shared/widgets/modals/category_selection_modal.dart';
 import './components/category_top_bar.dart';
 import './components/search_bar.dart';
 import './components/subcategory_bar.dart';

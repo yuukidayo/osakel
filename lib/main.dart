@@ -7,18 +7,18 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
-import 'screens/drink_detail_screen.dart';
-import 'screens/store/map_screen_fixed.dart' as map_screen;
-import 'screens/store/shop_detail_screen.dart';
+import 'features/drinks/screens/drink_detail_screen.dart';
+import 'features/stores/screens/map_screen_fixed.dart' as map_screen;
+import 'features/stores/screens/shop_detail_screen.dart';
 import 'screens/drinks/drink_search_screen.dart';
 import 'screens/drinks/providers/drink_search_notifier.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/signup_screen.dart';
-import 'screens/auth/forgot_password_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/signup_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
 import 'screens/main_screen.dart';
-import 'utils/global_navigator.dart';
-import 'widgets/firebase_debug_widget.dart';
-import 'services/fcm_service.dart';
+import 'core/utils/global_navigator.dart';
+
+import 'core/services/fcm_service.dart';
 
 /// バックグラウンド通知を処理するグローバルハンドラ
 @pragma('vm:entry-point')

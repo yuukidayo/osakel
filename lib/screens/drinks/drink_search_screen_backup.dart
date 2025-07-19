@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../store/shop_search_screen.dart';
-import '../../widgets/filters/drink_filter_bottom_sheet.dart';
+import '../../features/stores/screens/shop_search_screen.dart';
+import '../../shared/widgets/filters/drink_filter_bottom_sheet.dart';
 import './components/category_top_bar.dart';
 import './components/search_bar.dart';
 import './components/subcategory_bar.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../widgets/admin_guard.dart';
-import '../../models/admin_drink.dart';
-import '../../models/shop.dart';
+import '../../shared/widgets/admin_guard.dart';
+import '../models/admin_drink.dart';
+import '../models/shop.dart';
 
 /// 管理者用お酒登録画面
 class AddDrinkScreen extends StatefulWidget {

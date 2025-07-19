@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 
-import 'drinks/drink_search_screen.dart';
-import 'store/shop_search_screen.dart';
-import 'notification/notification_test_screen.dart';
-import '../providers/shared_category_provider.dart';
+import './drinks/drink_search_screen.dart';
+import '../../features/stores/screens/shop_search_screen.dart';
+import './notification/notification_test_screen.dart';
+import '../../providers/shared_category_provider.dart';
 
 /// メイン画面コンテナ
 /// IndexedStackを使用して各画面を管理し、切り替えのパフォーマンスを最適化する

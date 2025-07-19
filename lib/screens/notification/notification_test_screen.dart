@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // FirebaseMessagingはPushNotificationServiceを通じて間接的に使用
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../../services/push_notification_service.dart';
+import '../../core/services/push_notification_service.dart';
 
 class NotificationTestScreen extends StatefulWidget {
   const NotificationTestScreen({Key? key}) : super(key: key);

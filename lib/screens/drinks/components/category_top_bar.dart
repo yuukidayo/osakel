@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../widgets/side_menu.dart' show showSideMenu;
+import '../../../shared/widgets/side_menu.dart' show showSideMenu;
 
 class CategoryTopBar extends StatelessWidget {
   final String categoryDisplayName;

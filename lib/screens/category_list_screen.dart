@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
-import '../services/category_service.dart';
-import '../widgets/custom_app_bar.dart';
-import '../widgets/side_menu.dart';
-import 'subcategory_screen.dart';
+import '../../core/services/category_service.dart';
+import '../../shared/widgets/custom_app_bar.dart';
+import '../../shared/widgets/side_menu.dart';
+import './subcategory_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CategoryListScreen extends StatefulWidget {
