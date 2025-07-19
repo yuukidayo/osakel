@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:osakel/models/shop.dart';
 import 'package:osakel/models/shop_with_price.dart';
 import 'package:osakel/models/drink_shop_link.dart';
-import 'store_detail_screen.dart';
+import 'shop_detail_screen.dart';
 import 'package:osakel/services/firestore_service.dart';
 import 'package:osakel/utils/custom_marker_generator.dart';
 
@@ -374,8 +374,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StoreDetailScreen(
-          storeId: shopWithPrice.shop.id,
+        builder: (context) => ShopDetailScreen(
+          shop: shopWithPrice.shop,
+          price: shopWithPrice.drinkShopLink.price.toInt(),
         ),
       ),
     );

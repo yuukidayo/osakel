@@ -8,6 +8,7 @@ import '../services/firestore_service.dart';
 import '../utils/safe_data_utils.dart';
 
 import 'pro_comments_screen.dart';
+import 'components/drink_info_card.dart';
 
 class DrinkDetailScreen extends StatefulWidget {
   final String drinkId;
@@ -164,7 +165,6 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ドリンク画像
           Center(
             child: Image.network(
               _drink!.imageUrl,
@@ -181,8 +181,6 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               },
             ),
           ),
-          
-          // ドリンク名（日本語・英語）
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -197,7 +195,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _drink!.type, // 英語名の代わりにタイプを表示
+                  _drink!.type,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -206,289 +204,223 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               ],
             ),
           ),
-
-          // 「飲めるお店を探す」ボタン
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50, // ボタンの高さを固定
-              child: Stack(
-                children: [
-                  // 背景画像
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/map_background.png',
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        // 画像が読み込めない場合のフォールバック
-                        return Container(
-                          width: double.infinity,
-                          height: double.infinity,
-                          color: Colors.grey[200],
-                        );
-                      },
-                    ),
-                  ),
-                  // 半透明のオーバーレイ
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.black.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  // ボタン
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        Navigator.of(context).pushNamed(
-                          '/map',
-                          arguments: {'drinkId': _drink!.id},
-                        );
-                      },
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '飲めるお店を探す',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          _buildShopSearchButton(),
+          _buildProCommentsSection(),
+          Column(
+            children: [
+              const SizedBox(height: 24),
+              DrinkInfoCard(
+                drink: _drink!,
+                countryName: _countryName,
+                drinkData: _drinkData,
               ),
-            ),
+              const SizedBox(height: 40),
+            ],
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
-
-          // プロのコメントセクション
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'PROのコメント',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (_totalProComments > 0)
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProCommentsScreen(
-                            drinkId: widget.drinkId,
-                            drinkName: _drink?.name ?? '',
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'すべて見る',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // プロコメントの水平スクロールリスト
-          _proCommentsWithUserData.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('プロのコメントはまだありません', style: TextStyle(color: Colors.grey)),
-                )
-              : SizedBox(
-                  height: 180,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    itemCount: _proCommentsWithUserData.length,
-                    itemBuilder: (context, index) {
-                      return _buildProCommentItem(_proCommentsWithUserData[index]);
-                    },
-                  ),
-                ),
-
-          const SizedBox(height: 16),
-
-          // すべてのプロコメントを見るボタン
-          if (_totalProComments > 0)
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProCommentsScreen(
-                        drinkId: widget.drinkId,
-                        drinkName: _drink?.name ?? '',
-                      ),
-                    ),
+  Widget _buildShopSearchButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: Stack(
+          children: [
+            // 背景画像
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/map_background.png',
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    color: Colors.grey[200],
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  side: BorderSide(color: Colors.grey[300]!),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            // 半透明のオーバーレイ
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.black.withOpacity(0.3),
+                ),
+              ),
+            ),
+            // ボタン
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  Navigator.of(context).pushNamed(
+                    '/map',
+                    arguments: {'drinkId': _drink!.id},
+                  );
+                },
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '飲めるお店を探す',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Text(
-                  'すべてのコメント ($_totalProComments)',
-                  style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProCommentsSection() {
+    return Column(
+      children: [
+        const SizedBox(height: 24),
+        // プロのコメントヘッダー
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'PROのコメント',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-
-          const SizedBox(height: 24),
-
-          const SizedBox(height: 24),
-
-          // お酒の情報セクション
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'お酒の情報',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              if (_totalProComments > 0)
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProCommentsScreen(
+                          drinkId: widget.drinkId,
+                          drinkName: _drink?.name ?? '',
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'すべて見る',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // プロコメントリスト
+        _proCommentsWithUserData.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text('プロのコメントはまだありません', style: TextStyle(color: Colors.grey)),
+              )
+            : SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  itemCount: _proCommentsWithUserData.length,
+                  itemBuilder: (context, index) {
+                    return _buildProCommentItem(_proCommentsWithUserData[index]);
+                  },
+                ),
+              ),
+        const SizedBox(height: 16),
+        // すべてのプロコメントを見るボタン
+        if (_totalProComments > 0)
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProCommentsScreen(
+                      drinkId: widget.drinkId,
+                      drinkName: _drink?.name ?? '',
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                side: BorderSide(color: Colors.grey[300]!),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'すべてのコメント ($_totalProComments)',
+                style: const TextStyle(color: Colors.black),
               ),
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          // お酒の情報リスト
-          ..._buildDrinkInfoItems(),
-
-          const SizedBox(height: 40),
-        ],
-      ),
+      ],
     );
   }
 
-
-
-  Widget _buildInfoItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  // お酒の種類に応じた情報項目を構築する
-  List<Widget> _buildDrinkInfoItems() {
-    if (_drink == null || _drinkData == null) return [];
-    
-    final List<Widget> infoItems = [];
-    
-    // Firestoreのデータを取得
-    final String name = SafeDataUtils.safeGetString(_drinkData, 'name'); // ドリンク名（日本語）
-    final String nameEn = SafeDataUtils.safeGetString(_drinkData, 'name_en'); // ドリンク名（英語）
-    final String brand = SafeDataUtils.safeGetString(_drinkData, 'brand'); // ブランド名
-    final String area = SafeDataUtils.safeGetString(_drinkData, 'area'); // 生産地域
-    final double abv = SafeDataUtils.safeGetDouble(_drinkData, 'abv'); // アルコール度数として取得
-    final String country = _countryName ?? '不明'; // 国名を表示
-    
-    // 基本情報を表示
-    infoItems.add(_buildInfoItem('名称', name));
-    infoItems.add(_buildInfoItem('名称（英語）', nameEn));
-    infoItems.add(_buildInfoItem('生産国', country));
-    infoItems.add(_buildInfoItem('生産エリア', area));
-    infoItems.add(_buildInfoItem('お酒カテゴリ', _drink!.type));
-    infoItems.add(_buildInfoItem('アルコール度数', '${abv}%'));
-    infoItems.add(_buildInfoItem('シリーズ', brand));
-    
-    return infoItems;
-  }
-  
   Widget _buildProCommentItem(Map<String, dynamic> commentData) {
     final comment = commentData['comment'] as Comment;
     final user = commentData['user'] as User?;
     final shop = commentData['shop'] as Shop?;
     
-    final userName = user?.name ?? '不明なユーザー';
-    final shopName = shop?.name ?? '';
-    final displayName = shopName.isNotEmpty 
-        ? '$userName（$shopName）' 
-        : userName;
-    
-    // StatefulWidgetを使用して、コメントの展開状態を管理
-    return _ProCommentItem(comment: comment, displayName: displayName);
+    return _ProCommentCard(
+      comment: comment,
+      user: user,
+      shop: shop,
+    );
   }
 }
 
-// プロコメント用のStatefulWidgetを作成
-class _ProCommentItem extends StatefulWidget {
+class _ProCommentCard extends StatelessWidget {
   final Comment comment;
-  final String displayName;
+  final User? user;
+  final Shop? shop;
   
-  const _ProCommentItem({required this.comment, required this.displayName});
-  
-  @override
-  State<_ProCommentItem> createState() => _ProCommentItemState();
-}
-
-class _ProCommentItemState extends State<_ProCommentItem> {
-  bool _isExpanded = false;
+  const _ProCommentCard({
+    required this.comment,
+    required this.user,
+    required this.shop,
+  });
   
   @override
   Widget build(BuildContext context) {
+    final commentText = comment.comment;
+    final userName = user?.name ?? '不明なユーザー';
+    final shopName = shop?.name ?? '';
+    final displayName = shopName.isNotEmpty ? '$userName（$shopName）' : userName;
+    
     return Container(
       width: 280,
+      height: 180,
       margin: const EdgeInsets.symmetric(horizontal: 8.0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -508,122 +440,85 @@ class _ProCommentItemState extends State<_ProCommentItem> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ユーザー情報
+            _buildUserHeader(displayName),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Text(
+                commentText,
+                style: const TextStyle(fontSize: 14, height: 1.4),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Spacer(),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // アバター
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.person, color: Colors.white, size: 24),
+                Text(
+                  _formatDate(comment.createdAt),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
                   ),
                 ),
-                const SizedBox(width: 12),
-                
-                // ユーザー名と店舗名
-                Expanded(
-                  child: Text(
-                    widget.displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                if (comment.comment.length > 80)
+                  Icon(
+                    Icons.more_horiz,
+                    size: 16,
+                    color: Colors.grey[400],
                   ),
-                ),
               ],
             ),
-            
-            const SizedBox(height: 12),
-            
-            // コメント内容 - 展開時は縦スクロール可能に
-            _isExpanded
-                ? Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.comment.comment,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 8),
-                          // 「折りたたむ」ボタン
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isExpanded = false;
-                                });
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(60, 30),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                '折りたたむ',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.comment.comment,
-                            style: const TextStyle(fontSize: 14),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        
-                        // 「すべて表示」ボタン
-                        if (widget.comment.comment.length > 100) // 長いコメントの場合のみ表示
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isExpanded = true;
-                                });
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(60, 30),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'すべて表示',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
           ],
         ),
       ),
     );
+  }
+  
+  Widget _buildUserHeader(String displayName) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(Icons.person, color: Colors.white, size: 24),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            displayName,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  String _formatDate(DateTime? dateTime) {
+    if (dateTime == null) return '';
+    
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}日前';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}時間前';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}分前';
+    } else {
+      return 'たった今';
+    }
   }
 }
