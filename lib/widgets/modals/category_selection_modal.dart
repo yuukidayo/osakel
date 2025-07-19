@@ -100,20 +100,25 @@ class CategorySelectionModal extends StatelessWidget {
     );
   }
 
-  /// カテゴリリストの構築
+  /// カテゴリリストの構築（「すべてのカテゴリ」を最初に追加）
   Widget _buildCategoryList(BuildContext context) {
+    // 重複する「すべてのカテゴリ」を除外
+    final filteredCategories = categories.where((category) => 
+        category.name != 'すべてのカテゴリ').toList();
+    
+    // 「すべてのカテゴリ」 + フィルタリングされたカテゴリリスト
+    final totalItemCount = 1 + filteredCategories.length;
+    
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: categories.length,
+      itemCount: totalItemCount,
       itemBuilder: (context, index) {
-        final category = categories[index];
-        final isSelected = selectedCategory == category.name;
-        
-        return Column(
-          children: [
-            _buildCategoryItem(context, category, isSelected),
-            // リストの区切り線（最後の項目以外）
-            if (index < categories.length - 1)
+        if (index == 0) {
+          // 最初の項目: 「すべてのカテゴリ」
+          final isSelected = selectedCategory == 'すべてのカテゴリ';
+          return Column(
+            children: [
+              _buildAllCategoryItem(context, isSelected),
               const Divider(
                 height: 1,
                 thickness: 0.5,
@@ -121,8 +126,29 @@ class CategorySelectionModal extends StatelessWidget {
                 indent: 20,
                 endIndent: 20,
               ),
-          ],
-        );
+            ],
+          );
+        } else {
+          // 通常のカテゴリ項目（フィルタリングされたリストを使用）
+          final categoryIndex = index - 1;
+          final category = filteredCategories[categoryIndex];
+          final isSelected = selectedCategory == category.name;
+          
+          return Column(
+            children: [
+              _buildCategoryItem(context, category, isSelected),
+              // リストの区切り線（最後の項目以外）
+              if (categoryIndex < filteredCategories.length - 1)
+                const Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: Color(0xFFF0F0F0),
+                  indent: 20,
+                  endIndent: 20,
+                ),
+            ],
+          );
+        }
       },
     );
   }
@@ -214,6 +240,55 @@ class CategorySelectionModal extends StatelessWidget {
         selectedCategory: selectedCategory,
         onCategorySelected: onCategorySelected,
         title: title,
+      ),
+    );
+  }
+
+  /// 「すべてのカテゴリ」項目の構築
+  Widget _buildAllCategoryItem(BuildContext context, bool isSelected) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          // モーダルを閉じる
+          Navigator.of(context).pop();
+          // 「すべてのカテゴリ」を選択
+          onCategorySelected('all', 'すべてのカテゴリ');
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'すべてのカテゴリ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected 
+                        ? Theme.of(context).primaryColor 
+                        : const Color(0xFF333333),
+                  ),
+                ),
+              ),
+              // 選択状態のチェックマーク
+              if (isSelected)
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

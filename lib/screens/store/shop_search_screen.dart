@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../drinks/components/category_top_bar.dart';
 import '../../widgets/modals/category_selection_modal.dart';
+import '../../providers/shared_category_provider.dart';
 import 'components/shop_search_results.dart';
 import '../drinks/models/drink_category.dart';
 import 'services/shop_search_service.dart';
@@ -25,10 +27,8 @@ class ShopSearchScreen extends StatefulWidget {
 class _ShopSearchScreenState extends State<ShopSearchScreen> {
   final ShopSearchService _searchService = ShopSearchService();
   
-  // 状態管理
+  // 状態管理（カテゴリ選択は共有状態で管理）
   List<DrinkCategory> _categories = [];
-  String _selectedCategory = 'すべてのカテゴリ';
-  String _selectedCategoryId = 'all';
   bool _isLoading = true;
   
   // 検索結果
@@ -39,7 +39,13 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    // 共有状態を初期化してからカテゴリを読み込み
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
+      sharedProvider.initialize().then((_) {
+        _loadCategories();
+      });
+    });
   }
 
   /// カテゴリを読み込む
@@ -50,6 +56,12 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
         _categories = categories;
         _isLoading = false;
       });
+      
+      // 共有状態にカテゴリリストを設定
+      if (mounted) {
+        final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
+        sharedProvider.setCategories(categories);
+      }
       
       // 初期検索を実行
       await _performInitialSearch();
@@ -63,7 +75,10 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   /// 初期検索を実行
   Future<void> _performInitialSearch() async {
-    print('🔍 初期検索を実行: すべてのカテゴリ');
+    if (!mounted) return;
+    
+    final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
+    print('🔍 初期検索を実行: ${sharedProvider.selectedCategory}');
     
     setState(() {
       _isSearching = true;
@@ -72,8 +87,8 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
     try {
       final criteria = ShopSearchCriteria(
-        selectedCategoryId: 'all',
-        selectedCategory: 'すべてのカテゴリ',
+        selectedCategoryId: sharedProvider.selectedCategoryId,
+        selectedCategory: sharedProvider.selectedCategory,
       );
       
       final shops = await _searchService.searchShops(criteria);
@@ -95,50 +110,86 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   /// カテゴリモーダルを表示（美しい共通コンポーネント使用）
   void _showCategoryModal() {
+    final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
     CategorySelectionModal.show(
       context: context,
       categories: _categories,
-      selectedCategory: _selectedCategory,
+      selectedCategory: sharedProvider.selectedCategory,
       onCategorySelected: _selectCategory,
-      title: 'お店カテゴリを選択',
+      title: 'カテゴリを選択',
     );
   }
 
-  /// カテゴリを選択
+  /// カテゴリを選択（モーダルは既に閉じられている）
   void _selectCategory(String categoryId, String categoryName) {
-    setState(() {
-      _selectedCategoryId = categoryId;
-      _selectedCategory = categoryName;
-    });
+    print('📝 カテゴリ選択開始: $categoryName (ID: $categoryId)');
     
-    Navigator.pop(context);
-    _performSearch();
+    try {
+      // 共有状態を更新
+      final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
+      print('📝 SharedProvider取得成功');
+      
+      sharedProvider.selectCategory(categoryId, categoryName);
+      print('📝 共有状態更新成功');
+      
+      // モーダルは既にCategorySelectionModal内で閉じられているので、ここではNavigator.pop()を呼ばない
+      print('📝 モーダルは既に閉じられている');
+      
+      _performSearch();
+      print('📝 検索実行開始');
+    } catch (e, stackTrace) {
+      print('❌ カテゴリ選択エラー: $e');
+      print('❌ スタックトレース: $stackTrace');
+      
+      // エラー状態を表示
+      if (mounted) {
+        setState(() {
+          _searchError = 'カテゴリ選択エラー: $e';
+        });
+      }
+    }
   }
 
   /// 検索を実行
   Future<void> _performSearch() async {
-    setState(() {
-      _isSearching = true;
-      _searchError = '';
-    });
-
+    print('🔍 検索実行開始');
+    
     try {
+      final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
+      print('🔍 SharedProvider取得: ${sharedProvider.selectedCategory}');
+      
+      setState(() {
+        _isSearching = true;
+        _searchError = '';
+      });
+      print('🔍 検索状態を更新');
+
       final criteria = ShopSearchCriteria(
-        selectedCategoryId: _selectedCategoryId,
-        selectedCategory: _selectedCategory,
+        selectedCategoryId: sharedProvider.selectedCategoryId,
+        selectedCategory: sharedProvider.selectedCategory,
       );
+      print('🔍 検索条件作成: ${criteria.selectedCategory}');
       
       final shops = await _searchService.searchShops(criteria);
+      print('🔍 検索結果: ${shops.length}件');
       
-      setState(() {
-        _shops = shops;
-        _isSearching = false;
-      });
-    } catch (e) {
-      setState(() {
-        _searchError = '検索に失敗しました: $e';
-        _isSearching = false;
-      });
+      if (mounted) {
+        setState(() {
+          _shops = shops;
+          _isSearching = false;
+        });
+        print('🔍 検索結果を表示更新');
+      }
+    } catch (e, stackTrace) {
+      print('❌ 検索エラー: $e');
+      print('❌ スタックトレース: $stackTrace');
+      
+      if (mounted) {
+        setState(() {
+          _searchError = '検索に失敗しました: $e';
+          _isSearching = false;
+        });
+      }
     }
   }
 
@@ -170,33 +221,37 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // カテゴリ選択バー（SafeAreaでステータスバーから保護）
-          SafeArea(
-            child: CategoryTopBar(
-              categoryDisplayName: _selectedCategory,
-              onCategoryTap: _showCategoryModal,
-              onSwitchToShopSearch: _switchToDrinkSearch,
-              switchIcon: Icons.local_bar, // お酒アイコンでお酒検索に切り替え
-            ),
+    return Consumer<SharedCategoryProvider>(
+      builder: (context, sharedProvider, child) {
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: Column(
+            children: [
+              // カテゴリ選択バー（SafeAreaでステータスバーから保護）
+              SafeArea(
+                child: CategoryTopBar(
+                  categoryDisplayName: sharedProvider.selectedCategory,
+                  onCategoryTap: _showCategoryModal,
+                  onSwitchToShopSearch: _switchToDrinkSearch,
+                  switchIcon: Icons.local_bar, // お酒アイコンでお酒検索に切り替え
+                ),
+              ),
+              
+              // 検索結果表示エリア
+              Expanded(
+                child: ShopSearchResults(
+                  shops: _shops,
+                  isLoading: _isLoading,
+                  isSearching: _isSearching,
+                  searchError: _searchError,
+                  onRetry: _performSearch,
+                  onShopTap: _navigateToShopDetail,
+                ),
+              ),
+            ],
           ),
-          
-          // 検索結果表示エリア
-          Expanded(
-            child: ShopSearchResults(
-              shops: _shops,
-              isLoading: _isLoading,
-              isSearching: _isSearching,
-              searchError: _searchError,
-              onRetry: _performSearch,
-              onShopTap: _navigateToShopDetail,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

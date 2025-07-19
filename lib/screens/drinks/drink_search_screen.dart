@@ -133,7 +133,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       onCategorySelected: (categoryId, categoryName) {
         provider.selectCategory(categoryId, categoryName);
       },
-      title: 'お酒カテゴリを選択',
+      title: 'カテゴリを選択',
     );
   }
 

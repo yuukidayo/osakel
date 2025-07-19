@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 
 import 'drinks/drink_search_screen.dart';
 import 'store/shop_search_screen.dart';
 import 'notification/notification_test_screen.dart';
+import '../providers/shared_category_provider.dart';
 
 /// メイン画面コンテナ
 /// IndexedStackを使用して各画面を管理し、切り替えのパフォーマンスを最適化する
@@ -50,25 +52,28 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // お酒検索画面
-          DrinkSearchScreen(
-            onSwitchToShopSearch: switchToShopSearch,
-          ),
-          // お店検索画面
-          ShopSearchScreen(
-            onSwitchToDrinkSearch: () => switchToIndex(0),
-          ),
-          // 通知テスト画面
-          const NotificationTestScreen(),
-        ],
+    return ChangeNotifierProvider(
+      create: (context) => SharedCategoryProvider()..initialize(),
+      child: Scaffold(
+        backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            // お酒検索画面
+            DrinkSearchScreen(
+              onSwitchToShopSearch: switchToShopSearch,
+            ),
+            // お店検索画面
+            ShopSearchScreen(
+              onSwitchToDrinkSearch: () => switchToIndex(0),
+            ),
+            // 通知テスト画面
+            const NotificationTestScreen(),
+          ],
+        ),
+        // bottomNavigationBarを削除して非表示化
+        // 画面切り替えは別の方法で行う必要があります
       ),
-      // bottomNavigationBarを削除して非表示化
-      // 画面切り替えは別の方法で行う必要があります
     );
   }
 }
