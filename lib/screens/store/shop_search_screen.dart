@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../drinks/components/category_top_bar.dart';
+import '../../widgets/modals/category_selection_modal.dart';
 import 'components/shop_search_results.dart';
 import '../drinks/models/drink_category.dart';
 import 'services/shop_search_service.dart';
@@ -92,112 +93,14 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
     }
   }
 
-  /// カテゴリモーダルを表示（お酒検索画面と同じ美しいデザイン）
+  /// カテゴリモーダルを表示（美しい共通コンポーネント使用）
   void _showCategoryModal() {
-    showModalBottomSheet(
+    CategorySelectionModal.show(
       context: context,
-      isScrollControlled: true, // 高さの制約を外す
-      backgroundColor: Colors.transparent, // 背景を透明に
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85, // 画面の85%の高さ
-        decoration: const BoxDecoration(
-          color: Colors.white, // 白背景
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          children: [
-            // ヘッダー（モーダルのタイトル部分）
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white, // 白背景
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    spreadRadius: 0,
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'カテゴリを選択',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEEEEE), // 薄いグレー
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(Icons.close, size: 20, color: Color(0xFF666666)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-                            
-            // カテゴリ一覧（スクロール可能）
-            Expanded(
-              child: ListView.builder(
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  final isSelected = _selectedCategory == category.name;
-                  return Column(
-                    children: [
-                      ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                category.name,
-                                style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check,
-                                color: Theme.of(context).primaryColor,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                        onTap: () {
-                          // モーダルを閉じる
-                          Navigator.of(context).pop();
-                          // カテゴリを選択
-                          _selectCategory(category.id, category.name);
-                        },
-                      ),
-                      // リストの区切り線
-                      if (index < _categories.length - 1)
-                        const Divider(height: 1),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      categories: _categories,
+      selectedCategory: _selectedCategory,
+      onCategorySelected: _selectCategory,
+      title: 'お店カテゴリを選択',
     );
   }
 

@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 
 import '../store/shop_search_screen.dart';
 import '../../widgets/filters/drink_filter_bottom_sheet.dart';
+import '../../widgets/modals/category_selection_modal.dart';
 import './components/category_top_bar.dart';
 import './components/search_bar.dart';
 import './components/subcategory_bar.dart';
@@ -125,128 +126,14 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   void _showCategoryModal() {
     final provider = Provider.of<DrinkSearchNotifier>(context, listen: false);
     
-    showModalBottomSheet(
+    CategorySelectionModal.show(
       context: context,
-      isScrollControlled: true, // 高さの制約を外す
-      backgroundColor: Colors.transparent, // 背景を透明に
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85, // 画面の85%の高さ
-        decoration: const BoxDecoration(
-          color: Colors.white, // 白背景
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          children: [
-            // ヘッダー（モーダルのタイトル部分）
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white, // 白背景
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    spreadRadius: 0,
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'カテゴリを選択',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEEEEE), // 薄いグレー
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(Icons.close, size: 20, color: Color(0xFF666666)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-                            
-            // カテゴリ一覧（スクロール可能）
-            Expanded(
-              child: ListView.builder(
-                itemCount: provider.categories.length,
-                itemBuilder: (context, index) {
-                  final category = provider.categories[index];
-                  final isSelected = provider.selectedCategory == category.name;
-                  return Column(
-                    children: [
-                      ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                category.name,
-                                style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check,
-                                color: Theme.of(context).primaryColor,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                        subtitle: category.subcategories.isNotEmpty
-                            ? Wrap(
-                                spacing: 4,
-                                children: category.subcategories
-                                    .take(5) // 最初の5つだけ表示
-                                    .map((subcategory) => Text(
-                                          subcategory,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ))
-                                    .toList(),
-                              )
-                            : null,
-                        onTap: () {
-                          // モーダルを閉じる
-                          Navigator.of(context).pop();
-                          // カテゴリを選択
-                          provider.selectCategory(
-                            category.id,
-                            category.name,
-                          );
-                        },
-                      ),
-                      // リストの区切り線
-                      if (index < provider.categories.length - 1)
-                        const Divider(height: 1),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      categories: provider.categories,
+      selectedCategory: provider.selectedCategory,
+      onCategorySelected: (categoryId, categoryName) {
+        provider.selectCategory(categoryId, categoryName);
+      },
+      title: 'お酒カテゴリを選択',
     );
   }
 
