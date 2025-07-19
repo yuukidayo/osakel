@@ -9,6 +9,9 @@ import '../utils/safe_data_utils.dart';
 
 import 'pro_comments_screen.dart';
 import 'components/drink_info_card.dart';
+import 'components/shop_search_button.dart';
+import 'components/drink_image_section.dart';
+import 'components/drink_basic_info.dart';
 
 class DrinkDetailScreen extends StatefulWidget {
   final String drinkId;
@@ -165,46 +168,9 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Image.network(
-              _drink!.imageUrl,
-              height: 300,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 300,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _drink!.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _drink!.type,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildShopSearchButton(),
+          DrinkImageSection(imageUrl: _drink!.imageUrl),
+          DrinkBasicInfo(drink: _drink!),
+          ShopSearchButton(drink: _drink!),
           _buildProCommentsSection(),
           Column(
             children: [
@@ -218,80 +184,6 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildShopSearchButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: Stack(
-          children: [
-            // 背景画像
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/map_background.png',
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: Colors.grey[200],
-                  );
-                },
-              ),
-            ),
-            // 半透明のオーバーレイ
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.black.withOpacity(0.3),
-                ),
-              ),
-            ),
-            // ボタン
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () {
-                  Navigator.of(context).pushNamed(
-                    '/map',
-                    arguments: {'drinkId': _drink!.id},
-                  );
-                },
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '飲めるお店を探す',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
