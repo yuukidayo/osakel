@@ -17,10 +17,28 @@ class ShopDetailScreen extends StatefulWidget {
 }
 
 class _ShopDetailScreenState extends State<ShopDetailScreen> {
+  final PageController _pageController = PageController();
+  int _currentImageIndex = 0;
+  bool _isBookmarked = false;
+
+  // サンプル画像リスト（実際のアプリでは店舗の複数画像を使用）
+  List<String> get _imageUrls => [
+    widget.shop.imageUrl ?? 'https://via.placeholder.com/400x200?text=Shop+Image+1',
+    'https://via.placeholder.com/400x200?text=Shop+Image+2',
+    'https://via.placeholder.com/400x200?text=Shop+Image+3',
+    'https://via.placeholder.com/400x200?text=Shop+Image+4',
+    'https://via.placeholder.com/400x200?text=Shop+Image+5',
+  ];
+
   @override
   void initState() {
     super.initState();
-    // 現段階ではコメント読み込みは行わない
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _openGoogleMaps() async {
@@ -29,7 +47,7 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
     if (await canLaunchUrl(mapUri)) {
       await launchUrl(mapUri, mode: LaunchMode.externalApplication);
     } else {
-      if (mounted) { // Check if the widget is still in the tree
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('マップアプリを開けませんでした')),
         );
@@ -40,199 +58,363 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // カスタムAppBar（画像付き）
-          SliverAppBar(
-            expandedHeight: 250,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.shop.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(1, 1),
-                      blurRadius: 3,
-                      color: Color.fromARGB(150, 0, 0, 0),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // カスタムヘッダー
+            _buildHeader(context),
+            
+            // スクロール可能なコンテンツ
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 店舗情報
+                    _buildStoreInfo(),
+                    
+                    // 画像カルーセル
+                    _buildImageCarousel(),
+                    
+                    // 説明文
+                    _buildDescription(),
+                    
+                    // 平均予算
+                    _buildAverageBudget(),
+                    
+                    // アクションボタン
+                    _buildActionButtons(),
+                    
+                    const SizedBox(height: 32), // 下部余白
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ヘッダー（戻るボタン + ブックマークボタン）
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 戻るボタン
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios,
+                color: Color(0xFF1A202C),
+                size: 20,
+              ),
+            ),
+          ),
+          
+          // 中央は空白
+          const Spacer(),
+          
+          // ブックマークボタン
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isBookmarked = !_isBookmarked;
+              });
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Icon(
+                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                color: const Color(0xFF1A202C),
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 店舗情報（店舗名 + 位置情報）
+  Widget _buildStoreInfo() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 店舗名
+          Text(
+            widget.shop.name,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A202C),
+              height: 1.2,
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // 位置情報
+          Row(
+            children: [
+              const Icon(
+                Icons.location_on,
+                size: 16,
+                color: Color(0xFF666666),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  widget.shop.address.isNotEmpty 
+                    ? widget.shop.address 
+                    : 'Tokyo, Shibuya',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF666666),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 画像カルーセル
+  Widget _buildImageCarousel() {
+    return Column(
+      children: [
+        // 画像スライダー
+        SizedBox(
+          height: 200,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+            itemCount: _imageUrls.length,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    _imageUrls[index],
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: const Color(0xFFF7FAFC),
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Color(0xFFE2E8F0),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // ページネーションドット
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_imageUrls.length, (index) {
+            return Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _currentImageIndex == index 
+                  ? const Color(0xFF1A202C) 
+                  : const Color(0xFFE2E8F0),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  // 説明文
+  Widget _buildDescription() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        '日中からお楽しみいただけるバー&カフェ。ビビットカラーをアクセントにした空間で気軽に語らうひとときをお過ごしください。',
+        style: const TextStyle(
+          fontSize: 16,
+          color: Color(0xFF333333),
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+
+  // 平均予算
+  Widget _buildAverageBudget() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Text(
+          '平均予算: ¥${widget.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFF1A202C),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // アクションボタン
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // メニューボタン
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('メニュー機能は準備中です')),
+                );
+              },
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A202C),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.menu_book,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'メニュー',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              background: Hero(
-                tag: 'shop-image-${widget.shop.id}',
-                child: Image.network(
-                  widget.shop.imageUrl ?? 'https://via.placeholder.com/400x250?text=No+Image',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // クーポンボタン
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('クーポン機能は準備中です')),
+                );
+              },
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF1A202C),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.local_activity,
+                      color: Color(0xFF1A202C),
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'クーポン',
+                      style: TextStyle(
+                        color: Color(0xFF1A202C),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () {
-                  // シェア機能
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('シェア機能は準備中です')),
-                  );
-                },
-              ),
-            ],
-          ),
-
-          // 店舗情報
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 価格表示
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withAlpha((255 * 0.1).round()),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '¥${widget.price}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // 店舗情報
-                  const Text(
-                    '店舗情報',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // 住所
-                  _buildInfoRow(Icons.location_on, widget.shop.address),
-                  
-                  // 位置情報
-                  _buildInfoRow(Icons.place, '${widget.shop.lat}, ${widget.shop.lng}'),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Google Mapsボタン
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _openGoogleMaps,
-                      icon: const Icon(Icons.map),
-                      label: const Text('Google Mapsで見る'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // コメントセクション
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'コメント',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // コメント一覧画面へ
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('コメント機能は準備中です')),
-                          );
-                        },
-                        child: const Text('全て見る'),
-                      ),
-                    ],
-                  ),
-                  
-                  // コメントがない場合の表示
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(
-                      child: Text('まだコメントがありません'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // コメント一覧は現段階では表示しない
-          const SliverToBoxAdapter(child: SizedBox()),
-
-          // 下部の余白
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80),
-          ),
-        ],
-      ),
-      
-      // コメント追加ボタン
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // コメント追加画面へ
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('コメント機能は準備中です')),
-          );
-        },
-        child: const Icon(Icons.add_comment),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[800],
-              ),
-            ),
           ),
         ],
       ),
     );
   }
-
-  // コメント表示用のメソッドは現段階では必要ないため削除
-
-  // 日付フォーマット用のメソッドは現段階では必要ないため削除
 }
