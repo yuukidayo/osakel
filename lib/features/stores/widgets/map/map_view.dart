@@ -9,6 +9,7 @@ class MapView extends StatelessWidget {
   final Set<Marker> markers;
   final Function(GoogleMapController) onMapCreated;
   final VoidCallback? onCameraIdle;
+  final Function(CameraPosition)? onCameraMove;
   final bool myLocationEnabled;
   final bool myLocationButtonEnabled;
   final bool mapToolbarEnabled;
@@ -25,6 +26,7 @@ class MapView extends StatelessWidget {
     required this.markers,
     required this.onMapCreated,
     this.onCameraIdle,
+    this.onCameraMove,
     this.myLocationEnabled = true,
     this.myLocationButtonEnabled = false,
     this.mapToolbarEnabled = false,
@@ -44,7 +46,7 @@ class MapView extends StatelessWidget {
         mapToolbarEnabled: mapToolbarEnabled,
         zoomControlsEnabled: zoomControlsEnabled,
         onMapCreated: onMapCreated,
-        onCameraMove: (_) {},
+        onCameraMove: onCameraMove,
         onCameraIdle: onCameraIdle,
       ),
     );
