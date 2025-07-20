@@ -61,7 +61,7 @@ class ShopCardPageView extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: _buildShopImage(shopWithPrice.shop.imageUrl),
+                      child: _buildShopImage(shopWithPrice.shop.imageUrls),
                     ),
                   ),
                   
@@ -157,8 +157,11 @@ class ShopCardPageView extends StatelessWidget {
     );
   }
 
-  /// 店舗画像を構築
-  Widget _buildShopImage(String? imageUrl) {
+  /// 店舗画像を構築（imageUrls配列から最初の画像を使用）
+  Widget _buildShopImage(List<String> imageUrls) {
+    // 配列から最初の有効な画像URLを取得
+    String? imageUrl = _getFirstValidImageUrl(imageUrls);
+    
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
         imageUrl,
@@ -173,6 +176,14 @@ class ShopCardPageView extends StatelessWidget {
       );
     }
     return _buildPlaceholderImage();
+  }
+  
+  /// imageUrls配列から最初の有効な画像URLを取得するヘルパーメソッド
+  String? _getFirstValidImageUrl(List<String> imageUrls) {
+    if (imageUrls.isNotEmpty) {
+      return imageUrls.first;
+    }
+    return null;
   }
 
   /// プレースホルダー画像を構築

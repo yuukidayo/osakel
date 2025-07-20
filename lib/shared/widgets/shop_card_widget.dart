@@ -13,12 +13,8 @@ class ShopCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final shop = shopWithPrice.shop;
     
-    String? imageUrl;
-    if (shop.imageURL != null && shop.imageURL!.isNotEmpty) {
-      imageUrl = shop.imageURL;
-    } else if (shop.imageUrl != null && shop.imageUrl!.isNotEmpty) {
-      imageUrl = shop.imageUrl;
-    }
+    // imageUrls配列から最初の画像を取得
+    String? imageUrl = _getFirstImageUrl(shop.imageUrls);
     
     // 店舗情報の取得
     
@@ -186,5 +182,13 @@ class ShopCardWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // imageUrls配列から最初の画像URLを取得するヘルパーメソッド
+  String? _getFirstImageUrl(List<String>? imageUrls) {
+    if (imageUrls != null && imageUrls.isNotEmpty) {
+      return imageUrls.first;
+    }
+    return null;
   }
 }

@@ -8,6 +8,7 @@ class Shop {
   final String address;
   final String? imageUrl;
   final String? imageURL; // 大文字のimageURLフィールドを追加
+  final List<String> imageUrls; // 画像URL配列フィールドを追加
   final String? category;
   final String? distance;
   final String? openTime;
@@ -20,6 +21,7 @@ class Shop {
     required this.address,
     this.imageUrl,
     this.imageURL, // 大文字のimageURLフィールドを追加
+    this.imageUrls = const [], // 画像URL配列フィールド（デフォルト空配列）
     this.category,
     this.distance,
     this.openTime,
@@ -56,6 +58,14 @@ class Shop {
     print('imageUrlフィールド: ${data['imageUrl']}');
     print('imageURLフィールド: ${data['imageURL']}');
     
+    // imageUrls配列の処理
+    List<String> imageUrls = [];
+    if (data['imageUrls'] != null) {
+      if (data['imageUrls'] is List) {
+        imageUrls = List<String>.from(data['imageUrls']);
+      }
+    }
+    
     return Shop(
       id: id,
       name: data['name'] ?? '',
@@ -64,6 +74,7 @@ class Shop {
       address: data['address'] ?? '',
       imageUrl: data['imageUrl'],
       imageURL: data['imageURL'], // 大文字のimageURLフィールドを追加
+      imageUrls: imageUrls, // 画像URL配列フィールドを追加
       category: data['category'],
       distance: data['distance'],
       openTime: data['openTime'],
@@ -86,6 +97,7 @@ class Shop {
       'address': address,
       'imageUrl': imageUrl,
       'imageURL': imageURL, // 大文字のimageURLフィールドを追加
+      'imageUrls': imageUrls, // 画像URL配列フィールドを追加
       'category': category,
       'distance': distance,
       'openTime': openTime,

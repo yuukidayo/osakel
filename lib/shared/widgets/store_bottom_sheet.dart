@@ -77,9 +77,9 @@ class StoreBottomSheet extends StatelessWidget {
                       SizedBox(
                         height: 180,
                         width: double.infinity,
-                        child: shopWithPrice.shop.imageUrl != null
+                        child: _getFirstImageUrl(shopWithPrice.shop.imageUrls) != null
                           ? CachedNetworkImage(
-                              imageUrl: shopWithPrice.shop.imageUrl!,
+                              imageUrl: _getFirstImageUrl(shopWithPrice.shop.imageUrls)!,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Center(
                                 child: CircularProgressIndicator(color: Theme.of(context).primaryColor),
@@ -259,5 +259,13 @@ class StoreBottomSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // imageUrls配列から最初の画像URLを取得するヘルパーメソッド
+  String? _getFirstImageUrl(List<String>? imageUrls) {
+    if (imageUrls != null && imageUrls.isNotEmpty) {
+      return imageUrls.first;
+    }
+    return null;
   }
 }
