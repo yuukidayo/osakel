@@ -96,12 +96,12 @@ class GeoSearchService {
     try {
       print('🔍 GeoSearchService: 検索開始 - drinkId: $drinkId, 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
       
-      // 1. DrinkShopLinkから該当するドリンクの店舗IDを取得
-      print('🔍 ステップ1: DrinkShopLink検索開始');
+      // 1. DrinkShopLinkから該当するドリンクの店舗IDを取得（最大５０件の効率的検索）
+      print('🔍 ステップ１: DrinkShopLink検索開始 - 現在地+お酒ID絞り込み');
       final drinkShopQuery = await _firestore
           .collection('drink_shop_links')
           .where('drinkId', isEqualTo: drinkId)
-          .limit(100) // コスト削減のため制限
+          .limit(50) // 初回アクセス時は最大５０件に制限
           .get();
       
       print('🔍 DrinkShopLink検索結果: ${drinkShopQuery.docs.length}件');
@@ -128,9 +128,10 @@ class GeoSearchService {
         return [];
       }
       
-      // 2. 店舗情報を取得（地理的フィルタリングはアプリ側で実行）
-      print('🔍 ステップ3: shopsコレクション検索開始');
-      final queryShopIds = shopIds.take(10).toList();
+      // 2. 店舗情報を取得（最大５０件の効率的検索）
+      print('🔍 ステップ２: shopsコレクション検索開始 - 最大５０件制限');
+      // 初回アクセス時は最大５０件に制限（Firestore whereIn制限内）
+      final queryShopIds = shopIds.take(50).toList(); // 最大５０件に設定
       print('🔍 クエリ用shopIds: ${queryShopIds.length}件 - $queryShopIds');
       
       final shopsQuery = await _firestore
@@ -165,7 +166,11 @@ class GeoSearchService {
       // 距離でソート
       result.sort((a, b) => a.distance.compareTo(b.distance));
       
-      return result;
+      // 初回アクセス時は最大５０件に制限（効率的な検索のため）
+      final limitedResult = result.take(50).toList();
+      print('🎯 最終結果: ${limitedResult.length}件（距離順、最大５０件制限）');
+      
+      return limitedResult;
       
     } catch (e) {
       print('❌ Firestore検索エラー: $e');

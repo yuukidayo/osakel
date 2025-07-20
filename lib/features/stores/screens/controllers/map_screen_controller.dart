@@ -17,12 +17,7 @@ class MapScreenController extends ChangeNotifier {
   final LocationService _locationService = LocationService();
   final MapDataService _mapDataService = MapDataService();
 
-  // コールバック
-  VoidCallback? onStateChanged;
-  Function(String)? onError;
-  Function(String)? onSuccess;
-
-  // 状態
+  // 状態管理
   bool _isLoading = false;
   bool _isSearchingNearby = false;
   bool _isInitialFocusComplete = false;
@@ -33,6 +28,12 @@ class MapScreenController extends ChangeNotifier {
   Position? _currentPosition;
   LatLng? _currentMapCenter;
   String? _lastSearchDrinkId;
+  PageController? _pageController;
+
+  // コールバック
+  VoidCallback? onStateChanged;
+  Function(String)? onError;
+  Function(String)? onSuccess;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -262,9 +263,27 @@ class MapScreenController extends ChangeNotifier {
     _notifyStateChanged();
   }
 
-  /// 選択店舗更新
+  /// PageControllerを設定
+  void setPageController(PageController pageController) {
+    _pageController = pageController;
+  }
+
+  /// 選択店舗更新（マーカータップ時にカードも連動）
   void updateSelectedShop(ShopWithPrice shop) {
     _selectedShop = shop;
+    
+    // PageControllerが設定されている場合、該当ページにスクロール
+    if (_pageController != null && _shopsWithPrice.isNotEmpty) {
+      final index = _shopsWithPrice.indexWhere((s) => s.shop.id == shop.shop.id);
+      if (index != -1 && index != _pageController!.page?.round()) {
+        _pageController!.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+    
     _notifyStateChanged();
   }
 
@@ -329,8 +348,8 @@ class MapScreenController extends ChangeNotifier {
       print('❌ drinkId取得エラー: $e');
     }
     
-    // フォールバック: デバッグで確認した実際のID
-    return '9oy6BCLnOnKPxoSZhNJf_duplicated';
+    // フォールバック: 大阪関目周辺の店舗データに対応するID
+    return 'oZTuXXMx1WaErBoCzYa1_duplicated';
   }
 
   /// 現在地ベースの初期検索

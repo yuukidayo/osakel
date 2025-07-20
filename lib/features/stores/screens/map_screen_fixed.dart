@@ -39,6 +39,9 @@ class _MapScreenState extends State<MapScreen> {
     _controller = MapScreenController();
     _mapState = MapScreenState();
     
+    // PageControllerをMapScreenControllerに設定（マーカータップ時のカード連動のため）
+    _controller.setPageController(_pageController);
+    
     // Listen to controller state changes
     _controller.addListener(_onControllerStateChanged);
     
