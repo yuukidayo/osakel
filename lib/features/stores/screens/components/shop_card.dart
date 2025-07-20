@@ -97,11 +97,8 @@ class ShopCard extends StatelessWidget {
 
   /// 店舗画像を構築
   Widget _buildShopImage() {
-    final imageUrl = shop.imageURL?.isNotEmpty == true 
-        ? shop.imageURL 
-        : shop.imageUrl?.isNotEmpty == true 
-            ? shop.imageUrl 
-            : null;
+    // imageUrls配列から最初の画像を取得
+    final imageUrl = _getFirstImageUrl(shop.imageUrls);
 
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
@@ -130,5 +127,13 @@ class ShopCard extends StatelessWidget {
         color: Colors.grey[400],
       ),
     );
+  }
+
+  // imageUrls配列から最初の画像URLを取得するヘルパーメソッド
+  String? _getFirstImageUrl(List<String>? imageUrls) {
+    if (imageUrls != null && imageUrls.isNotEmpty) {
+      return imageUrls.first;
+    }
+    return null;
   }
 }
