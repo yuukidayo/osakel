@@ -94,21 +94,24 @@ class GeoSearchService {
     double radiusKm,
   ) async {
     try {
-      // 1. 地理的境界を計算
-      final bounds = _calculateBounds(latitude, longitude, radiusKm);
+      print('🔍 GeoSearchService: 検索開始 - drinkId: $drinkId, 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
       
-      // 2. DrinkShopLinkから該当するドリンクの店舗IDを取得
+      // 1. DrinkShopLinkから該当するドリンクの店舗IDを取得
+      print('🔍 ステップ1: DrinkShopLink検索開始');
       final drinkShopQuery = await _firestore
           .collection('drink_shop_links')
           .where('drinkId', isEqualTo: drinkId)
           .limit(100) // コスト削減のため制限
           .get();
       
+      print('🔍 DrinkShopLink検索結果: ${drinkShopQuery.docs.length}件');
+      
       if (drinkShopQuery.docs.isEmpty) {
         print('⚠️ 該当するドリンクの店舗が見つかりません');
         return [];
       }
       
+      print('🔍 ステップ2: shopIds抽出開始');
       final shopIds = drinkShopQuery.docs
           .map((doc) => doc.data()['shopId'] as String?)
           .where((id) => id != null)
@@ -118,15 +121,26 @@ class GeoSearchService {
           .map((doc) => DrinkShopLink.fromFirestore(doc))
           .toList();
       
-      // 3. 店舗情報を地理的範囲で絞り込み
+      print('🔍 抽出したshopIds: ${shopIds.length}件 - ${shopIds.take(5).toList()}...');
+      
+      if (shopIds.isEmpty) {
+        print('⚠️ shopIdsが空です');
+        return [];
+      }
+      
+      // 2. 店舗情報を取得（地理的フィルタリングはアプリ側で実行）
+      print('🔍 ステップ3: shopsコレクション検索開始');
+      final queryShopIds = shopIds.take(10).toList();
+      print('🔍 クエリ用shopIds: ${queryShopIds.length}件 - $queryShopIds');
+      
       final shopsQuery = await _firestore
           .collection('shops')
-          .where(FieldPath.documentId, whereIn: shopIds.take(10).toList()) // Firestore制限対応
-          .where('lat', isGreaterThan: bounds.southWest.latitude)
-          .where('lat', isLessThan: bounds.northEast.latitude)
+          .where(FieldPath.documentId, whereIn: queryShopIds) // Firestore制限対応
           .get();
       
-      // 4. 精密な距離計算とフィルタリング
+      print('🔍 shops検索結果: ${shopsQuery.docs.length}件');
+      
+      // 3. 精密な距離計算とフィルタリング
       final result = <ShopWithPrice>[];
       
       for (final shopDoc in shopsQuery.docs) {
@@ -157,18 +171,6 @@ class GeoSearchService {
       print('❌ Firestore検索エラー: $e');
       rethrow;
     }
-  }
-
-  /// 地理的境界を計算
-  GeoBounds _calculateBounds(double lat, double lng, double radiusKm) {
-    const double kmPerDegree = 111.0;
-    final double latDelta = radiusKm / kmPerDegree;
-    final double lngDelta = radiusKm / (kmPerDegree * cos(lat * pi / 180));
-    
-    return GeoBounds(
-      southWest: GeoPoint(lat - latDelta, lng - lngDelta),
-      northEast: GeoPoint(lat + latDelta, lng + lngDelta),
-    );
   }
 
   /// 2点間の距離を計算（ハヴァサイン公式）

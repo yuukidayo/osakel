@@ -6,10 +6,8 @@ import 'shop_detail_screen.dart';
 import '../widgets/map/map_view.dart';
 import '../widgets/map/map_control_buttons.dart';
 import '../widgets/map/shop_card_page_view.dart';
-import '../widgets/map/search_box.dart';
-import '../widgets/map/location_search_bar.dart';
 
-import '../widgets/map/location_data_service.dart';
+
 import 'controllers/map_screen_controller.dart';
 import 'models/map_screen_state.dart';
 
@@ -114,64 +112,9 @@ class _MapScreenState extends State<MapScreen> {
   
 
   
-  // 検索モーダルの表示状態
-  bool _isSearchModalVisible = false;
+
   
-  // 検索ボックスのフォーカス管理
-  final FocusNode _searchFocusNode = FocusNode();
-  
-  // モーダル内の検索ボックスのコントローラ
-  final TextEditingController _searchController = TextEditingController();
-  
-  // 場所を検索して地図を移動
-  void _searchLocation(String location) {
-    // キーボードを閉じる
-    FocusManager.instance.primaryFocus?.unfocus();
-    
-    // モーダルを閉じる
-    setState(() {
-      _searchController.clear();
-      _isSearchModalVisible = false;
-    });
-    
-    // 位置情報を取得
-    final coordinates = LocationDataService.getLocationCoordinates(location);
-    
-    if (coordinates != null) {
-      // 地図を選択された場所に移動
-      _mapController.future.then((controller) {
-        controller.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: coordinates,
-              zoom: 14.0,
-            ),
-          ),
-        );
-      });
-    }
-  }
-  
-  // モーダル検索ボックスを表示
-  void _showSearchModal() {
-    setState(() {
-      _isSearchModalVisible = true;
-    });
-    
-    // モーダル表示後に検索ボックスに自動フォーカス
-    Future.delayed(const Duration(milliseconds: 100), () {
-      FocusScope.of(context).requestFocus(_searchFocusNode);
-    });
-  }
-  
-  // モーダル検索ボックスを閉じる
-  void _hideSearchModal() {
-    setState(() {
-      _isSearchModalVisible = false;
-      _searchController.clear();
-    });
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
+
   
   /// 「このエリアで再検索」ボタンのUI
   Widget _buildSearchAreaButton() {
@@ -291,12 +234,7 @@ class _MapScreenState extends State<MapScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 検索ボックス（コンポーネント化）
-                SearchBox(
-                  onTap: _showSearchModal,
-                ),
-                
-                const SizedBox(height: 8),
+
                 
                 // 「このエリアで再検索」ボタン
                 _buildSearchAreaButton(),
@@ -324,7 +262,6 @@ class _MapScreenState extends State<MapScreen> {
                 final controller = await _mapController.future;
                 controller.animateCamera(CameraUpdate.zoomOut());
               },
-              onSearch: _showSearchModal,
             ),
           ),
           
@@ -374,15 +311,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           
-          // 全画面検索モーダル（コンポーネント化）
-          if (_isSearchModalVisible)
-            Positioned.fill(
-              child: LocationSearchBar(
-                locationSuggestions: LocationDataService.locationSuggestions,
-                onLocationSearch: _searchLocation,
-                onClose: _hideSearchModal,
-              ),
-            ),
+
         ],
       ),
     );
