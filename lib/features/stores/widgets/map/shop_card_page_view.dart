@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../models/shop_with_price.dart';
 
-/// 店舗カードページビューコンポーネント
+/// 店舗カードページビューコンポーネント（モノトーン版）
 /// 
 /// マップ下部に表示される店舗カードのスライダー
 class ShopCardPageView extends StatelessWidget {
@@ -34,95 +34,116 @@ class ShopCardPageView extends StatelessWidget {
         return GestureDetector(
           onTap: () => onShopTap(shopWithPrice),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAFAFA), // オフホワイト背景
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 画像表示部分
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
+                  // 左側: 店舗画像
+                  Container(
+                    width: 100,
+                    height: 100,
+                    margin: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFFE2E8F0), // ライトグレー
                     ),
-                    child: _buildShopImage(shopWithPrice.shop.imageUrl),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: _buildShopImage(shopWithPrice.shop.imageUrl),
+                    ),
                   ),
                   
-                  // 店舗情報部分
+                  // 右側: 店舗情報
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.fromLTRB(8, 16, 16, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // 店舗名と価格
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                shopWithPrice.shop.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${NumberFormat('#,###').format(shopWithPrice.drinkShopLink.price.toInt())}円',
-                                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                                ),
-                              ),
-                            ],
+                          // 上部: 店舗名
+                          Text(
+                            shopWithPrice.shop.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A202C), // ダークグレー
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                          
                           const SizedBox(height: 8),
                           
-                          // 住所
+                          // 中部: 料金
+                          Text(
+                            '¥${NumberFormat('#,###').format(shopWithPrice.drinkShopLink.price.toInt())}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D3748), // 強調ダークグレー
+                            ),
+                          ),
+                          
+                          const Spacer(),
+                          
+                          // 下部: カテゴリと営業時間
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  shopWithPrice.shop.address,
-                                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              // カテゴリバッジ
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE2E8F0), // ライトグレー背景
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  _getCategoryText(shopWithPrice.shop.category),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF4A5568), // ミディアムグレー
+                                  ),
+                                ),
+                              ),
+                              
+                              // 営業時間
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _getBusinessHours(shopWithPrice.shop),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF4A5568), // ミディアムグレー
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          
-                          // カテゴリー（存在する場合）
-                          if (shopWithPrice.shop.category != null) ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                shopWithPrice.shop.category!,
-                                style: TextStyle(
-                                  color: Colors.blue[700],
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -141,32 +162,55 @@ class ShopCardPageView extends StatelessWidget {
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
         imageUrl,
-        width: 100,
-        height: 120,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderImage();
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _buildPlaceholderImage();
+        },
       );
     }
     return _buildPlaceholderImage();
   }
 
-  /// プレースホルダー画像
+  /// プレースホルダー画像を構築
   Widget _buildPlaceholderImage() {
     return Container(
-      width: 100,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          bottomLeft: Radius.circular(12),
-        ),
-      ),
-      child: Icon(
+      color: const Color(0xFFE2E8F0),
+      child: const Icon(
         Icons.store,
         size: 40,
-        color: Colors.grey[400],
+        color: Color(0xFF9CA3AF), // グレーアイコン
       ),
     );
+  }
+
+  /// カテゴリテキストを取得
+  String _getCategoryText(String? category) {
+    if (category == null || category.isEmpty) {
+      return 'Bar'; // デフォルト
+    }
+    
+    // カテゴリの正規化
+    final lowerCategory = category.toLowerCase();
+    if (lowerCategory.contains('bar') || lowerCategory.contains('バー')) {
+      return 'Bar';
+    } else if (lowerCategory.contains('shop') || 
+               lowerCategory.contains('store') || 
+               lowerCategory.contains('販売')) {
+      return '販売店';
+    }
+    
+    return category; // そのまま返す
+  }
+
+  /// 営業時間を取得
+  String _getBusinessHours(shop) {
+    // 営業開始時刻を取得（closeTimeプロパティが存在しないため、openTimeのみ表示）
+    final openTime = shop.openTime ?? '18:00';
+    
+    return '${openTime}〜'; // 開始時刻のみ表示
   }
 }
