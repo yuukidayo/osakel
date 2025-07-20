@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -14,9 +13,11 @@ class MapView extends StatelessWidget {
   final bool myLocationButtonEnabled;
   final bool mapToolbarEnabled;
   final bool zoomControlsEnabled;
+  final CameraPosition? initialCameraPosition;
+  final bool isLoading;
 
-  // 東京駅を中心とした初期カメラ位置
-  static const CameraPosition _initialCameraPosition = CameraPosition(
+  // デフォルトの初期カメラ位置（東京駅）
+  static const CameraPosition _defaultCameraPosition = CameraPosition(
     target: LatLng(35.681236, 139.767125),
     zoom: 15,
   );
@@ -31,6 +32,8 @@ class MapView extends StatelessWidget {
     this.myLocationButtonEnabled = false,
     this.mapToolbarEnabled = false,
     this.zoomControlsEnabled = false,
+    this.initialCameraPosition,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -38,16 +41,52 @@ class MapView extends StatelessWidget {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,
-      child: GoogleMap(
-        initialCameraPosition: _initialCameraPosition,
-        markers: markers,
-        myLocationEnabled: myLocationEnabled,
-        myLocationButtonEnabled: myLocationButtonEnabled,
-        mapToolbarEnabled: mapToolbarEnabled,
-        zoomControlsEnabled: zoomControlsEnabled,
-        onMapCreated: onMapCreated,
-        onCameraMove: onCameraMove,
-        onCameraIdle: onCameraIdle,
+      child: isLoading
+          ? _buildLoadingView()
+          : GoogleMap(
+              initialCameraPosition: initialCameraPosition ?? _defaultCameraPosition,
+              markers: markers,
+              myLocationEnabled: myLocationEnabled,
+              myLocationButtonEnabled: myLocationButtonEnabled,
+              mapToolbarEnabled: mapToolbarEnabled,
+              zoomControlsEnabled: zoomControlsEnabled,
+              onMapCreated: onMapCreated,
+              onCameraMove: onCameraMove,
+              onCameraIdle: onCameraIdle,
+      ),
+    );
+  }
+
+  /// 現在地取得中のローディング表示
+  Widget _buildLoadingView() {
+    return Container(
+      color: Colors.grey[100],
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '📍 現在地を取得中...',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'マップを読み込んでいます',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

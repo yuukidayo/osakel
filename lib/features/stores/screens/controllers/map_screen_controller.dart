@@ -26,6 +26,7 @@ class MapScreenController extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSearchingNearby = false;
   bool _isInitialFocusComplete = false;
+  bool _isLocationReady = false;
   List<ShopWithPrice> _shopsWithPrice = [];
   Set<Marker> _markers = {};
   ShopWithPrice? _selectedShop;
@@ -37,10 +38,22 @@ class MapScreenController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSearchingNearby => _isSearchingNearby;
   bool get isInitialFocusComplete => _isInitialFocusComplete;
+  bool get isLocationReady => _isLocationReady;
   List<ShopWithPrice> get shopsWithPrice => _shopsWithPrice;
   Set<Marker> get markers => _markers;
   ShopWithPrice? get selectedShop => _selectedShop;
   LatLng? get currentMapCenter => _currentMapCenter;
+  
+  /// 初期カメラ位置を取得
+  CameraPosition? get initialCameraPosition {
+    if (_currentMapCenter != null) {
+      return CameraPosition(
+        target: _currentMapCenter!,
+        zoom: 15.0,
+      );
+    }
+    return null;
+  }
 
   /// 初期化
   Future<void> initialize(String? drinkId) async {
@@ -61,16 +74,22 @@ class MapScreenController extends ChangeNotifier {
       
       if (_currentPosition != null) {
         _currentMapCenter = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+        _isLocationReady = true;
         print('✅ 現在地取得成功: $_currentMapCenter');
+        
+        // UI更新を通知（マップ表示開始）
+        _notifyStateChanged();
         
         // 現在地周辺5km以内の店舗を自動検索
         await _performInitialLocationSearch();
       } else {
         print('⚠️ 現在地取得失敗、デフォルト位置を使用');
+        _isLocationReady = true; // フォールバック時もマップ表示
         await _fallbackToDefaultLocation();
       }
     } catch (e) {
       print('❌ 位置情報取得エラー: $e');
+      _isLocationReady = true; // エラー時もマップ表示
       await _fallbackToDefaultLocation();
     } finally {
       _setLoading(false);

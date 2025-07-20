@@ -218,6 +218,8 @@ class _MapScreenState extends State<MapScreen> {
           // Google Map（コンポーネント化）
           MapView(
             markers: _controller.markers,
+            initialCameraPosition: _controller.initialCameraPosition,
+            isLoading: !_controller.isLocationReady,
             onMapCreated: (GoogleMapController controller) {
               _mapController.complete(controller);
               _controller.updateMarkerPositions();
