@@ -91,4 +91,27 @@ class Shop {
       'openTime': openTime,
     };
   }
+  
+  /// JSONへ変換（toMapと同じだがidを含む）
+  Map<String, dynamic> toJson() {
+    final map = toMap();
+    map['id'] = id;
+    return map;
+  }
+  
+  /// JSONからShopオブジェクトを生成
+  factory Shop.fromJson(Map<String, dynamic> json) {
+    return Shop(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      lat: (json['location']?['lat'] ?? 0.0).toDouble(),
+      lng: (json['location']?['lng'] ?? 0.0).toDouble(),
+      address: json['address'] ?? '',
+      imageUrl: json['imageUrl'],
+      imageURL: json['imageURL'],
+      category: json['category'],
+      distance: json['distance'],
+      openTime: json['openTime'],
+    );
+  }
 }

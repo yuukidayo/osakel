@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../models/shop_with_price.dart';
 import 'shop_detail_screen.dart';
-import '../../../core/utils/custom_marker_generator.dart';
-// mapコンポーネントのimport
 import '../widgets/map/map_view.dart';
 import '../widgets/map/map_control_buttons.dart';
 import '../widgets/map/shop_card_page_view.dart';
@@ -14,6 +14,8 @@ import '../widgets/map/empty_state_widget.dart';
 import '../widgets/map/location_data_service.dart';
 import '../widgets/map/map_data_service.dart';
 import '../widgets/map/mock_data_service.dart';
+import '../../../core/services/geo_search_service.dart';
+import '../../../core/services/location_service.dart';
 
 class MapScreen extends StatefulWidget {
   final String? drinkId;
@@ -52,12 +54,21 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    print('🗺️ MapScreen: initState開始');
+    
     // 初期化時に空のリストを作成
     _shopsWithPrice = [];
     
+    print('🗺️ MapScreen: 初期化完了、データ読み込みをスケジュール');
+    
     // データを読み込む前に少し遅延させる（UIの初期化を待つため）
     Future.delayed(const Duration(milliseconds: 500), () {
-      _loadShopsData();
+      if (mounted) {
+        print('🗺️ MapScreen: 遅延後のデータ読み込み開始');
+        _loadShopsDataSafely();
+      } else {
+        print('⚠️ MapScreen: Widgetがunmountされているためデータ読み込みをスキップ');
+      }
     });
   }
   
@@ -66,9 +77,14 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     super.dispose();
   }
 
-  // 店舗データを読み込む
-  Future<void> _loadShopsData() async {
-    print('🗺️ MapScreen: _loadShopsData開始 - drinkId: ${widget.drinkId}');
+  // 店舗データを安全に読み込む
+  Future<void> _loadShopsDataSafely() async {
+    print('🗺️ MapScreen: _loadShopsDataSafely開始 - drinkId: ${widget.drinkId}');
+    
+    if (!mounted) {
+      print('⚠️ MapScreen: Widgetがunmountされているため処理を中止');
+      return;
+    }
     
     setState(() {
       _isLoading = true;
@@ -76,8 +92,20 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     
     try {
       print('🗺️ MapScreen: MapDataServiceでデータ取得開始');
-      final shops = await _mapDataService.loadShopsData(drinkId: widget.drinkId);
+      
+      // 全体の処理にタイムアウトを設定
+      final shops = await _mapDataService.loadShopsData(drinkId: widget.drinkId)
+          .timeout(const Duration(seconds: 30), onTimeout: () {
+        print('⚠️ MapScreen: データ読み込みがタイムアウト');
+        return [];
+      });
+      
       print('🗺️ MapScreen: データ取得完了 - 店舗数: ${shops.length}');
+      
+      if (!mounted) {
+        print('⚠️ MapScreen: データ取得後にWidgetがunmountされたため処理を中止');
+        return;
+      }
       
       setState(() {
         _shopsWithPrice = shops;
@@ -87,20 +115,27 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       
       // 初回フォーカス処理
       print('🗺️ MapScreen: 初回フォーカス処理開始');
-      await _performInitialFocus();
+      await _performInitialFocusSafely();
       print('🗺️ MapScreen: 初回フォーカス処理完了');
+      
+      if (!mounted) {
+        print('⚠️ MapScreen: フォーカス後にWidgetがunmountされたため処理を中止');
+        return;
+      }
       
       // マーカーを更新
       print('🗺️ MapScreen: マーカー更新開始');
       _updateMarkerPositions();
       print('🗺️ MapScreen: マーカー更新完了');
       
-      print('🗺️ MapScreen: _loadShopsData完了');
+      print('🗺️ MapScreen: _loadShopsDataSafely完了');
       
     } catch (e) {
       print('❌ MapScreen: エラー発生 - $e');
-      // エラー時はモックデータを生成
-      _generateMockData();
+      if (mounted) {
+        // エラー時はモックデータを生成
+        _generateMockDataSafely();
+      }
     }
   }
   
@@ -121,6 +156,36 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     }
   }
   
+  // 初回フォーカス処理（安全版）
+  Future<void> _performInitialFocusSafely() async {
+    if (!mounted) {
+      print('⚠️ MapScreen: _performInitialFocusSafely - Widgetがunmountされているため処理を中止');
+      return;
+    }
+    
+    if (_shopsWithPrice.isNotEmpty && !_isInitialFocusComplete) {
+      try {
+        await _mapDataService.performInitialFocus(
+          shops: _shopsWithPrice,
+          mapController: _mapController,
+          pageController: _pageController,
+          onShopSelected: (shop) {
+            if (mounted) {
+              setState(() {
+                _selectedShop = shop;
+                _isInitialFocusComplete = true;
+              });
+            }
+          },
+        ).timeout(const Duration(seconds: 10), onTimeout: () {
+          print('⚠️ MapScreen: 初回フォーカス処理がタイムアウト');
+        });
+      } catch (e) {
+        print('❌ MapScreen: 初回フォーカス処理でエラー - $e');
+      }
+    }
+  }
+  
   // モックデータを生成
   void _generateMockData() async {
     final mockShops = MockDataService.generateMockShops(drinkId: widget.drinkId);
@@ -135,6 +200,34 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     
     // マーカーを更新
     _updateMarkerPositions();
+  }
+  
+  // モックデータを生成（安全版）
+  void _generateMockDataSafely() async {
+    if (!mounted) {
+      print('⚠️ MapScreen: _generateMockDataSafely - Widgetがunmountされているため処理を中止');
+      return;
+    }
+    
+    print('🗺️ MapScreen: モックデータ生成開始');
+    final mockShops = MockDataService.generateMockShops(drinkId: widget.drinkId);
+    
+    if (mounted) {
+      setState(() {
+        _shopsWithPrice = mockShops;
+        _isLoading = false;
+      });
+      print('🗺️ MapScreen: モックデータ設定完了');
+    }
+    
+    // 初回フォーカス処理
+    await _performInitialFocusSafely();
+    
+    if (mounted) {
+      // マーカーを更新
+      _updateMarkerPositions();
+      print('🗺️ MapScreen: モックデータ生成完了');
+    }
   }
   
 
@@ -155,60 +248,129 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     });
   }
   
-  // マーカーの位置を更新
-  void _updateMarkerPositions() async {
-    setState(() {
-      _isLoading = true; // データ読み込み開始
-    });
-    _markers.clear();
-    Set<Marker> markers = {};
+  // マーカーの位置を更新（改善版）
+  Future<void> _updateMarkerPositions() async {
+    print('🗺️ MapScreen: マーカー更新開始 - 店舗数: ${_shopsWithPrice.length}');
     
-    for (int i = 0; i < _shopsWithPrice.length; i++) {
-      final shop = _shopsWithPrice[i].shop;
-      final price = _shopsWithPrice[i].drinkShopLink.price;
-      final isFirstShop = i == 0; // 先頭店舗かどうか
-      final isSelected = _selectedShop?.shop.id == shop.id;
-      
-      // カスタムマーカーを生成
-      final BitmapDescriptor markerIcon = await CustomMarkerGenerator.createPriceMarker(
-        price: price,
-        isSelected: isSelected || (isFirstShop && !_isInitialFocusComplete),
-      );
-      
-      // マーカーを作成
-      final marker = Marker(
-        markerId: MarkerId(shop.id),
-        position: LatLng(shop.lat, shop.lng),
-        icon: markerIcon,
-        onTap: () {
-          // print('マーカーがタップされました: ${shop.id}');
-          _updateSelectedShop(_shopsWithPrice[i]);
-          
-          // PageViewを該当のインデックスに移動
-          _pageController.animateToPage(
-            i,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        },
-      );
-      
-      markers.add(marker);
+    if (!mounted) {
+      print('⚠️ MapScreen: Widgetがunmountされているためマーカー更新を中止');
+      return;
     }
     
     setState(() {
-      _markers = markers;
-      _isLoading = false; // データ読み込み完了
+      _isLoading = true;
     });
     
-    // 初回フォーカス完了後、先頭店舗のInfoWindowを表示
+    try {
+      _markers.clear();
+      Set<Marker> markers = {};
+      
+      print('🗺️ MapScreen: マーカー生成開始');
+      
+      // マーカーを段階的に生成（UIフリーズを防止）
+      for (int i = 0; i < _shopsWithPrice.length; i++) {
+        if (!mounted) {
+          print('⚠️ MapScreen: マーカー生成中にWidgetがunmountされた');
+          return;
+        }
+        
+        final shop = _shopsWithPrice[i].shop;
+        final price = _shopsWithPrice[i].drinkShopLink.price;
+        final isFirstShop = i == 0;
+        final isSelected = _selectedShop?.shop.id == shop.id;
+        
+        print('🗺️ MapScreen: マーカー生成中 ${i + 1}/${_shopsWithPrice.length} - ${shop.name}');
+        
+        try {
+          // カスタムマーカー生成をタイムアウト付きで実行
+          final BitmapDescriptor markerIcon = await CustomMarkerGenerator.createPriceMarker(
+            price: price,
+            isSelected: isSelected || isFirstShop,
+          ).timeout(const Duration(seconds: 5), onTimeout: () {
+            print('⚠️ MapScreen: マーカー生成タイムアウト - ${shop.name}');
+            return BitmapDescriptor.defaultMarker; // デフォルトマーカーを使用
+          });
+          
+          final marker = Marker(
+            markerId: MarkerId(shop.id),
+            position: LatLng(shop.lat, shop.lng),
+            icon: markerIcon,
+            onTap: () {
+              _updateSelectedShop(_shopsWithPrice[i]);
+              
+              // PageViewを該当のインデックスに移動
+              _pageController.animateToPage(
+                i,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          );
+          
+          markers.add(marker);
+          
+          // UIフリーズを防ぐため、少し待機
+          if (i % 3 == 0 && i > 0) {
+            await Future.delayed(const Duration(milliseconds: 10));
+          }
+          
+        } catch (e) {
+          print('❌ MapScreen: マーカー生成エラー - ${shop.name}: $e');
+          // エラー時はデフォルトマーカーを使用
+          final marker = Marker(
+            markerId: MarkerId(shop.id),
+            position: LatLng(shop.lat, shop.lng),
+            icon: BitmapDescriptor.defaultMarker,
+            onTap: () {
+              _updateSelectedShop(_shopsWithPrice[i]);
+              
+              _pageController.animateToPage(
+                i,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          );
+          markers.add(marker);
+        }
+      }
+      
+      if (!mounted) {
+        print('⚠️ MapScreen: マーカー生成後にWidgetがunmountされた');
+        return;
+      }
+      
+      setState(() {
+        _markers = markers;
+        _isLoading = false;
+      });
+      
+      print('🗺️ MapScreen: マーカー更新完了 - 生成数: ${markers.length}');
+      
+      // InfoWindow表示処理を分離
+      _showInitialInfoWindow();
+      
+    } catch (e) {
+      print('❌ MapScreen: マーカー更新でエラー - $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  // InfoWindow表示処理を分離
+  Future<void> _showInitialInfoWindow() async {
     if (_isInitialFocusComplete && _shopsWithPrice.isNotEmpty && _selectedShop != null) {
-      // 先頭店舗のInfoWindowを自動表示
-      if (_shopsWithPrice.isNotEmpty) {
+      try {
         final firstShop = _shopsWithPrice.first;
         final markerId = firstShop.shop.id;
         final controller = await _mapController.future;
-        controller.showMarkerInfoWindow(MarkerId(markerId));
+        await controller.showMarkerInfoWindow(MarkerId(markerId));
+        print('🗺️ MapScreen: InfoWindow表示完了');
+      } catch (e) {
+        print('❌ MapScreen: InfoWindow表示エラー - $e');
       }
     }
   }

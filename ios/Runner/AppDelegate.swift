@@ -2,6 +2,7 @@ import UIKit
 import Flutter
 import Firebase
 import FirebaseMessaging
+import GoogleMaps
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
@@ -11,6 +12,16 @@ import FirebaseMessaging
   ) -> Bool {
     // Firebase設定 - 最初に呼び出す
     FirebaseApp.configure()
+    
+    // Google Maps SDK初期化
+    if let path = Bundle.main.path(forResource: "Info", ofType: "plist"),
+       let plist = NSDictionary(contentsOfFile: path),
+       let apiKey = plist["GMSApiKey"] as? String {
+      GMSServices.provideAPIKey(apiKey)
+      print("Google Maps SDK initialized with API key")
+    } else {
+      print("Warning: Google Maps API key not found in Info.plist")
+    }
     
     // FCM設定
     Messaging.messaging().delegate = self
