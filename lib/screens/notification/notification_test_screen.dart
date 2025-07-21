@@ -49,7 +49,7 @@ class _NotificationTestScreenState extends State<NotificationTestScreen> {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           await FirebaseFirestore.instance
-              .collection('users')
+              .collection('user')
               .doc(user.uid)
               .set({
             'fcmToken': token,

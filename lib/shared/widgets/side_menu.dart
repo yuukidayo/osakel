@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../features/auth/screens/login_screen.dart';
-import '../../../core/services/admin_service.dart';
 // import '../../../features/admin/screens/add_drink_screen.dart'; // TODO: admin画面実装後に有効化
 
 /// サイドメニューコンポーネント
@@ -64,7 +65,7 @@ class SideMenu extends StatelessWidget {
                     
                     // 管理者専用メニュー
                     FutureBuilder<bool>(
-                      future: AdminService.isAdmin(),
+                      future: AuthService.isAdmin(),
                       builder: (context, snapshot) {
                         if (snapshot.data == true) {
                           return Column(

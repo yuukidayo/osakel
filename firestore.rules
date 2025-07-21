@@ -4,12 +4,19 @@ service cloud.firestore {
     
     // ユーザー情報
     match /user/{userId} {
-      // 自分の情報は読み書き可能、管理者は全ユーザー情報を読める
+      // 読み取り: 自分の情報または管理者
       allow read: if request.auth != null && 
                      (request.auth.uid == userId || isAdmin());
-      allow write: if request.auth != null && request.auth.uid == userId;
-      // 管理者は他のユーザー情報も編集可能
-      allow update: if request.auth != null && isAdmin();
+      
+      // 作成: 自分のアカウント作成時
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // 更新: 自分の情報（FCMトークン等）または管理者
+      allow update: if request.auth != null && 
+                       (request.auth.uid == userId || isAdmin());
+      
+      // 削除: 管理者のみ
+      allow delete: if request.auth != null && isAdmin();
     }
     
     // 店舗情報

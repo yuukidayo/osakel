@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../shared/widgets/admin_guard.dart';
+import '../../shared/widgets/permission_guard.dart';
 import '../models/admin_drink.dart';
 import '../models/shop.dart';
 
@@ -176,7 +176,7 @@ class _AddDrinkScreenState extends State<AddDrinkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminGuard(
+    return PermissionGuard.adminOnly(
       child: Scaffold(
         appBar: AppBar(
           title: const Text('お酒登録'),
