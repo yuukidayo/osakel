@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ユーザー情報
+    match /user/{userId} {
+      // 自分の情報は読み書き可能、管理者は全ユーザー情報を読める
+      allow read: if request.auth != null && 
+                     (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
+      // 管理者は他のユーザー情報も編集可能
+      allow update: if request.auth != null && isAdmin();
+    }
+    
+    // 店舗情報
+    match /shops/{shopId} {
+      allow read: if true; // 誰でも見れる
+      allow create: if request.auth != null && isAdmin(); // 管理者のみ新規作成
+      allow update: if request.auth != null && 
+                       (isAdmin() || isShopOwner(shopId)); // 管理者または店舗オーナー
+      allow delete: if request.auth != null && isAdmin(); // 管理者のみ削除
+    }
+    
+    // お酒情報
+    match /drinks/{drinkId} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+    }
+    
+    // 店舗-お酒関連付け
+    match /drink_shop_links/{linkId} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+    }
+    
+    // カテゴリ情報
+    match /categories/{categoryId} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+    }
+    
+    // コメント
+    match /comments/{commentId} {
+      allow read: if true; // 誰でも見れる
+      allow create: if request.auth != null && isAuthenticated(); // 認証ユーザーのみ作成
+      allow update, delete: if request.auth != null && 
+                               (request.auth.uid == resource.data.userId || 
+                                isAdmin() || 
+                                isShopOwnerOfComment()); // 本人、管理者、関連店舗オーナー
+    }
+    
+    // 権限チェック関数
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role in ['user', 'shop_owner', 'admin'];
+    }
+    
+    function isShopOwner(shopId) {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner' &&
+             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId == shopId;
+    }
+    
+    function isShopOwnerOfComment() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner' &&
+             resource.data.shopId == get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId;
+    }
+  }
+}

@@ -1,0 +1,37 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // 店舗画像
+    match /shops/{shopId}/{allPaths=**} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && 
+                      (isAdmin() || isShopOwner(shopId)); // 管理者または店舗オーナー
+    }
+    
+    // お酒画像
+    match /drinks/{allPaths=**} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && isAdmin(); // 管理者のみ
+    }
+    
+    // ユーザープロフィール画像
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true; // 誰でも見れる
+      allow write: if request.auth != null && 
+                      (request.auth.uid == userId || isAdmin()); // 本人または管理者
+    }
+    
+    // 権限チェック関数
+    function isAdmin() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/user/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isShopOwner(shopId) {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/user/$(request.auth.uid)).data.role == 'shop_owner' &&
+             firestore.get(/databases/(default)/documents/user/$(request.auth.uid)).data.shopId == shopId;
+    }
+  }
+}

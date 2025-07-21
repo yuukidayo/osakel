@@ -1,0 +1,51 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "drink_shop_links",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "drinkId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "shopId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "shops",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "latitude",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "longitude",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "drinkId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
