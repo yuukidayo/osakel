@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
+import '../widgets/auth_widgets.dart';
+import '../widgets/email_verification_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -33,6 +35,41 @@ class _LoginScreenState extends State<LoginScreen> {
     return emailRegex.hasMatch(email);
   }
 
+  String _getFirebaseErrorMessage(String errorCode) {
+    switch (errorCode) {
+      case 'user-not-found':
+        return 'アカウントが見つかりません。';
+      case 'wrong-password':
+        return 'パスワードが正しくありません。';
+      case 'invalid-email':
+        return 'メールアドレスの形式が正しくありません。';
+      case 'user-disabled':
+        return 'このアカウントは無効化されています。';
+      default:
+        return 'ログインに失敗しました。';
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('ログインしました'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   Future<void> _login() async {
     // Validate form first
     if (!_formKey.currentState!.validate()) {
@@ -54,90 +91,23 @@ class _LoginScreenState extends State<LoginScreen> {
       
       // Check if email is verified
       if (user != null && !user.emailVerified) {
-        if (!mounted) return;
-        // Show dialog for unverified email
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('メール認証が未完了です'),
-            content: const Text('登録したメールアドレスに送信された認証メールから認証を完了してください。'),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  // Resend verification email
-                  await user.sendEmailVerification();
-                  if (!mounted) return;
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('認証メールを再送信しました'),
-                      backgroundColor: Colors.blue,
-                    ),
-                  );
-                },
-                child: const Text('認証メールを再送信'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('閉じる'),
-              ),
-            ],
-          ),
+        await EmailVerificationDialog.showEmailVerificationDialog(
+          context,
+          user,
+          _auth,
         );
-        
-        // Sign out since email is not verified
-        await _auth.signOut();
       } else {
         // Email verified, navigate to main screen
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ログインしました'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _showSuccessSnackBar();
         
         // Navigate to drink search screen
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/drink_search');
       }
     } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'アカウントが見つかりません。';
-          break;
-        case 'wrong-password':
-          errorMessage = 'パスワードが正しくありません。';
-          break;
-        case 'invalid-email':
-          errorMessage = 'メールアドレスの形式が正しくありません。';
-          break;
-        case 'user-disabled':
-          errorMessage = 'このアカウントは無効化されています。';
-          break;
-        default:
-          errorMessage = 'ログインに失敗しました: ${e.message}';
-      }
-      
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackBar(_getFirebaseErrorMessage(e.code));
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('ログインに失敗しました: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackBar('ログインに失敗しました: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -150,70 +120,55 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // 純白背景(#FFFFFF)に統一
-      appBar: AppBar(
-        title: const Text('ログイン'),
-        backgroundColor: Colors.teal,
-      ),
+      backgroundColor: Colors.white,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 50),
-                    // Logo or app name
-                    const Icon(
-                      Icons.liquor,
-                      size: 80,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'OSAKEL',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 60),
+                      const OSAKELLogo(),
+                      const SizedBox(height: 60),
+                      const SectionTitle(title: 'ログイン'),
+                      const SizedBox(height: 16),
+                      CustomInputField(
+                        controller: _emailController,
+                        hintText: 'メールアドレス',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'メールアドレスを入力してください';
+                          }
+                          if (!_isValidEmail(value)) {
+                            return '有効なメールアドレスを入力してください';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 50),
-                    // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'メールアドレス',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'メールアドレスを入力してください';
-                        }
-                        if (!_isValidEmail(value)) {
-                          return '有効なメールアドレスを入力してください';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    // Password field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'パスワード',
-                        prefixIcon: const Icon(Icons.lock),
-                        border: const OutlineInputBorder(),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Password field
+                      CustomInputField(
+                        controller: _passwordController,
+                        hintText: 'パスワード',
+                        obscureText: _obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: const Color(0xFF666666),
+                            size: 20,
                           ),
                           onPressed: () {
                             setState(() {
@@ -221,73 +176,103 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
                           },
                         ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'パスワードを入力してください';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    // Forgot password link
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ForgotPasswordScreen(),
-                            ),
-                          );
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'パスワードを入力してください';
+                          }
+                          return null;
                         },
-                        child: const Text(
-                          'パスワードをお忘れですか？',
-                          style: TextStyle(color: Colors.teal),
-                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Login button
-                    ElevatedButton(
-                      onPressed: _login,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      ),
-                      child: const Text(
-                        'ログイン',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Sign up link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('アカウントをお持ちでないですか？ '),
-                        TextButton(
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Forgot password link
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const SignUpScreen(),
+                                builder: (context) => const ForgotPasswordScreen(),
                               ),
                             );
                           },
                           child: const Text(
-                            '登録する',
-                            style: TextStyle(color: Colors.teal),
+                            'パスワードをお忘れですか？',
+                            style: TextStyle(
+                              color: Color(0xFF666666), // #666
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Primary Action Button
+                      PrimaryButton(
+                        text: 'ログイン',
+                        onPressed: _login,
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Divider
+                      const OrDivider(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Google Sign-In Button
+                      GoogleButton(
+                        text: 'Continue with Google',
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Google認証は今後実装予定です'),
+                              backgroundColor: Color(0xFF666666),
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Sign up link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'アカウントをお持ちでないですか？ ',
+                            style: TextStyle(
+                              color: Color(0xFF666666), // #666
+                              fontSize: 14,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SignUpScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'アカウント登録',
+                              style: TextStyle(
+                                color: Colors.black, // black
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32), // Bottom spacing
+                    ],
+                  ),
                 ),
               ),
             ),

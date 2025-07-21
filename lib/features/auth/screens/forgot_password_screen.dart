@@ -104,93 +104,168 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('パスワードをリセット'),
-        backgroundColor: Colors.teal,
-      ),
+      backgroundColor: Colors.white, // #FFFFFF
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 40),
-                    const Icon(
-                      Icons.lock_reset,
-                      size: 80,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'パスワードをリセット',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        '登録したメールアドレスを入力してください。パスワードリセット用のリンクをお送りします。',
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0), // 16px safe-area padding
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 60), // Generous spacing
+                      
+                      // Brand Header - Centered OSAKEL logo text
+                      const Text(
+                        'OSAKEL',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+                          fontSize: 24, // 24 sp
+                          fontWeight: FontWeight.w600, // semi-bold
+                          color: Colors.black, // #000
+                          letterSpacing: 1.2,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'メールアドレス',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'メールアドレスを入力してください';
-                        }
-                        if (!_isValidEmail(value)) {
-                          return '有効なメールアドレスを入力してください';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    // Reset password button
-                    ElevatedButton(
-                      onPressed: _resetPassword,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                      
+                      const SizedBox(height: 60), // Generous 16px+ gaps
+                      
+                      // Reset Password Section
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Description text
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          '登録したメールアドレスを入力してください。\nパスワードリセット用のリンクをお送りします。',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14, // 14 sp
+                            color: Color(0xFF666666), // #666
+                            height: 1.5, // Line height
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'リセットメールを送信',
-                        style: TextStyle(fontSize: 16),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Email Section
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'メールアドレス',
+                          style: TextStyle(
+                            fontSize: 16, // 16 sp
+                            fontWeight: FontWeight.w600, // semi-bold
+                            color: Color(0xFF333333), // #333
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Back to login link
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'ログイン画面に戻る',
-                        style: TextStyle(color: Colors.teal),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Email field
+                      Container(
+                        height: 56, // ≈ 56 px height
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5), // #F5F5F5 background
+                          borderRadius: BorderRadius.circular(12), // 12 px border radius
+                        ),
+                        child: TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(
+                            fontSize: 16, // 16 sp
+                            color: Colors.black,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'メールアドレス', // Placeholder text
+                            hintStyle: TextStyle(
+                              fontSize: 16, // 16 sp regular
+                              color: Color(0xFF666666), // #666
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'メールアドレスを入力してください';
+                            }
+                            if (!_isValidEmail(value)) {
+                              return '有効なメールアドレスを入力してください';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                      
+                      const SizedBox(height: 32), // Generous spacing
+                      
+                      // Primary Action Button - "Send Reset Email" button
+                      Container(
+                        height: 56, // ≈ 56 px height
+                        decoration: BoxDecoration(
+                          color: Colors.black, // #000 background
+                          borderRadius: BorderRadius.circular(12), // 12 px border radius
+                          boxShadow: [
+                            BoxShadow(
+                              offset: const Offset(0, 2), // Y-offset 2 px
+                              blurRadius: 8, // blur 8 px
+                              color: Colors.black.withOpacity(0.1), // rgba(0,0,0,10%)
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: _resetPassword,
+                            child: const Center(
+                              child: Text(
+                                '送信',
+                                style: TextStyle(
+                                  color: Colors.white, // white text
+                                  fontSize: 16, // 16 sp
+                                  fontWeight: FontWeight.w500, // medium
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Back to login link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              '戻る',
+                              style: TextStyle(
+                                color: Colors.black, // black
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32), // Bottom spacing
+                    ],
+                  ),
                 ),
               ),
             ),

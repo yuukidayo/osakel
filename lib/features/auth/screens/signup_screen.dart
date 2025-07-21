@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
+import '../widgets/auth_widgets.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -108,69 +109,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('アカウント登録'),
-        backgroundColor: Colors.teal,
-      ),
+      backgroundColor: Colors.white, // #FFFFFF
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 30),
-                    // Logo or app name
-                    const Icon(
-                      Icons.account_circle,
-                      size: 80,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'OSAKEL',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0), // 16px safe-area padding
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 60), // Generous spacing
+                      
+                      const OSAKELLogo(),
+                      const SizedBox(height: 60),
+                      const SectionTitle(title: 'アカウント登録'),
+                      
+                      const SizedBox(height: 16),
+                      
+                      CustomInputField(
+                        controller: _emailController,
+                        hintText: 'メールアドレス',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'メールアドレスを入力してください';
+                          }
+                          if (!_isValidEmail(value)) {
+                            return '有効なメールアドレスを入力してください';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'メールアドレス',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'メールアドレスを入力してください';
-                        }
-                        if (!_isValidEmail(value)) {
-                          return '有効なメールアドレスを入力してください';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    // Password field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'パスワード',
-                        prefixIcon: const Icon(Icons.lock),
-                        border: const OutlineInputBorder(),
+                      
+                      const SizedBox(height: 12), // 12 px vertical gap
+                      
+                      CustomInputField(
+                        controller: _passwordController,
+                        hintText: 'パスワード',
+                        obscureText: _obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: const Color(0xFF666666),
+                            size: 20,
                           ),
                           onPressed: () {
                             setState(() {
@@ -178,35 +167,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             });
                           },
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'パスワードを入力してください';
+                          }
+                          if (value.length < 8) {
+                            return 'パスワードは8文字以上で入力してください';
+                          }
+                          if (!value.contains(RegExp(r'[A-Za-z]')) ||
+                              !value.contains(RegExp(r'[0-9]'))) {
+                            return 'パスワードは英字と数字を含める必要があります';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'パスワードを入力してください';
-                        }
-                        if (value.length < 8) {
-                          return 'パスワードは8文字以上で入力してください';
-                        }
-                        if (!value.contains(RegExp(r'[A-Za-z]')) ||
-                            !value.contains(RegExp(r'[0-9]'))) {
-                          return 'パスワードは英字と数字を含める必要があります';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    // Confirm password field
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      decoration: InputDecoration(
-                        labelText: 'パスワード（確認）',
-                        prefixIcon: const Icon(Icons.lock),
-                        border: const OutlineInputBorder(),
+                      
+                      const SizedBox(height: 12), // 12 px vertical gap
+                      
+                      CustomInputField(
+                        controller: _confirmPasswordController,
+                        hintText: 'パスワード(確認',
+                        obscureText: _obscureConfirmPassword,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
+                            color: const Color(0xFF666666),
+                            size: 20,
                           ),
                           onPressed: () {
                             setState(() {
@@ -214,50 +202,73 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             });
                           },
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'パスワードを再入力してください';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'パスワードが一致しません';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'パスワードを再入力してください';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'パスワードが一致しません';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    // Sign up button
-                    ElevatedButton(
-                      onPressed: _signUp,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
+                      
+                      const SizedBox(height: 32), // Generous spacing
+                      
+                      PrimaryButton(
+                        text: 'アカウント登録',
+                        onPressed: _signUp,
                       ),
-                      child: const Text(
-                        '登録する',
-                        style: TextStyle(fontSize: 16),
+                      
+                      const SizedBox(height: 32), // 16 px vertical padding above and below
+                      
+                      const OrDivider(),
+                      
+                      const SizedBox(height: 32), // 16 px vertical padding above and below
+                      
+                      GoogleButton(
+                        text: 'Continue with Google',
+                        onPressed: () {
+                          // TODO: Implement Google Sign-Up
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Google認証は今後実装予定です'),
+                              backgroundColor: Color(0xFF666666),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Login link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('既にアカウントをお持ちですか？ '),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'ログイン',
-                            style: TextStyle(color: Colors.teal),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Login link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            '既にアカウントをお持ちですか？ ',
+                            style: TextStyle(
+                              color: Color(0xFF666666), // #666
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'ログイン',
+                              style: TextStyle(
+                                color: Colors.black, // black
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32), // Bottom spacing
+                    ],
+                  ),
                 ),
               ),
             ),
