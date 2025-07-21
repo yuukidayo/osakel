@@ -2,85 +2,104 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ユーザー情報
+    // ※ デバッグ用の全許可ルールは削除 or コメントアウト
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+
+    // ユーザー登録／プロファイル管理
     match /user/{userId} {
-      // 読み取り: 自分の情報または管理者
-      allow read: if request.auth != null && 
-                     (request.auth.uid == userId || isAdmin());
-      
-      // 作成: 自分のアカウント作成時
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // 更新: 自分の情報（FCMトークン等）または管理者
-      allow update: if request.auth != null && 
-                       (request.auth.uid == userId || isAdmin());
-      
-      // 削除: 管理者のみ
-      allow delete: if request.auth != null && isAdmin();
+      // ドキュメントの存在有無にかかわらず、新規作成は誰でもOK
+      allow create: if true;
+      // 自分の user ドキュメントのみ更新可
+      allow update: if request.auth != null
+                    && request.auth.uid == userId;
+      // （必要に応じて）自分のドキュメントのみ読取可
+      allow read:   if request.auth != null
+                    && request.auth.uid == userId;
+      // 削除は基本禁止、あるいは管理者のみ
+      allow delete: if false;
     }
-    
+
+    // — 以下、既存のコレクションルール —
+
     // 店舗情報
     match /shops/{shopId} {
-      allow read: if true; // 誰でも見れる
-      allow create: if request.auth != null && isAdmin(); // 管理者のみ新規作成
-      allow update: if request.auth != null && 
-                       (isAdmin() || isShopOwner(shopId)); // 管理者または店舗オーナー
-      allow delete: if request.auth != null && isAdmin(); // 管理者のみ削除
+      allow read:   if true;
+      allow create: if request.auth != null && isAdmin();
+      allow update: if request.auth != null
+                      && (isAdmin() || isShopOwner(shopId));
+      allow delete: if request.auth != null && isAdmin();
     }
-    
+
     // お酒情報
     match /drinks/{drinkId} {
-      allow read: if true; // 誰でも見れる
-      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+      allow read:  if true;
+      allow write: if request.auth != null && isAdmin();
     }
-    
+
     // 店舗-お酒関連付け
     match /drink_shop_links/{linkId} {
-      allow read: if true; // 誰でも見れる
-      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+      allow read:  if true;
+      allow write: if request.auth != null && isAdmin();
     }
-    
+
     // カテゴリ情報
     match /categories/{categoryId} {
-      allow read: if true; // 誰でも見れる
-      allow write: if request.auth != null && isAdmin(); // 管理者のみ編集
+      allow read:  if true;
+      allow write: if request.auth != null && isAdmin();
     }
-    
+
     // コメント
     match /comments/{commentId} {
-      allow read: if true; // 誰でも見れる
-      allow create: if request.auth != null && isAuthenticated(); // 認証ユーザーのみ作成
-      allow update, delete: if request.auth != null && 
-                               (request.auth.uid == resource.data.userId || 
-                                isAdmin() || 
-                                isShopOwnerOfComment()); // 本人、管理者、関連店舗オーナー
+      allow read:    if true;
+      allow create:  if request.auth != null && isAuthenticated();
+      allow update, delete: if request.auth != null
+                              && (request.auth.uid == resource.data.userId
+                                  || isAdmin()
+                                  || isShopOwnerOfComment());
     }
-    
+
+    // お気に入り
+    match /favorites/{favoriteId} {
+      allow read:    if true;
+      allow create:  if request.auth != null && isAuthenticated();
+      allow update, delete: if request.auth != null
+                              && (request.auth.uid == resource.data.userId
+                                  || isAdmin());
+    }
+
+    // 評価
+    match /evaluations/{evaluationId} {
+      allow read:    if true;
+      allow create:  if request.auth != null && isAuthenticated();
+      allow update, delete: if request.auth != null
+                              && (request.auth.uid == resource.data.userId
+                                  || isAdmin());
+    }
+
     // 権限チェック関数
     function isAdmin() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null
+        && exists(/databases/$(database)/documents/user/$(request.auth.uid))
+        && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
     }
-    
     function isAuthenticated() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role in ['user', 'shop_owner', 'admin'];
+      return request.auth != null
+        && exists(/databases/$(database)/documents/user/$(request.auth.uid))
+        && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role in ['user','shop_owner','admin'];
     }
-    
     function isShopOwner(shopId) {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner' &&
-             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId == shopId;
+      return request.auth != null
+        && exists(/databases/$(database)/documents/user/$(request.auth.uid))
+        && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner'
+        && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId == shopId;
     }
-    
     function isShopOwnerOfComment() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner' &&
-             resource.data.shopId == get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId;
+      return request.auth != null
+        && exists(/databases/$(database)/documents/user/$(request.auth.uid))
+        && get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'shop_owner'
+        && resource.data.shopId == get(/databases/$(database)/documents/user/$(request.auth.uid)).data.shopId;
     }
   }
 }

@@ -19,7 +19,7 @@ class FirestoreService {
   // Collection references with error handling
   CollectionReference get shopsRef => _firestore.collection('shops');
   CollectionReference get drinkShopLinksRef => _firestore.collection('drink_shop_links');
-  CollectionReference get usersRef => _firestore.collection('user');
+  CollectionReference get usersRef => _firestore.collection('users');
   CollectionReference get commentsRef => _firestore.collection('comments');
   
   // Get a specific shop by ID
@@ -236,6 +236,52 @@ class FirestoreService {
       return true;
     } catch (e) {
       print('Error deleting comment: $e');
+      return false;
+    }
+  }
+  
+  // ユーザー情報をFirestoreに保存
+  Future<bool> saveUser({
+    required String uid,
+    required String name,
+    required String email,
+    String? fcmToken,
+    String role = '一般', // デフォルトで一般ユーザー
+  }) async {
+    print('🚀 FirestoreService.saveUser() メソッド開始');
+    print('📝 保存対象データ:');
+    print('  - UID: $uid');
+    print('  - Name: $name');
+    print('  - Email: $email');
+    print('  - FCMToken: ${fcmToken ?? "なし"}');
+    print('  - Role: $role');
+    
+    try {
+      print('📡 Firestore usersRef.doc($uid).set() 呼び出し開始');
+      
+      await usersRef.doc(uid).set({
+        'uid': uid, // ユーザーのUID
+        'name': name, // 名前
+        'email': email, // メールアドレス（既存）
+        'role': role, // role: 一般
+        'fcmToken': fcmToken, // FCMトークン
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      print('✅ Firestore書き込み成功: usersコレクションにUID=$uid で保存完了');
+      return true;
+    } catch (e) {
+      print('❌ FirestoreService.saveUser() エラー発生:');
+      print('  - エラー内容: $e');
+      print('  - エラータイプ: ${e.runtimeType}');
+      
+      if (e.toString().contains('permission-denied')) {
+        print('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
+        print('  - コレクション: users');
+        print('  - ドキュメントID: $uid');
+      }
+      
       return false;
     }
   }
