@@ -69,8 +69,57 @@ Future<void> main() async {
 }
 
 /// 認証状態を監視し、適切な画面にルーティングするためのラッパー
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // アプリライフサイクル監視を開始
+    WidgetsBinding.instance.addObserver(this);
+    developer.log('🔄 AuthWrapper初期化 - ライフサイクル監視開始');
+  }
+
+  @override
+  void dispose() {
+    // アプリライフサイクル監視を停止
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    if (state == AppLifecycleState.resumed) {
+      developer.log('📱 アプリがフォアグラウンドに復帰 - 認証状態を再確認');
+      _checkAuthenticationStateOnResume();
+    }
+  }
+
+  /// アプリ復帰時の認証状態確認
+  Future<void> _checkAuthenticationStateOnResume() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        developer.log('🔄 アプリ復帰時のユーザー状態再読み込み: ${user.email}');
+        await user.reload();
+        
+        final updatedUser = FirebaseAuth.instance.currentUser;
+        if (updatedUser != null && updatedUser.emailVerified) {
+          developer.log('✅ アプリ復帰時にメール認証確認 - 状態更新');
+          // StreamBuilderが自動的に再構築されてMainScreenに遷移する
+        }
+      } catch (e) {
+        developer.log('❌ アプリ復帰時のユーザー状態確認エラー: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,17 +142,37 @@ class AuthWrapper extends StatelessWidget {
           // メール認証が完了しているかチェック
           if (user != null && user.emailVerified) {
             // メール認証完了済み → MainScreen画面へ変更
+            developer.log('✅ メール認証完了済み - MainScreenへ遷移: ${user.email}');
             return const MainScreen();
           } else {
-            // メール認証未完了 → ログイン画面に戻す
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              // ログアウト
-              FirebaseAuth.instance.signOut();
-              
-              // 認証未完了をログ出力のみ（SnackBar削除）
-              developer.log('メール認証未完了のためログアウトしました');
-            });
-            return const LoginScreen();
+            // メール認証未完了の場合、ユーザー状態を再読み込みして再確認
+            developer.log('🔄 メール認証未完了 - ユーザー状態再読み込み中: ${user?.email}');
+            return FutureBuilder<void>(
+              future: _reloadUserAndCheck(user),
+              builder: (context, reloadSnapshot) {
+                if (reloadSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('認証状態を確認中...'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                
+                // 再読み込み後もメール未認証の場合はログアウト
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  FirebaseAuth.instance.signOut();
+                  developer.log('❌ メール認証未完了のためログアウトしました');
+                });
+                return const LoginScreen();
+              },
+            );
           }
         }
         
@@ -111,6 +180,28 @@ class AuthWrapper extends StatelessWidget {
         return const LoginScreen();
       },
     );
+  }
+
+  /// ユーザー状態を再読み込みして認証状態を再確認
+  Future<void> _reloadUserAndCheck(User? user) async {
+    if (user == null) return;
+    
+    try {
+      developer.log('🔄 ユーザー状態再読み込み開始: ${user.email}');
+      await user.reload();
+      
+      final updatedUser = FirebaseAuth.instance.currentUser;
+      if (updatedUser != null) {
+        developer.log('📧 再読み込み後の認証状態: emailVerified=${updatedUser.emailVerified}');
+        
+        if (updatedUser.emailVerified) {
+          developer.log('✅ 再読み込み後にメール認証確認 - 画面更新をトリガー');
+          // 認証状態が更新された場合、StreamBuilderが自動的に再構築される
+        }
+      }
+    } catch (e) {
+      developer.log('❌ ユーザー状態再読み込みエラー: $e');
+    }
   }
 }
 
