@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer' as developer;
 
 class EmailVerificationDialog extends StatelessWidget {
   final User user;
@@ -13,20 +14,21 @@ class EmailVerificationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('メール認証が未完了です'),
-      content: const Text('登録したメールアドレスに送信された認証メールから認証を完了してください。'),
       actions: [
         TextButton(
           onPressed: () async {
-            // Resend verification email
-            await user.sendEmailVerification();
-            if (!context.mounted) return;
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('認証メールを再送信しました'),
-                backgroundColor: Colors.blue,
-              ),
-            );
+            try {
+              // Resend verification email
+              developer.log('認証メール再送信開始: ${user.email}');
+              await user.sendEmailVerification();
+              developer.log('✅ 認証メール再送信成功: ${user.email}');
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            } catch (e) {
+              developer.log('❌ 認証メール再送信エラー: $e');
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            }
           },
           child: const Text('認証メールを再送信'),
         ),

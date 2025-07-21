@@ -183,13 +183,13 @@ class GoogleButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Google "G" icon placeholder (24×24 px)
+              // Google "G" icon placeholder (24×24 px) - Black tone
               Container(
                 width: 24,
                 height: 24,
                 margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4285F4),
+                  color: Colors.black, // Changed to black for monochrome design
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: const Center(

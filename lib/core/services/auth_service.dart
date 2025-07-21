@@ -47,7 +47,7 @@ class AuthService {
       print('👤 現在のユーザー: ${user.uid}');
       
       // ユーザードキュメントを取得
-      final userDoc = await _firestore.collection('user').doc(user.uid).get();
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
       
       if (!userDoc.exists) {
         print('🚫 ユーザードキュメントが見つかりません: ${user.uid}');
@@ -198,7 +198,7 @@ class AuthService {
         userData['shopId'] = shopId;
       }
 
-      await _firestore.collection('user').doc(userId).update(userData);
+      await _firestore.collection('users').doc(userId).update(userData);
       print('✅ ユーザー権限設定完了: ${role.displayName}');
     } catch (e) {
       print('❌ ユーザー権限設定エラー: $e');
@@ -228,7 +228,7 @@ class AuthService {
         userData['shopId'] = shopId;
       }
 
-      await _firestore.collection('user').doc(userId).set(userData);
+      await _firestore.collection('users').doc(userId).set(userData);
       print('✅ 新規ユーザー作成完了: ${role.displayName}');
     } catch (e) {
       print('❌ 新規ユーザー作成エラー: $e');

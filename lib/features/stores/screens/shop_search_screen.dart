@@ -16,9 +16,9 @@ class ShopSearchScreen extends StatefulWidget {
   final VoidCallback? onSwitchToDrinkSearch;
   
   const ShopSearchScreen({
-    Key? key,
+    super.key,
     this.onSwitchToDrinkSearch,
-  }) : super(key: key);
+  });
 
   @override
   State<ShopSearchScreen> createState() => _ShopSearchScreenState();

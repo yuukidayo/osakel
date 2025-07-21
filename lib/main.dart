@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:developer' as developer;
 import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
 import 'screens/subcategory_screen.dart';
@@ -69,7 +70,7 @@ Future<void> main() async {
 
 /// 認証状態を監視し、適切な画面にルーティングするためのラッパー
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -94,18 +95,13 @@ class AuthWrapper extends StatelessWidget {
             // メール認証完了済み → MainScreen画面へ変更
             return const MainScreen();
           } else {
-            // メール認証未完了 → ログイン画面に戻して、そこでダイアログ表示
+            // メール認証未完了 → ログイン画面に戻す
             WidgetsBinding.instance.addPostFrameCallback((_) {
               // ログアウト
               FirebaseAuth.instance.signOut();
               
-              // 認証未完了メッセージ
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('メール認証を完了してからログインしてください'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
+              // 認証未完了をログ出力のみ（SnackBar削除）
+              developer.log('メール認証未完了のためログアウトしました');
             });
             return const LoginScreen();
           }
@@ -121,7 +117,7 @@ class AuthWrapper extends StatelessWidget {
 class MyApp extends StatefulWidget {
   final bool firebaseInitialized;
 
-  const MyApp({Key? key, required this.firebaseInitialized}) : super(key: key);
+  const MyApp({super.key, required this.firebaseInitialized});
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -173,9 +169,7 @@ class _MyAppState extends State<MyApp> {
             secondary: Color(0xFF333333),   // ダークグレー
             onSecondary: Color(0xFFFFFFFF), // ダークグレー上のテキスト
             surface: Color(0xFFFFFFFF),     // 表面の色（カード背景等）
-            onSurface: Color(0xFF000000),   // 表面上のテキスト
-            background: Color(0xFFFFFFFF),  // 背景色
-            onBackground: Color(0xFF000000),// 背景上のテキスト
+            onSurface: Color(0xFF000000),// 背景上のテキスト
             error: Color(0xFF000000),       // エラーカラー（モノトーンに合わせて黒に）
             onError: Color(0xFFFFFFFF),     // エラーカラー上のテキスト
             outline: Color(0xFF8A8A8A),     // アウトライン（グレー）
@@ -239,10 +233,6 @@ class _MyAppState extends State<MyApp> {
             bodyMedium: TextStyle(color: Color(0xFF000000)),
             bodySmall: TextStyle(color: Color(0xFF8A8A8A)),  // 小さいテキストは薄いグレー
           ),
-          // ダイアログ関連の設定
-          // Flutter バージョンによりDialogThemeとDialogThemeDataの互換性の問題があるため、
-          // 個別のプロパティとして設定
-          dialogBackgroundColor: const Color(0xFFFFFFFF),
           // ボトムシートテーマ
           bottomSheetTheme: const BottomSheetThemeData(
             backgroundColor: Color(0xFFFFFFFF),
@@ -252,7 +242,7 @@ class _MyAppState extends State<MyApp> {
           snackBarTheme: const SnackBarThemeData(
             backgroundColor: Color(0xFF000000),
             contentTextStyle: TextStyle(color: Color(0xFFFFFFFF)),
-          ),
+          ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFFFFFFFF)),
         ),
         // FirebaseDebugWidgetをbuilderパターンで統合
         builder: (context, child) {
