@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SignUpCompleteScreen extends StatelessWidget {
   final String email;
-  
+
   const SignUpCompleteScreen({
     Key? key,
     required this.email,
@@ -11,115 +12,157 @@ class SignUpCompleteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // #FFFFFF
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(12), // 12px rounded corners effect
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0), // 16px safe-area padding
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Success Icon - 80×80 px circle with light green background
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8F5E9), // Very light green background
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 40,
-                    color: Color(0xFF388E3C), // Medium green check mark
-                  ),
-                ),
-                
-                const SizedBox(height: 24), // 24px vertical gap below icon
-                
-                // Title - 「登録が完了しました！」
-                const Text(
-                  '登録が完了しました！',
-                  style: TextStyle(
-                    fontSize: 24, // 24sp
-                    fontWeight: FontWeight.w600, // Semi-bold
-                    color: Color(0xFF000000), // #000
-                    height: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 12), // 12px gap between title and first line
-                
-                // Body Message - First line
-                const Text(
-                  '登録したメールアドレス宛に確認メールを送信しました。',
-                  style: TextStyle(
-                    fontSize: 16, // 16sp
-                    fontWeight: FontWeight.normal, // Regular
-                    color: Color(0xFF333333), // #333
-                    height: 1.5, // line-height 24px (24/16 = 1.5)
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 12), // 12px gap between the two lines
-                
-                // Body Message - Second line
-                const Text(
-                  'メール内のリンクをクリックして認証を完了してから、アプリをお楽しみください。',
-                  style: TextStyle(
-                    fontSize: 16, // 16sp
-                    fontWeight: FontWeight.normal, // Regular
-                    color: Color(0xFF333333), // #333
-                    height: 1.5, // line-height 24px (24/16 = 1.5)
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 40), // Extra spacing for better visual balance
-                
-                // Email confirmation display
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5), // Light gray background
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFFCCCCCC), // #CCC border
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.email_outlined,
-                        size: 20,
-                        color: Color(0xFF666666), // #666
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 成功アイコン
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          email,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF666666), // #666
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 60,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // タイトル
+                    const Text(
+                      'アカウント登録完了！',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF333333),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // サブタイトル
+                    Text(
+                      '$email\nにメール認証を送信しました',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF666666),
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // 説明文
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFE9ECEF),
+                          width: 1,
                         ),
                       ),
-                    ],
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF6C757D),
+                            size: 32,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'メール認証を完了してください',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF495057),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '送信されたメールのリンクをタップして\nメール認証を完了してください。\n\n認証完了後、下のボタンから\nログインしてアプリをお楽しみください。',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6C757D),
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // ログイン画面へのボタン
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // ログイン画面に遷移
+                    Navigator.of(context).pushReplacementNamed('/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2196F3),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'ログイン画面へ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // メール再送信ボタン（オプション）
+              TextButton(
+                onPressed: () {
+                  // メール再送信の処理（必要に応じて実装）
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('メール認証を再送信しました'),
+                      backgroundColor: Color(0xFF4CAF50),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'メール認証を再送信',
+                  style: TextStyle(
+                    color: Color(0xFF666666),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

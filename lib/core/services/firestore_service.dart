@@ -257,9 +257,16 @@ class FirestoreService {
     print('  - Role: $role');
     
     try {
-      print('📡 Firestore usersRef.doc($uid).set() 呼び出し開始');
+      print('📡 Firestore接続状態確認中...');
       
-      await usersRef.doc(uid).set({
+      // Firestore接続状態を確認
+      print('🔍 Firestore instance: ${_firestore.toString()}');
+      print('🔍 usersRef: ${usersRef.toString()}');
+      
+      print('📡 Firestore usersRef.doc($uid).set() 呼び出し開始');
+      print('⏱️ タイムアウト設定: 30秒');
+      
+      final userData = {
         'uid': uid, // ユーザーのUID
         'name': name, // 名前
         'email': email, // メールアドレス（既存）
@@ -267,21 +274,39 @@ class FirestoreService {
         'fcmToken': fcmToken, // FCMトークン
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      
+      print('📄 保存データ構築完了: $userData');
+      print('🚀 Firestore書き込み開始...');
+      
+      // タイムアウト付きFirestore書き込みを実行
+      await usersRef.doc(uid).set(userData).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          print('⏰ Firestore書き込みがタイムアウトしました (30秒)');
+          throw TimeoutException('Firestore書き込みがタイムアウトしました', const Duration(seconds: 30));
+        },
+      );
       
       print('✅ Firestore書き込み成功: usersコレクションにUID=$uid で保存完了');
+      print('🎉 saveUser処理完了 - trueを返します');
       return true;
     } catch (e) {
       print('❌ FirestoreService.saveUser() エラー発生:');
       print('  - エラー内容: $e');
       print('  - エラータイプ: ${e.runtimeType}');
       
-      if (e.toString().contains('permission-denied')) {
+      if (e is TimeoutException) {
+        print('⏰ タイムアウトエラー: Firestore接続またはネットワークの問題');
+      } else if (e.toString().contains('permission-denied')) {
         print('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
         print('  - コレクション: users');
         print('  - ドキュメントID: $uid');
+      } else if (e.toString().contains('network')) {
+        print('🌐 ネットワークエラー: インターネット接続を確認してください');
       }
       
+      print('💥 saveUser処理失敗 - falseを返します');
       return false;
     }
   }

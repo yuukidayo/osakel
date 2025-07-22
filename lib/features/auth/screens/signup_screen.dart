@@ -26,10 +26,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureConfirmPassword = true;
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  StreamSubscription<User?>? _authStateSubscription;
+  
+  // デバッグ情報用
+  String _debugInfo = '待機中';
+  String _lastError = '';
 
   @override
   void initState() {
     super.initState();
+    
+    // Firebase Auth認証状態監視を追加
+    _authStateSubscription = _auth.authStateChanges().listen((User? user) {
+      if (user != null && user.emailVerified) {
+        developer.log('✅ SignUpScreenで認証完了を検知 - MainScreenへ遷移: ${user.email}');
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
+    });
   }
 
   @override
@@ -38,6 +51,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _authStateSubscription?.cancel();
     super.dispose();
   }
 
@@ -99,8 +113,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     
     // フォームバリデーションを正しく実行
     print('📝 フォームバリデーション開始');
+    setState(() {
+      _debugInfo = '📝 フォームバリデーション中...';
+      _lastError = '';
+    });
+    
     if (!_formKey.currentState!.validate()) {
       print('❌ バリデーションエラー: フォーム入力が無効です');
+      setState(() {
+        _debugInfo = '❌ バリデーションエラー';
+        _lastError = 'フォーム入力が無効です';
+      });
       return;
     }
     print('✅ フォームバリデーション成功');
@@ -108,6 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     print('🔄 setState開始: _isLoading = true');
     setState(() {
       _isLoading = true;
+      _debugInfo = '🔄 アカウント作成中...';
     });
     print('✅ setState完了: _isLoading = true');
 
@@ -121,6 +145,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       // Create user with email and password
       print('createUserWithEmailAndPassword呼び出し前');
+      setState(() {
+        _debugInfo = '🔐 Firebase認証アカウント作成中...';
+      });
       
       // 1. Firebase Auth でアカウント作成
       final userCredential = await _auth.createUserWithEmailAndPassword(
@@ -130,11 +157,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       if (userCredential.user == null) {
         print('❌ ユーザー作成失敗: userCredential.userがnullです');
+        setState(() {
+          _debugInfo = '❌ ユーザー作成失敗';
+          _lastError = 'userCredential.userがnullです';
+        });
         return;
       }
       
       final uid = userCredential.user!.uid;
       print('✅ ユーザー作成成功: $uid');
+      setState(() {
+        _debugInfo = '✅ アカウント作成成功 - FCMトークン取得中...';
+      });
       
       // 2. userCredentialから直接ユーザー情報を取得
       final user = userCredential.user!;
@@ -145,8 +179,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       try {
         fcmToken = await FirebaseMessaging.instance.getToken();
         print('✅ FCMトークン取得成功: ${fcmToken != null ? fcmToken.substring(0, 20) + '...' : 'null'}');
+        setState(() {
+          _debugInfo = '✅ FCMトークン取得成功 - メール認証送信中...';
+        });
       } catch (e) {
         print('❌ FCMトークン取得エラー: $e');
+        setState(() {
+          _debugInfo = '⚠️ FCMトークン取得エラー - メール認証送信中...';
+        });
       }
       
       // 4. メール認証送信（Firestore保存より前に実行）
@@ -156,9 +196,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         
         await user.sendEmailVerification();
         print('✅ メール認証送信成功: ${user.email}');
+        setState(() {
+          _debugInfo = '✅ メール認証送信成功 - Firestore保存中...';
+        });
       } catch (e) {
         print('❌ メール認証送信エラー: $e');
         print('🔍 エラー詳細: ${e.runtimeType}');
+        setState(() {
+          _debugInfo = '⚠️ メール認証送信エラー - Firestore保存中...';
+          _lastError = 'メール送信エラー: $e';
+        });
         // メール送信失敗でも処理は継続
       }
       
@@ -167,6 +214,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       print('💾 保存対象UID: ${user.uid}');
       print('👤 保存対象名前: ${_nameController.text.trim()}');
       print('📧 保存対象メール: ${_emailController.text.trim()}');
+      print('⏱️ SignUpScreen側タイムアウト設定: 10秒');
       
       final result = await FirestoreService().saveUser(
         uid: user.uid,
@@ -174,14 +222,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
         email: _emailController.text.trim(),
         fcmToken: fcmToken,
         role: '一般',
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏰ SignUpScreen: Firestore保存がタイムアウトしました (10秒)');
+          throw Exception('Firestoreへのユーザー保存に失敗しました: タイムアウト');
+        },
       );
       
       if (!result) {
         print('❌ Firestoreへのユーザー保存失敗');
+        setState(() {
+          _debugInfo = '❌ Firestore保存失敗';
+          _lastError = 'Firestoreへのユーザー保存に失敗しました';
+        });
         throw Exception('Firestoreへのユーザー保存に失敗しました');
       }
       
       print('✅ Firestoreへのユーザー保存成功');
+      setState(() {
+        _debugInfo = '✅ Firestore保存成功 - 完了画面へ遷移中...';
+      });
       
       // 6. 完了画面へ遷移
       if (!mounted) return;
@@ -196,8 +257,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     } on FirebaseAuthException catch (e) {
       print('❌ FirebaseAuthException: ${e.code} - ${e.message}');
+      setState(() {
+        _debugInfo = '❌ Firebase認証エラー';
+        _lastError = '${e.code}: ${e.message}';
+      });
     } catch (e) {
       print('❌ 未処理の例外: $e');
+      setState(() {
+        _debugInfo = '❌ 未処理エラー';
+        _lastError = '$e';
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -212,9 +281,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: Colors.white, // #FFFFFF
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                  ),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      _debugInfo,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF333333),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  if (_lastError.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        _lastError,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFFFF5722),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             )
           : SafeArea(
