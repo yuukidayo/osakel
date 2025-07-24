@@ -39,7 +39,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    print('🗺️ MapScreen: initState開始 - drinkId: ${widget.drinkId}');
+    debugPrint('🗺️ MapScreen: initState開始 - drinkId: ${widget.drinkId}');
     
     // Initialize controller and state
     _controller = MapScreenController();
@@ -222,7 +222,7 @@ class _MapScreenState extends State<MapScreen> {
     _controller.onCameraMove(position);
     
     // デバッグログ（本番では削除推奨）
-    // print('📍 地図中心位置更新: ${position.target.latitude}, ${position.target.longitude}');
+    // debugPrint('📍 地図中心位置更新: ${position.target.latitude}, ${position.target.longitude}');
   }
 
   /// フィルター選択時の処理
