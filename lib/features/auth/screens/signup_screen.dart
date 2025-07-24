@@ -57,7 +57,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _saveUserToFirestore(User user, Map<String, dynamic> userData) async {
     try {
-      print('📟 Firestoreにユーザーデータ保存開始...');
+      debugPrint('📟 Firestoreにユーザーデータ保存開始...');
       final String uid = user.uid;
       final String name = userData['name'] as String;
       final String email = userData['email'] as String;
@@ -65,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       // メール認証送信は最初の認証状態確認時に実行済みなので、ここでは行わない
       // 直接Firestore保存を実行
-      print('📟 FirestoreService().saveUser() 呼び出し...');
+      debugPrint('📟 FirestoreService().saveUser() 呼び出し...');
       final result = await FirestoreService().saveUser(
         uid: uid,
         name: name,
@@ -73,10 +73,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         fcmToken: fcmToken,
         role: '一般', // 明示的にroleを指定
       );
-      print('📟 FirestoreService().saveUser() 呼び出し完了 - 結果: $result');
+      debugPrint('📟 FirestoreService().saveUser() 呼び出し完了 - 結果: $result');
       
       if (result) {
-        print('✅ Firestoreへのユーザー保存成功');
+        debugPrint('✅ Firestoreへのユーザー保存成功');
         
         // 画面遷移
         if (mounted) {
@@ -90,12 +90,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           );
         }
       } else {
-        print('❌ Firestoreへのユーザー保存失敗');
+        debugPrint('❌ Firestoreへのユーザー保存失敗');
       }
     } catch (e) {
-      print('❌ Firestoreへの保存中にエラー発生: $e');
+      debugPrint('❌ Firestoreへの保存中にエラー発生: $e');
       if (e.toString().contains('permission-denied')) {
-        print('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
+        debugPrint('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
       }
     } finally {
       // ローディング状態のリセットは不要、_signUpメソッドのfinalブロックで処理済み
@@ -109,42 +109,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _signUp() async {
-    print('🚀 _signUp()メソッド開始');
+    debugPrint('🚀 _signUp()メソッド開始');
     
     // フォームバリデーションを正しく実行
-    print('📝 フォームバリデーション開始');
+    debugPrint('📝 フォームバリデーション開始');
     setState(() {
       _debugInfo = '📝 フォームバリデーション中...';
       _lastError = '';
     });
     
     if (!_formKey.currentState!.validate()) {
-      print('❌ バリデーションエラー: フォーム入力が無効です');
+      debugPrint('❌ バリデーションエラー: フォーム入力が無効です');
       setState(() {
         _debugInfo = '❌ バリデーションエラー';
         _lastError = 'フォーム入力が無効です';
       });
       return;
     }
-    print('✅ フォームバリデーション成功');
+    debugPrint('✅ フォームバリデーション成功');
 
-    print('🔄 setState開始: _isLoading = true');
+    debugPrint('🔄 setState開始: _isLoading = true');
     setState(() {
       _isLoading = true;
       _debugInfo = '🔄 アカウント作成中...';
     });
-    print('✅ setState完了: _isLoading = true');
+    debugPrint('✅ setState完了: _isLoading = true');
 
-    print('🎯 tryブロック開始');
+    debugPrint('🎯 tryブロック開始');
     try {
       // デバッグログ
-      print('サインアップ処理を開始します: ${_emailController.text.trim()}');
+      debugPrint('サインアップ処理を開始します: ${_emailController.text.trim()}');
       
       // 処理の各ステップを細かくログ出力
-      print('FirebaseAuth.instance取得済み');
+      debugPrint('FirebaseAuth.instance取得済み');
       
       // Create user with email and password
-      print('createUserWithEmailAndPassword呼び出し前');
+      debugPrint('createUserWithEmailAndPassword呼び出し前');
       setState(() {
         _debugInfo = '🔐 Firebase認証アカウント作成中...';
       });
@@ -156,7 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
       
       if (userCredential.user == null) {
-        print('❌ ユーザー作成失敗: userCredential.userがnullです');
+        debugPrint('❌ ユーザー作成失敗: userCredential.userがnullです');
         setState(() {
           _debugInfo = '❌ ユーザー作成失敗';
           _lastError = 'userCredential.userがnullです';
@@ -165,25 +165,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
       
       final uid = userCredential.user!.uid;
-      print('✅ ユーザー作成成功: $uid');
+      debugPrint('✅ ユーザー作成成功: $uid');
       setState(() {
         _debugInfo = '✅ アカウント作成成功 - FCMトークン取得中...';
       });
       
       // 2. userCredentialから直接ユーザー情報を取得
       final user = userCredential.user!;
-      print('✅ 認証状態確認完了: UID=${user.uid}');
+      debugPrint('✅ 認証状態確認完了: UID=${user.uid}');
       
       // 3. FCMトークン取得
       String? fcmToken;
       try {
         fcmToken = await FirebaseMessaging.instance.getToken();
-        print('✅ FCMトークン取得成功: ${fcmToken != null ? fcmToken.substring(0, 20) + '...' : 'null'}');
+        debugPrint('✅ FCMトークン取得成功: ${fcmToken != null ? fcmToken.substring(0, 20) + '...' : 'null'}');
         setState(() {
           _debugInfo = '✅ FCMトークン取得成功 - メール認証送信中...';
         });
       } catch (e) {
-        print('❌ FCMトークン取得エラー: $e');
+        debugPrint('❌ FCMトークン取得エラー: $e');
         setState(() {
           _debugInfo = '⚠️ FCMトークン取得エラー - メール認証送信中...';
         });
@@ -191,17 +191,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       // 4. メール認証送信（Firestore保存より前に実行）
       try {
-        print('📧 メール認証送信開始: ${user.email}');
-        print('🔍 ユーザー作成直後にメール送信（セッション安定状態）');
+        debugPrint('📧 メール認証送信開始: ${user.email}');
+        debugPrint('🔍 ユーザー作成直後にメール送信（セッション安定状態）');
         
         await user.sendEmailVerification();
-        print('✅ メール認証送信成功: ${user.email}');
+        debugPrint('✅ メール認証送信成功: ${user.email}');
         setState(() {
           _debugInfo = '✅ メール認証送信成功 - Firestore保存中...';
         });
       } catch (e) {
-        print('❌ メール認証送信エラー: $e');
-        print('🔍 エラー詳細: ${e.runtimeType}');
+        debugPrint('❌ メール認証送信エラー: $e');
+        debugPrint('🔍 エラー詳細: ${e.runtimeType}');
         setState(() {
           _debugInfo = '⚠️ メール認証送信エラー - Firestore保存中...';
           _lastError = 'メール送信エラー: $e';
@@ -210,11 +210,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
       
       // 5. Firestoreへのユーザー情報保存（メール送信後に実行）
-      print('💾 Firestoreへのユーザー保存開始');
-      print('💾 保存対象UID: ${user.uid}');
-      print('👤 保存対象名前: ${_nameController.text.trim()}');
-      print('📧 保存対象メール: ${_emailController.text.trim()}');
-      print('⏱️ SignUpScreen側タイムアウト設定: 10秒');
+      debugPrint('💾 Firestoreへのユーザー保存開始');
+      debugPrint('💾 保存対象UID: ${user.uid}');
+      debugPrint('👤 保存対象名前: ${_nameController.text.trim()}');
+      debugPrint('📧 保存対象メール: ${_emailController.text.trim()}');
+      debugPrint('⏱️ SignUpScreen側タイムアウト設定: 10秒');
       
       final result = await FirestoreService().saveUser(
         uid: user.uid,
@@ -225,13 +225,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          print('⏰ SignUpScreen: Firestore保存がタイムアウトしました (10秒)');
+          debugPrint('⏰ SignUpScreen: Firestore保存がタイムアウトしました (10秒)');
           throw Exception('Firestoreへのユーザー保存に失敗しました: タイムアウト');
         },
       );
       
       if (!result) {
-        print('❌ Firestoreへのユーザー保存失敗');
+        debugPrint('❌ Firestoreへのユーザー保存失敗');
         setState(() {
           _debugInfo = '❌ Firestore保存失敗';
           _lastError = 'Firestoreへのユーザー保存に失敗しました';
@@ -239,14 +239,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         throw Exception('Firestoreへのユーザー保存に失敗しました');
       }
       
-      print('✅ Firestoreへのユーザー保存成功');
+      debugPrint('✅ Firestoreへのユーザー保存成功');
       setState(() {
         _debugInfo = '✅ Firestore保存成功 - 完了画面へ遷移中...';
       });
       
       // 6. 完了画面へ遷移
       if (!mounted) return;
-      print('🎉 アカウント登録完了 - 完了画面へ遷移');
+      debugPrint('🎉 アカウント登録完了 - 完了画面へ遷移');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -256,13 +256,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       );
     } on FirebaseAuthException catch (e) {
-      print('❌ FirebaseAuthException: ${e.code} - ${e.message}');
+      debugPrint('❌ FirebaseAuthException: ${e.code} - ${e.message}');
       setState(() {
         _debugInfo = '❌ Firebase認証エラー';
         _lastError = '${e.code}: ${e.message}';
       });
     } catch (e) {
-      print('❌ 未処理の例外: $e');
+      debugPrint('❌ 未処理の例外: $e');
       setState(() {
         _debugInfo = '❌ 未処理エラー';
         _lastError = '$e';
