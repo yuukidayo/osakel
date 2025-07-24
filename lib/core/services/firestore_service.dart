@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/shop.dart';
 import '../../models/drink_shop_link.dart';
 import '../../models/shop_with_price.dart';
@@ -31,7 +32,7 @@ class FirestoreService {
       }
       return null;
     } catch (e) {
-      print('Error fetching shop: $e');
+      debugPrint('Error fetching shop: $e');
       return null;
     }
   }
@@ -48,7 +49,7 @@ class FirestoreService {
         return DrinkShopLink.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      print('Error fetching drink-shop links: $e');
+      debugPrint('Error fetching drink-shop links: $e');
       return [];
     }
   }
@@ -60,7 +61,7 @@ class FirestoreService {
 
   // Get shops with prices for a specific drink
   Future<List<ShopWithPrice>> getShopsWithPricesForDrink(String drinkId) async {
-    print('Fetching shops with prices for drink: $drinkId');
+    debugPrint('Fetching shops with prices for drink: $drinkId');
     
     try {
       // Get all drink-shop links for the specified drink where isAvailable is true
@@ -69,21 +70,21 @@ class FirestoreService {
           .where('isAvailable', isEqualTo: true)
           .get()
           .timeout(const Duration(seconds: 10), onTimeout: () {
-            print('Firestore query timed out');
+            debugPrint('Firestore query timed out');
             throw TimeoutException('Firestore query timed out');
           });
       
       if (linksSnapshot.docs.isEmpty) {
-        print('No available drink-shop links found for drink: $drinkId');
+        debugPrint('No available drink-shop links found for drink: $drinkId');
         return [];
       }
       
-      print('Found ${linksSnapshot.docs.length} available drink-shop links');
+      debugPrint('Found ${linksSnapshot.docs.length} available drink-shop links');
       
       // ドキュメントIDを表示
       for (var doc in linksSnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        print('ドキュメントID: ${doc.id}, drinkId: ${data['drinkId'] ?? 'null'}, shopId: ${data['shopId'] ?? 'null'}');
+        debugPrint('ドキュメントID: ${doc.id}, drinkId: ${data['drinkId'] ?? 'null'}, shopId: ${data['shopId'] ?? 'null'}');
       }
       
       // Create a list to store the results
@@ -113,16 +114,16 @@ class FirestoreService {
             ));
           }
         } catch (e) {
-          print('Error processing shop link: $e');
+          debugPrint('Error processing shop link: $e');
           // Continue with next link even if one fails
           continue;
         }
       }
       
-      print('Returning ${shopsWithPrices.length} shops with prices');
+      debugPrint('Returning ${shopsWithPrices.length} shops with prices');
       return shopsWithPrices;
     } catch (e) {
-      print('Error fetching shops with prices: $e');
+      debugPrint('Error fetching shops with prices: $e');
       // Return empty list on error
       return [];
     }
@@ -139,7 +140,7 @@ class FirestoreService {
       }
       return null;
     } catch (e) {
-      print('Error fetching user: $e');
+      debugPrint('Error fetching user: $e');
       return null;
     }
   }
@@ -155,7 +156,7 @@ class FirestoreService {
         return User.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      print('Error fetching pro users: $e');
+      debugPrint('Error fetching pro users: $e');
       return [];
     }
   }
@@ -174,7 +175,7 @@ class FirestoreService {
         return Comment.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      print('Error fetching comments for drink: $e');
+      debugPrint('Error fetching comments for drink: $e');
       return [];
     }
   }
@@ -213,7 +214,7 @@ class FirestoreService {
       
       return proComments;
     } catch (e) {
-      print('Error fetching pro comments for drink: $e');
+      debugPrint('Error fetching pro comments for drink: $e');
       return [];
     }
   }
@@ -224,7 +225,7 @@ class FirestoreService {
       final docRef = await commentsRef.add(comment.toMap());
       return docRef.id;
     } catch (e) {
-      print('Error adding comment: $e');
+      debugPrint('Error adding comment: $e');
       return null;
     }
   }
@@ -235,7 +236,7 @@ class FirestoreService {
       await commentsRef.doc(commentId).delete();
       return true;
     } catch (e) {
-      print('Error deleting comment: $e');
+      debugPrint('Error deleting comment: $e');
       return false;
     }
   }
@@ -248,23 +249,23 @@ class FirestoreService {
     String? fcmToken,
     String role = '一般', // デフォルトで一般ユーザー
   }) async {
-    print('🚀 FirestoreService.saveUser() メソッド開始');
-    print('📝 保存対象データ:');
-    print('  - UID: $uid');
-    print('  - Name: $name');
-    print('  - Email: $email');
-    print('  - FCMToken: ${fcmToken ?? "なし"}');
-    print('  - Role: $role');
+    debugPrint('🚀 FirestoreService.saveUser() メソッド開始');
+    debugPrint('📝 保存対象データ:');
+    debugPrint('  - UID: $uid');
+    debugPrint('  - Name: $name');
+    debugPrint('  - Email: $email');
+    debugPrint('  - FCMToken: ${fcmToken ?? "なし"}');
+    debugPrint('  - Role: $role');
     
     try {
-      print('📡 Firestore接続状態確認中...');
+      debugPrint('📡 Firestore接続状態確認中...');
       
       // Firestore接続状態を確認
-      print('🔍 Firestore instance: ${_firestore.toString()}');
-      print('🔍 usersRef: ${usersRef.toString()}');
+      debugPrint('🔍 Firestore instance: ${_firestore.toString()}');
+      debugPrint('🔍 usersRef: ${usersRef.toString()}');
       
-      print('📡 Firestore usersRef.doc($uid).set() 呼び出し開始');
-      print('⏱️ タイムアウト設定: 30秒');
+      debugPrint('📡 Firestore usersRef.doc($uid).set() 呼び出し開始');
+      debugPrint('⏱️ タイムアウト設定: 30秒');
       
       final userData = {
         'uid': uid, // ユーザーのUID
@@ -276,37 +277,37 @@ class FirestoreService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
       
-      print('📄 保存データ構築完了: $userData');
-      print('🚀 Firestore書き込み開始...');
+      debugPrint('📄 保存データ構築完了: $userData');
+      debugPrint('🚀 Firestore書き込み開始...');
       
       // タイムアウト付きFirestore書き込みを実行
       await usersRef.doc(uid).set(userData).timeout(
         const Duration(seconds: 30),
         onTimeout: () {
-          print('⏰ Firestore書き込みがタイムアウトしました (30秒)');
+          debugPrint('⏰ Firestore書き込みがタイムアウトしました (30秒)');
           throw TimeoutException('Firestore書き込みがタイムアウトしました', const Duration(seconds: 30));
         },
       );
       
-      print('✅ Firestore書き込み成功: usersコレクションにUID=$uid で保存完了');
-      print('🎉 saveUser処理完了 - trueを返します');
+      debugPrint('✅ Firestore書き込み成功: usersコレクションにUID=$uid で保存完了');
+      debugPrint('🎉 saveUser処理完了 - trueを返します');
       return true;
     } catch (e) {
-      print('❌ FirestoreService.saveUser() エラー発生:');
-      print('  - エラー内容: $e');
-      print('  - エラータイプ: ${e.runtimeType}');
+      debugPrint('❌ FirestoreService.saveUser() エラー発生:');
+      debugPrint('  - エラー内容: $e');
+      debugPrint('  - エラータイプ: ${e.runtimeType}');
       
       if (e is TimeoutException) {
-        print('⏰ タイムアウトエラー: Firestore接続またはネットワークの問題');
+        debugPrint('⏰ タイムアウトエラー: Firestore接続またはネットワークの問題');
       } else if (e.toString().contains('permission-denied')) {
-        print('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
-        print('  - コレクション: users');
-        print('  - ドキュメントID: $uid');
+        debugPrint('🚫 権限エラー: Firestoreセキュリティルールでアクセスが拒否されました');
+        debugPrint('  - コレクション: users');
+        debugPrint('  - ドキュメントID: $uid');
       } else if (e.toString().contains('network')) {
-        print('🌐 ネットワークエラー: インターネット接続を確認してください');
+        debugPrint('🌐 ネットワークエラー: インターネット接続を確認してください');
       }
       
-      print('💥 saveUser処理失敗 - falseを返します');
+      debugPrint('💥 saveUser処理失敗 - falseを返します');
       return false;
     }
   }
