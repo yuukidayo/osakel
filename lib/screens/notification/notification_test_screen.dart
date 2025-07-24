@@ -6,7 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/services/push_notification_service.dart';
 
 class NotificationTestScreen extends StatefulWidget {
-  const NotificationTestScreen({Key? key}) : super(key: key);
+  const NotificationTestScreen({super.key});
 
   @override
   State<NotificationTestScreen> createState() => _NotificationTestScreenState();

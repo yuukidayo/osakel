@@ -5,9 +5,9 @@ class EmptyStateWidget extends StatelessWidget {
   final VoidCallback onGenerateMockData;
 
   const EmptyStateWidget({
-    Key? key,
+    super.key,
     required this.onGenerateMockData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

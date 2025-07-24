@@ -6,7 +6,7 @@ import '../models/shop.dart';
 
 /// 管理者用お酒登録画面
 class AddDrinkScreen extends StatefulWidget {
-  const AddDrinkScreen({Key? key}) : super(key: key);
+  const AddDrinkScreen({super.key});
 
   @override
   State<AddDrinkScreen> createState() => _AddDrinkScreenState();

@@ -16,12 +16,12 @@ class SideMenu extends StatelessWidget {
   final int notificationCount;
   
   const SideMenu({
-    Key? key,
+    super.key,
     required this.onClose,
     required this.userName,
     this.profileImage,
     this.notificationCount = 0,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {

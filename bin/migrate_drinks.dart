@@ -15,7 +15,7 @@ void main() async {
 }
 
 class MigrationApp extends StatelessWidget {
-  const MigrationApp({Key? key}) : super(key: key);
+  const MigrationApp({super.key});
 
   @override
   Widget build(BuildContext context) {

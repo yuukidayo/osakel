@@ -11,10 +11,10 @@ class FirebaseDebugWidget extends StatefulWidget {
   final bool showInProduction;
 
   const FirebaseDebugWidget({
-    Key? key,
+    super.key,
     required this.child,
     this.showInProduction = false,
-  }) : super(key: key);
+  });
 
   @override
   _FirebaseDebugWidgetState createState() => _FirebaseDebugWidgetState();

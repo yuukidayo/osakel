@@ -7,12 +7,12 @@ class DrinkSearchBar extends StatelessWidget {
   final bool isEnabled;
 
   const DrinkSearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     required this.onChanged,
     required this.searchKeyword,
     this.isEnabled = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

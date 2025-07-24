@@ -5,9 +5,9 @@ class ShopCardWidget extends StatelessWidget {
   final ShopWithPrice shopWithPrice;
 
   const ShopCardWidget({
-    Key? key,
+    super.key,
     required this.shopWithPrice,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

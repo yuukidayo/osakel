@@ -9,11 +9,11 @@ class MapControlButtons extends StatelessWidget {
   final VoidCallback onZoomOut;
 
   const MapControlButtons({
-    Key? key,
+    super.key,
     required this.onCurrentLocation,
     required this.onZoomIn,
     required this.onZoomOut,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

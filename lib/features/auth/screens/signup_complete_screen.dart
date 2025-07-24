@@ -5,9 +5,9 @@ class SignUpCompleteScreen extends StatelessWidget {
   final String email;
 
   const SignUpCompleteScreen({
-    Key? key,
+    super.key,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

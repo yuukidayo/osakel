@@ -6,11 +6,11 @@ class CategoryModal extends StatelessWidget {
   final Function(String, String) onCategorySelected;
 
   const CategoryModal({
-    Key? key,
+    super.key,
     required this.categories,
     required this.selectedCategory,
     required this.onCategorySelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

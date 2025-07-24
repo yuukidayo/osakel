@@ -8,12 +8,12 @@ class CategoryTopBar extends StatelessWidget {
   final IconData switchIcon;
 
   const CategoryTopBar({
-    Key? key,
+    super.key,
     required this.categoryDisplayName,
     required this.onCategoryTap,
     required this.onSwitchToShopSearch,
     this.switchIcon = Icons.storefront,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

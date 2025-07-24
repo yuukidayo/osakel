@@ -10,13 +10,13 @@ class FilterBar extends StatelessWidget {
   final List<String> activeFilters;
 
   const FilterBar({
-    Key? key,
+    super.key,
     this.selectedFilter,
     required this.onFilterSelected,
     this.activeFilterCount = 0,
     this.facilityName,
     this.activeFilters = const [],
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,12 +72,12 @@ class _PillFilterButton extends StatelessWidget {
   final IconData? leadingIcon;
 
   const _PillFilterButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.isActive,
     required this.onPressed,
     this.leadingIcon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -139,11 +139,11 @@ class _FilterButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   const _FilterButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.isSelected,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<_FilterButton> createState() => _FilterButtonState();

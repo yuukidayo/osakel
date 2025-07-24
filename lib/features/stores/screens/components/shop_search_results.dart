@@ -12,14 +12,14 @@ class ShopSearchResults extends StatelessWidget {
   final Function(Shop) onShopTap;
 
   const ShopSearchResults({
-    Key? key,
+    super.key,
     required this.shops,
     required this.isLoading,
     required this.isSearching,
     required this.searchError,
     required this.onRetry,
     required this.onShopTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

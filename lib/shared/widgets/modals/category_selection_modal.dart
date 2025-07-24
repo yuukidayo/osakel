@@ -9,12 +9,12 @@ class CategorySelectionModal extends StatelessWidget {
   final String title;
 
   const CategorySelectionModal({
-    Key? key,
+    super.key,
     required this.categories,
     required this.selectedCategory,
     required this.onCategorySelected,
     this.title = 'カテゴリを選択',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -8,11 +8,11 @@ class DrinkItem extends StatelessWidget {
   final bool isPr;
   
   const DrinkItem({
-    Key? key,
+    super.key,
     required this.document,
     required this.categories,
     this.isPr = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

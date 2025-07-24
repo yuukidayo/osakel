@@ -10,13 +10,13 @@ class SearchResultsList extends StatelessWidget {
   final List<Map<String, dynamic>> categories;
 
   const SearchResultsList({
-    Key? key,
+    super.key,
     required this.searchSnapshot,
     this.hasError = false,
     this.isDebugMode = false,
     required this.buildDebugPanel,
     required this.categories,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

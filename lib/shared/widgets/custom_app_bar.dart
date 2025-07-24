@@ -7,9 +7,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onProfileTap;
   
   const CustomAppBar({
-    Key? key,
+    super.key,
     required this.onProfileTap,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {

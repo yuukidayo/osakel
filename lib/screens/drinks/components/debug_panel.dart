@@ -6,11 +6,11 @@ class DebugPanel extends StatelessWidget {
   final VoidCallback onFirebaseConsoleOpen;
 
   const DebugPanel({
-    Key? key, 
+    super.key, 
     required this.resultCount,
     required this.debugInfo,
     required this.onFirebaseConsoleOpen,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

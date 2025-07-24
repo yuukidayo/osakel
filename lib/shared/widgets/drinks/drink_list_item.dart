@@ -8,10 +8,10 @@ class DrinkListItem extends StatelessWidget {
   final VoidCallback? onFavoritePressed;
 
   const DrinkListItem({
-    Key? key,
+    super.key,
     required this.document,
     this.onFavoritePressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

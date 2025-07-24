@@ -21,7 +21,7 @@ class SubcategoryBar extends StatelessWidget {
   }) buildSubcategoryChip;
 
   const SubcategoryBar({
-    Key? key,
+    super.key,
     required this.isLoadingCategories,
     required this.categories,
     required this.subcategories,
@@ -31,7 +31,7 @@ class SubcategoryBar extends StatelessWidget {
     required this.onSubcategorySelected,
     required this.onShowFilterBottomSheet,
     required this.buildSubcategoryChip,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,25 +10,24 @@ class PermissionGuard extends StatelessWidget {
   final String? requiredShopId; // 店舗オーナーの場合の特定店舗ID
 
   const PermissionGuard({
-    Key? key,
+    super.key,
     required this.child,
     required this.allowedRoles,
     this.fallbackWidget,
     this.requiredShopId,
-  }) : super(key: key);
+  });
 
   /// 管理者専用ガード（既存のAdminGuardと互換性維持）
   PermissionGuard.adminOnly({
-    Key? key,
+    super.key,
     required this.child,
     this.fallbackWidget,
   }) : allowedRoles = [UserRole.admin],
        requiredShopId = null,
-       super(key: key);
 
   /// 認証ユーザー専用ガード
   PermissionGuard.authenticatedOnly({
-    Key? key,
+    super.key,
     required this.child,
     this.fallbackWidget,
   }) : allowedRoles = [
@@ -37,11 +36,10 @@ class PermissionGuard extends StatelessWidget {
          UserRole.shopOwner
        ],
        requiredShopId = null,
-       super(key: key);
 
   /// 店舗オーナー専用ガード（特定店舗）
   PermissionGuard.shopOwnerOnly({
-    Key? key,
+    super.key,
     required this.child,
     required this.requiredShopId,
     this.fallbackWidget,
@@ -49,7 +47,6 @@ class PermissionGuard extends StatelessWidget {
          UserRole.admin,
          UserRole.shopOwner
        ],
-       super(key: key);
 
   @override
   Widget build(BuildContext context) {

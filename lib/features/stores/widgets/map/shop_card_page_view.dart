@@ -12,12 +12,12 @@ class ShopCardPageView extends StatelessWidget {
   final Function(ShopWithPrice) onShopTap;
 
   const ShopCardPageView({
-    Key? key,
+    super.key,
     required this.shops,
     required this.controller,
     required this.onPageChanged,
     required this.onShopTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

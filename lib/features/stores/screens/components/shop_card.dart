@@ -7,10 +7,10 @@ class ShopCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const ShopCard({
-    Key? key,
+    super.key,
     required this.shop,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

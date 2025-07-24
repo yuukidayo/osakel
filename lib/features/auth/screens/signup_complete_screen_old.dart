@@ -9,9 +9,9 @@ class SignUpCompleteScreen extends StatefulWidget {
   final String email;
   
   const SignUpCompleteScreen({
-    Key? key,
+    super.key,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   State<SignUpCompleteScreen> createState() => _SignUpCompleteScreenState();

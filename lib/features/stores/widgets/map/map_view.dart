@@ -23,7 +23,7 @@ class MapView extends StatelessWidget {
   );
 
   const MapView({
-    Key? key,
+    super.key,
     required this.markers,
     required this.onMapCreated,
     this.onCameraIdle,
@@ -34,7 +34,7 @@ class MapView extends StatelessWidget {
     this.zoomControlsEnabled = false,
     this.initialCameraPosition,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   /// Airbnb風マップスタイル
   /// 水域: 明るいティール/アクアブルー (#B3E5FC)

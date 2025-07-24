@@ -11,14 +11,14 @@ class CategorySelectorWidget extends StatelessWidget {
   final VoidCallback onShowCategoryModal;
 
   const CategorySelectorWidget({
-    Key? key,
+    super.key,
     required this.selectedCategory,
     required this.categoryDisplayName,
     required this.categories,
     required this.isLoadingCategories,
     required this.onCategorySelected,
     required this.onShowCategoryModal,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
