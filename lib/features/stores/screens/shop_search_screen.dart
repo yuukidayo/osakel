@@ -78,7 +78,7 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
     if (!mounted) return;
     
     final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
-    print('🔍 初期検索を実行: ${sharedProvider.selectedCategory}');
+    debugPrint('🔍 初期検索を実行: ${sharedProvider.selectedCategory}');
     
     setState(() {
       _isSearching = true;
@@ -98,13 +98,13 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
         _isSearching = false;
       });
       
-      print('✅ 初期検索完了: ${shops.length}件のお店が見つかりました');
+      debugPrint('✅ 初期検索完了: ${shops.length}件のお店が見つかりました');
     } catch (e) {
       setState(() {
         _searchError = '検索に失敗しました: $e';
         _isSearching = false;
       });
-      print('❌ 初期検索エラー: $e');
+      debugPrint('❌ 初期検索エラー: $e');
     }
   }
 
@@ -122,24 +122,24 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   /// カテゴリを選択（モーダルは既に閉じられている）
   void _selectCategory(String categoryId, String categoryName) {
-    print('📝 カテゴリ選択開始: $categoryName (ID: $categoryId)');
+    debugPrint('📝 カテゴリ選択開始: $categoryName (ID: $categoryId)');
     
     try {
       // 共有状態を更新
       final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
-      print('📝 SharedProvider取得成功');
+      debugPrint('📝 SharedProvider取得成功');
       
       sharedProvider.selectCategory(categoryId, categoryName);
-      print('📝 共有状態更新成功');
+      debugPrint('📝 共有状態更新成功');
       
       // モーダルは既にCategorySelectionModal内で閉じられているので、ここではNavigator.pop()を呼ばない
-      print('📝 モーダルは既に閉じられている');
+      debugPrint('📝 モーダルは既に閉じられている');
       
       _performSearch();
-      print('📝 検索実行開始');
+      debugPrint('📝 検索実行開始');
     } catch (e, stackTrace) {
-      print('❌ カテゴリ選択エラー: $e');
-      print('❌ スタックトレース: $stackTrace');
+      debugPrint('❌ カテゴリ選択エラー: $e');
+      debugPrint('❌ スタックトレース: $stackTrace');
       
       // エラー状態を表示
       if (mounted) {
@@ -152,37 +152,37 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   /// 検索を実行
   Future<void> _performSearch() async {
-    print('🔍 検索実行開始');
+    debugPrint('🔍 検索実行開始');
     
     try {
       final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
-      print('🔍 SharedProvider取得: ${sharedProvider.selectedCategory}');
+      debugPrint('🔍 SharedProvider取得: ${sharedProvider.selectedCategory}');
       
       setState(() {
         _isSearching = true;
         _searchError = '';
       });
-      print('🔍 検索状態を更新');
+      debugPrint('🔍 検索状態を更新');
 
       final criteria = ShopSearchCriteria(
         selectedCategoryId: sharedProvider.selectedCategoryId,
         selectedCategory: sharedProvider.selectedCategory,
       );
-      print('🔍 検索条件作成: ${criteria.selectedCategory}');
+      debugPrint('🔍 検索条件作成: ${criteria.selectedCategory}');
       
       final shops = await _searchService.searchShops(criteria);
-      print('🔍 検索結果: ${shops.length}件');
+      debugPrint('🔍 検索結果: ${shops.length}件');
       
       if (mounted) {
         setState(() {
           _shops = shops;
           _isSearching = false;
         });
-        print('🔍 検索結果を表示更新');
+        debugPrint('🔍 検索結果を表示更新');
       }
     } catch (e, stackTrace) {
-      print('❌ 検索エラー: $e');
-      print('❌ スタックトレース: $stackTrace');
+      debugPrint('❌ 検索エラー: $e');
+      debugPrint('❌ スタックトレース: $stackTrace');
       
       if (mounted) {
         setState(() {
@@ -206,7 +206,7 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
 
   /// お店詳細画面に遷移
   void _navigateToShopDetail(Shop shop) {
-    print('🏪 お店詳細画面に遷移: ${shop.name}');
+    debugPrint('🏪 お店詳細画面に遷移: ${shop.name}');
     
     Navigator.push(
       context,
