@@ -4,11 +4,11 @@ import 'dart:io';
 
 // Firebaseの初期化とdrink_shop_linksコレクションの作成を行うスクリプト
 void main() async {
-  print('drink_shop_links作成スクリプトを開始します...');
+  debugPrint('drink_shop_links作成スクリプトを開始します...');
   
   // Firebaseの初期化
   await Firebase.initializeApp();
-  print('Firebase初期化成功');
+  debugPrint('Firebase初期化成功');
   
   // Firestoreインスタンスの取得
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -16,14 +16,14 @@ void main() async {
   try {
     // 既存のshopsコレクションからデータを取得
     QuerySnapshot shopsSnapshot = await firestore.collection('shops').get();
-    print('取得した店舗数: ${shopsSnapshot.docs.length}');
+    debugPrint('取得した店舗数: ${shopsSnapshot.docs.length}');
     
     // 既存のdrinksコレクションからデータを取得
     QuerySnapshot drinksSnapshot = await firestore.collection('drinks').get();
-    print('取得したドリンク数: ${drinksSnapshot.docs.length}');
+    debugPrint('取得したドリンク数: ${drinksSnapshot.docs.length}');
     
     if (shopsSnapshot.docs.isEmpty || drinksSnapshot.docs.isEmpty) {
-      print('店舗またはドリンクのデータがありません。先にサンプルデータを作成してください。');
+      debugPrint('店舗またはドリンクのデータがありません。先にサンプルデータを作成してください。');
       exit(1);
     }
     
@@ -38,7 +38,7 @@ void main() async {
       String shopName = shopData['name'] ?? 'Unknown Shop';
       List<dynamic> drinkIds = shopData['drinkIds'] ?? [];
       
-      print('店舗 "$shopName" の処理中...');
+      debugPrint('店舗 "$shopName" の処理中...');
       
       // drinkIdsフィールドがある場合、それを使用してリンクを作成
       if (drinkIds.isNotEmpty) {
@@ -68,7 +68,7 @@ void main() async {
             batch.set(linkRef, linkData);
             linkCount++;
             
-            print('リンク作成: $shopName - $drinkName');
+            debugPrint('リンク作成: $shopName - $drinkName');
           }
         }
       } else {
@@ -146,7 +146,7 @@ void main() async {
               batch.set(linkRef, linkData);
               linkCount++;
               
-              print('リンク作成: $shopName - $drinkName');
+              debugPrint('リンク作成: $shopName - $drinkName');
             }
           }
         }
@@ -156,16 +156,16 @@ void main() async {
     // バッチ処理を実行
     if (linkCount > 0) {
       await batch.commit();
-      print('$linkCount 件のdrink_shop_linksがFirestoreに追加されました');
+      debugPrint('$linkCount 件のdrink_shop_linksがFirestoreに追加されました');
     } else {
-      print('作成するリンクがありませんでした');
+      debugPrint('作成するリンクがありませんでした');
     }
     
   } catch (e) {
-    print('エラーが発生しました: $e');
+    debugPrint('エラーが発生しました: $e');
     exit(1);
   }
   
-  print('drink_shop_links作成が完了しました！');
+  debugPrint('drink_shop_links作成が完了しました！');
   exit(0); // スクリプト終了
 }

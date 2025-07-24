@@ -4,13 +4,13 @@ import 'dart:io';
 /// 
 /// ビルドする前に、存在しないファイルを参照しているimport文を検出します
 void main() async {
-  print('🔍 Import エラー検出スクリプト開始...\n');
+  debugPrint('🔍 Import エラー検出スクリプト開始...\n');
   
   final errors = <String>[];
   final libDirectory = Directory('lib');
   
   if (!libDirectory.existsSync()) {
-    print('❌ libディレクトリが見つかりません');
+    debugPrint('❌ libディレクトリが見つかりません');
     return;
   }
   
@@ -21,14 +21,14 @@ void main() async {
   }
   
   if (errors.isEmpty) {
-    print('✅ Import エラーは見つかりませんでした！');
+    debugPrint('✅ Import エラーは見つかりませんでした！');
   } else {
-    print('❌ ${errors.length}個のImport エラーが見つかりました:\n');
+    debugPrint('❌ ${errors.length}個のImport エラーが見つかりました:\n');
     for (final error in errors) {
-      print(error);
+      debugPrint(error);
     }
     
-    print('\n📋 修正が必要なパターン:');
+    debugPrint('\n📋 修正が必要なパターン:');
     analyzeErrorPatterns(errors);
   }
 }
@@ -58,7 +58,7 @@ Future<void> scanFileForImportErrors(File file, List<String> errors) async {
       }
     }
   } catch (e) {
-    print('⚠️  ファイル読み込みエラー: ${file.path} - $e');
+    debugPrint('⚠️  ファイル読み込みエラー: ${file.path} - $e');
   }
 }
 
@@ -107,10 +107,10 @@ void analyzeErrorPatterns(List<String> errors) {
   }
   
   patterns.forEach((pattern, count) {
-    print('  • $pattern: ${count}件');
+    debugPrint('  • $pattern: ${count}件');
   });
   
   if (patterns.isNotEmpty) {
-    print('\n💡 fix_import_paths.dartスクリプトで一括修正できる可能性があります！');
+    debugPrint('\n💡 fix_import_paths.dartスクリプトで一括修正できる可能性があります！');
   }
 }

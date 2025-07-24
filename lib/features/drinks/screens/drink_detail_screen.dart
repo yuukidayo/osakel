@@ -76,10 +76,10 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
         // プロユーザーのコメントを取得
         await _loadProComments();
       } else {
-        print('ドリンクが見つかりません: ${widget.drinkId}');
+        debugPrint('ドリンクが見つかりません: ${widget.drinkId}');
       }
     } catch (e) {
-      print('ドリンク詳細の取得中にエラーが発生しました: $e');
+      debugPrint('ドリンク詳細の取得中にエラーが発生しました: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -129,7 +129,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
         _proCommentsWithUserData = commentsWithUserData;
       });
     } catch (e) {
-      print('プロコメントの取得中にエラーが発生しました: $e');
+      debugPrint('プロコメントの取得中にエラーが発生しました: $e');
     }
   }
 

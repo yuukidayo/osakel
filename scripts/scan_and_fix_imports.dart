@@ -1,13 +1,13 @@
 import 'dart:io';
 
 void main() async {
-  print('🔍 Import問題スキャン＆修正開始...');
+  debugPrint('🔍 Import問題スキャン＆修正開始...');
   
   // 実際のファイル構造をスキャン
   final fileMap = <String, String>{};
   await _scanFiles(Directory('lib'), fileMap);
   
-  print('📁 発見されたファイル: ${fileMap.length}個');
+  debugPrint('📁 発見されたファイル: ${fileMap.length}個');
   
   int totalFiles = 0;
   int fixedFiles = 0;
@@ -37,8 +37,8 @@ void main() async {
                 final correctPath = _calculateRelativePath(entity.path, fileMap[fileName]!);
                 lines[i] = line.replaceAll(importPath, correctPath);
                 modified = true;
-                print('🔧 修正: ${entity.path}');
-                print('   ${importPath} → ${correctPath}');
+                debugPrint('🔧 修正: ${entity.path}');
+                debugPrint('   ${importPath} → ${correctPath}');
               } else {
                 errors.add('❌ ${entity.path}: ${importPath} (ファイル未発見)');
               }
@@ -54,14 +54,14 @@ void main() async {
     }
   }
   
-  print('\n🎉 スキャン完了!');
-  print('📊 総ファイル数: $totalFiles');
-  print('📊 修正ファイル数: $fixedFiles');
+  debugPrint('\n🎉 スキャン完了!');
+  debugPrint('📊 総ファイル数: $totalFiles');
+  debugPrint('📊 修正ファイル数: $fixedFiles');
   
   if (errors.isNotEmpty) {
-    print('\n⚠️ 未解決エラー:');
+    debugPrint('\n⚠️ 未解決エラー:');
     for (final error in errors) {
-      print(error);
+      debugPrint(error);
     }
   }
 }

@@ -4,7 +4,7 @@ import 'dart:io';
 /// 
 /// 検出された全てのimportエラーを一括修正します
 void main() async {
-  print('🔧 全Import Path修正スクリプト開始...\n');
+  debugPrint('🔧 全Import Path修正スクリプト開始...\n');
   
   int totalFixed = 0;
   
@@ -17,14 +17,14 @@ void main() async {
   // 3. sharedディレクトリ内のパス修正
   totalFixed += await fixSharedDirectory();
   
-  print('\n✅ 修正完了！');
-  print('📊 総修正ファイル数: $totalFixed');
-  print('🎉 全Import path修正が完了しました！');
+  debugPrint('\n✅ 修正完了！');
+  debugPrint('📊 総修正ファイル数: $totalFixed');
+  debugPrint('🎉 全Import path修正が完了しました！');
 }
 
 /// modelsディレクトリ内の修正
 Future<int> fixModelsDirectory() async {
-  print('🔍 modelsディレクトリ を修正中...');
+  debugPrint('🔍 modelsディレクトリ を修正中...');
   int fixedCount = 0;
   
   // lib/models/filters/drink_filter_options.dart
@@ -37,7 +37,7 @@ Future<int> fixModelsDirectory() async {
     );
     if (content != newContent) {
       await filterOptionsFile.writeAsString(newContent);
-      print('   ✅ 修正: lib/models/filters/drink_filter_options.dart');
+      debugPrint('   ✅ 修正: lib/models/filters/drink_filter_options.dart');
       fixedCount++;
     }
   }
@@ -49,17 +49,17 @@ Future<int> fixModelsDirectory() async {
     content = content.replaceAll("import 'shop.dart';", "import './shop.dart';");
     content = content.replaceAll("import 'drink_shop_link.dart';", "import './drink_shop_link.dart';");
     await shopWithPriceFile.writeAsString(content);
-    print('   ✅ 修正: lib/models/shop_with_price.dart');
+    debugPrint('   ✅ 修正: lib/models/shop_with_price.dart');
     fixedCount++;
   }
   
-  print('   📊 modelsディレクトリ: ${fixedCount}ファイル修正\n');
+  debugPrint('   📊 modelsディレクトリ: ${fixedCount}ファイル修正\n');
   return fixedCount;
 }
 
 /// screensディレクトリ内の修正
 Future<int> fixScreensDirectory() async {
-  print('🔍 screensディレクトリ を修正中...');
+  debugPrint('🔍 screensディレクトリ を修正中...');
   int fixedCount = 0;
   
   final patterns = [
@@ -93,20 +93,20 @@ Future<int> fixScreensDirectory() async {
         
         if (content != originalContent) {
           await entity.writeAsString(content);
-          print('   ✅ 修正: ${entity.path}');
+          debugPrint('   ✅ 修正: ${entity.path}');
           fixedCount++;
         }
       }
     }
   }
   
-  print('   📊 screensディレクトリ: ${fixedCount}ファイル修正\n');
+  debugPrint('   📊 screensディレクトリ: ${fixedCount}ファイル修正\n');
   return fixedCount;
 }
 
 /// sharedディレクトリ内の修正
 Future<int> fixSharedDirectory() async {
-  print('🔍 sharedディレクトリ を修正中...');
+  debugPrint('🔍 sharedディレクトリ を修正中...');
   int fixedCount = 0;
   
   final sharedDir = Directory('lib/shared');
@@ -128,13 +128,13 @@ Future<int> fixSharedDirectory() async {
         
         if (content != originalContent) {
           await entity.writeAsString(content);
-          print('   ✅ 修正: ${entity.path}');
+          debugPrint('   ✅ 修正: ${entity.path}');
           fixedCount++;
         }
       }
     }
   }
   
-  print('   📊 sharedディレクトリ: ${fixedCount}ファイル修正\n');
+  debugPrint('   📊 sharedディレクトリ: ${fixedCount}ファイル修正\n');
   return fixedCount;
 }

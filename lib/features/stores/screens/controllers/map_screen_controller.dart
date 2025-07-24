@@ -58,7 +58,7 @@ class MapScreenController extends ChangeNotifier {
 
   /// 初期化
   Future<void> initialize(String? drinkId) async {
-    print('🎮 MapScreenController: 初期化開始');
+    debugPrint('🎮 MapScreenController: 初期化開始');
     _lastSearchDrinkId = drinkId;
     
     // 現在地を取得して地図中心を設定
@@ -70,13 +70,13 @@ class MapScreenController extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      print('📍 現在地取得開始');
+      debugPrint('📍 現在地取得開始');
       _currentPosition = await _locationService.getCurrentLocation();
       
       if (_currentPosition != null) {
         _currentMapCenter = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
         _isLocationReady = true;
-        print('✅ 現在地取得成功: $_currentMapCenter');
+        debugPrint('✅ 現在地取得成功: $_currentMapCenter');
         
         // UI更新を通知（マップ表示開始）
         _notifyStateChanged();
@@ -84,12 +84,12 @@ class MapScreenController extends ChangeNotifier {
         // 現在地周辺5km以内の店舗を自動検索
         await _performInitialLocationSearch();
       } else {
-        print('⚠️ 現在地取得失敗、デフォルト位置を使用');
+        debugPrint('⚠️ 現在地取得失敗、デフォルト位置を使用');
         _isLocationReady = true; // フォールバック時もマップ表示
         await _fallbackToDefaultLocation();
       }
     } catch (e) {
-      print('❌ 位置情報取得エラー: $e');
+      debugPrint('❌ 位置情報取得エラー: $e');
       _isLocationReady = true; // エラー時もマップ表示
       await _fallbackToDefaultLocation();
     } finally {
@@ -100,16 +100,16 @@ class MapScreenController extends ChangeNotifier {
   /// 初回現在地ベースの検索とマップフォーカス
   Future<void> _performInitialLocationSearch() async {
     if (_currentMapCenter == null) {
-      print('⚠️ 現在地が設定されていません');
+      debugPrint('⚠️ 現在地が設定されていません');
       return;
     }
 
     try {
-      print('🎯 初回現在地検索開始: $_currentMapCenter');
+      debugPrint('🎯 初回現在地検索開始: $_currentMapCenter');
       
       // 有効なdrinkIdを取得
       String searchDrinkId = _lastSearchDrinkId ?? await _getFirstAvailableDrinkId();
-      print('🎯 使用するdrinkId: $searchDrinkId');
+      debugPrint('🎯 使用するdrinkId: $searchDrinkId');
       
       // 現在地周辺5km圏内の店舗を検索
       final nearbyShops = await _geoSearchService.searchNearbyShops(
@@ -124,10 +124,10 @@ class MapScreenController extends ChangeNotifier {
       
       if (nearbyShops.isNotEmpty) {
         _selectedShop = nearbyShops.first;
-        print('🎯 初回検索完了: ${nearbyShops.length}件の店舗が見つかりました');
+        debugPrint('🎯 初回検索完了: ${nearbyShops.length}件の店舗が見つかりました');
         onSuccess?.call('${nearbyShops.length}件の店舗が見つかりました');
       } else {
-        print('🎯 初回検索完了: 店舗が見つかりませんでした');
+        debugPrint('🎯 初回検索完了: 店舗が見つかりませんでした');
         onSuccess?.call('現在地周辺に店舗が見つかりませんでした');
       }
       
@@ -135,7 +135,7 @@ class MapScreenController extends ChangeNotifier {
       _notifyStateChanged();
       
     } catch (e) {
-      print('❌ 初回現在地検索エラー: $e');
+      debugPrint('❌ 初回現在地検索エラー: $e');
       onError?.call('店舗の検索に失敗しました');
     }
   }
@@ -145,11 +145,11 @@ class MapScreenController extends ChangeNotifier {
     try {
       // 東京駅をデフォルト位置に設定
       _currentMapCenter = const LatLng(35.6812, 139.7671);
-      print('📍 デフォルト位置設定: $_currentMapCenter');
+      debugPrint('📍 デフォルト位置設定: $_currentMapCenter');
       
       await _loadShopsDataSafely();
     } catch (e) {
-      print('❌ フォールバック処理エラー: $e');
+      debugPrint('❌ フォールバック処理エラー: $e');
       // モックデータでフォールバック
       _shopsWithPrice = MockDataService.generateMockShops(drinkId: _lastSearchDrinkId ?? 'default_drink_id');
       await _updateMarkerPositions();
@@ -164,12 +164,12 @@ class MapScreenController extends ChangeNotifier {
       _shopsWithPrice = shops;
       _selectedShop = shops.isNotEmpty ? shops.first : null;
       
-      print('✅ 店舗データ読み込み完了: ${shops.length}件');
+      debugPrint('✅ 店舗データ読み込み完了: ${shops.length}件');
       
       await _updateMarkerPositions();
       _notifyStateChanged();
     } catch (e) {
-      print('❌ 店舗データ読み込みエラー: $e');
+      debugPrint('❌ 店舗データ読み込みエラー: $e');
       // エラー時はモックデータでフォールバック
       _shopsWithPrice = MockDataService.generateMockShops(drinkId: _lastSearchDrinkId ?? 'default_drink_id');
       await _updateMarkerPositions();
@@ -184,11 +184,11 @@ class MapScreenController extends ChangeNotifier {
     _setSearchingNearby(true);
     
     try {
-      print('🔍 現在のエリアで再検索開始: $_currentMapCenter');
+      debugPrint('🔍 現在のエリアで再検索開始: $_currentMapCenter');
       
       // 有効なdrinkIdを取得
       String searchDrinkId = _lastSearchDrinkId ?? await _getFirstAvailableDrinkId();
-      print('🔍 使用するdrinkId: $searchDrinkId');
+      debugPrint('🔍 使用するdrinkId: $searchDrinkId');
       
       final nearbyShops = await _geoSearchService.searchNearbyShops(
         latitude: _currentMapCenter!.latitude,
@@ -205,9 +205,9 @@ class MapScreenController extends ChangeNotifier {
       onSuccess?.call('${nearbyShops.length}件の店舗が見つかりました');
       _notifyStateChanged();
       
-      print('✅ 再検索完了: ${nearbyShops.length}件の店舗が見つかりました');
+      debugPrint('✅ 再検索完了: ${nearbyShops.length}件の店舗が見つかりました');
     } catch (e) {
-      print('❌ エリア再検索エラー: $e');
+      debugPrint('❌ エリア再検索エラー: $e');
       onError?.call('検索に失敗しました。もう一度お試しください。');
     } finally {
       _setSearchingNearby(false);
@@ -244,7 +244,7 @@ class MapScreenController extends ChangeNotifier {
         
         _markers.add(marker);
       } catch (e) {
-        print('⚠️ マーカー生成エラー (${shopWithPrice.shop.name}): $e');
+        debugPrint('⚠️ マーカー生成エラー (${shopWithPrice.shop.name}): $e');
         
         // フォールバック: デフォルトマーカーを使用
         final fallbackMarker = Marker(
@@ -307,7 +307,7 @@ class MapScreenController extends ChangeNotifier {
       onSuccess?.call('${_shopsWithPrice.length}件の店舗データを生成しました');
       _notifyStateChanged();
     } catch (e) {
-      print('❌ モックデータ生成エラー: $e');
+      debugPrint('❌ モックデータ生成エラー: $e');
       onError?.call('データの生成に失敗しました');
     }
   }
@@ -341,11 +341,11 @@ class MapScreenController extends ChangeNotifier {
       
       if (snapshot.docs.isNotEmpty) {
         final drinkId = snapshot.docs.first.id;
-        print('🔍 取得したdrinkId: $drinkId');
+        debugPrint('🔍 取得したdrinkId: $drinkId');
         return drinkId;
       }
     } catch (e) {
-      print('❌ drinkId取得エラー: $e');
+      debugPrint('❌ drinkId取得エラー: $e');
     }
     
     // フォールバック: 大阪関目周辺の店舗データに対応するID
@@ -354,7 +354,7 @@ class MapScreenController extends ChangeNotifier {
 
   /// 現在地ベースの初期検索
   Future<void> initializeLocationBasedSearch(String drinkId) async {
-    print('🎮 MapScreenController: 現在地ベース検索開始 - drinkId: $drinkId');
+    debugPrint('🎮 MapScreenController: 現在地ベース検索開始 - drinkId: $drinkId');
     _lastSearchDrinkId = drinkId;
     await _initializeLocationBasedSearch();
   }
@@ -370,7 +370,7 @@ class MapScreenController extends ChangeNotifier {
     required PageController pageController,
   }) async {
     if (_currentMapCenter != null && !_isInitialFocusComplete) {
-      print('🎮 MapScreenController: 初回フォーカス処理開始');
+      debugPrint('🎮 MapScreenController: 初回フォーカス処理開始');
       
       try {
         _isInitialFocusComplete = true;
@@ -385,9 +385,9 @@ class MapScreenController extends ChangeNotifier {
         );
         
         _notifyStateChanged();
-        print('🎮 MapScreenController: 初回フォーカス処理完了');
+        debugPrint('🎮 MapScreenController: 初回フォーカス処理完了');
       } catch (e) {
-        print('⚠️ MapScreenController: 初回フォーカスエラー: $e');
+        debugPrint('⚠️ MapScreenController: 初回フォーカスエラー: $e');
       }
     }
   }

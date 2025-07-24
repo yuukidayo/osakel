@@ -1,7 +1,7 @@
 import 'dart:io';
 
 void main() async {
-  print('🔧 Import自動修正開始...');
+  debugPrint('🔧 Import自動修正開始...');
   
   final rules = {
     '../models/': '../../models/',
@@ -25,7 +25,7 @@ void main() async {
     final dir = Directory(dirPath);
     if (!dir.existsSync()) continue;
     
-    print('📁 処理中: $dirPath');
+    debugPrint('📁 処理中: $dirPath');
     
     await for (final entity in dir.list(recursive: true)) {
       if (entity is File && entity.path.endsWith('.dart')) {
@@ -48,13 +48,13 @@ void main() async {
         if (content != original) {
           await entity.writeAsString(content);
           modifiedFiles++;
-          print('✅ 修正: ${entity.path}');
+          debugPrint('✅ 修正: ${entity.path}');
         }
       }
     }
   }
   
-  print('\n🎉 修正完了!');
-  print('📊 総ファイル数: $totalFiles');
-  print('📊 修正ファイル数: $modifiedFiles');
+  debugPrint('\n🎉 修正完了!');
+  debugPrint('📊 総ファイル数: $totalFiles');
+  debugPrint('📊 修正ファイル数: $modifiedFiles');
 }

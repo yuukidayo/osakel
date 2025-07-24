@@ -7,12 +7,12 @@ void main() async {
   // Flutter初期化
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('drink_shop_linksコレクション更新スクリプトを開始します...');
+  debugPrint('drink_shop_linksコレクション更新スクリプトを開始します...');
   
   try {
     // Firebaseの初期化
     await Firebase.initializeApp();
-    print('Firebase初期化成功');
+    debugPrint('Firebase初期化成功');
     
     // Firestoreインスタンスの取得
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -23,10 +23,10 @@ void main() async {
     int errorLinks = 0;
     
     // drink_shop_linksコレクションから全てのドキュメントを取得
-    print('drink_shop_linksコレクションのドキュメントを取得中...');
+    debugPrint('drink_shop_linksコレクションのドキュメントを取得中...');
     final QuerySnapshot linksSnapshot = await firestore.collection('drink_shop_links').get();
     totalLinks = linksSnapshot.docs.length;
-    print('取得したリンク数: $totalLinks');
+    debugPrint('取得したリンク数: $totalLinks');
     
     // バッチ処理の準備
     // Firestoreのバッチ処理は最大500件までなので、必要に応じて複数のバッチを作成
@@ -70,46 +70,46 @@ void main() async {
               updatedLinks++;
               
               if (updatedLinks % 100 == 0) {
-                print('$updatedLinks 件のリンクを処理しました...');
+                debugPrint('$updatedLinks 件のリンクを処理しました...');
               }
             } else {
-              print('警告: ドリンク $drinkId にカテゴリIDがありません');
+              debugPrint('警告: ドリンク $drinkId にカテゴリIDがありません');
               errorLinks++;
             }
           } else {
-            print('警告: ドリンク $drinkId が存在しません');
+            debugPrint('警告: ドリンク $drinkId が存在しません');
             errorLinks++;
           }
         } else {
-          print('警告: リンク ${linkDoc.id} にdrinkIdがありません');
+          debugPrint('警告: リンク ${linkDoc.id} にdrinkIdがありません');
           errorLinks++;
         }
       } catch (e) {
-        print('エラー: リンク処理中にエラーが発生しました - ${e.toString()}');
+        debugPrint('エラー: リンク処理中にエラーが発生しました - ${e.toString()}');
         errorLinks++;
       }
     }
     
     // バッチ処理の実行
-    print('リンクの更新を実行中...');
+    debugPrint('リンクの更新を実行中...');
     int batchIndex = 1;
     for (var batch in batches) {
       if (operationCount > 0) {
-        print('バッチ $batchIndex/${batches.length} を実行中...');
+        debugPrint('バッチ $batchIndex/${batches.length} を実行中...');
         await batch.commit();
-        print('バッチ $batchIndex/${batches.length} 完了');
+        debugPrint('バッチ $batchIndex/${batches.length} 完了');
         batchIndex++;
       }
     }
     
     // 処理結果の表示
-    print('=== 処理完了 ===');
-    print('総リンク数: $totalLinks');
-    print('更新したリンク数: $updatedLinks');
-    print('エラー数: $errorLinks');
-    print('==================');
+    debugPrint('=== 処理完了 ===');
+    debugPrint('総リンク数: $totalLinks');
+    debugPrint('更新したリンク数: $updatedLinks');
+    debugPrint('エラー数: $errorLinks');
+    debugPrint('==================');
     
   } catch (e) {
-    print('スクリプト実行中にエラーが発生しました: ${e.toString()}');
+    debugPrint('スクリプト実行中にエラーが発生しました: ${e.toString()}');
   }
 }

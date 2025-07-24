@@ -11,14 +11,14 @@ class DrinkSearchService {
   /// カテゴリを読み込む
   Future<List<DrinkCategory>> loadCategories() async {
     try {
-      print('カテゴリ読み込み開始'); // デバッグ用
+      debugPrint('カテゴリ読み込み開始'); // デバッグ用
       final snap = await _firestore.collection('categories').get();
-      print('カテゴリ取得成功: ${snap.docs.length}件'); // デバッグ用
+      debugPrint('カテゴリ取得成功: ${snap.docs.length}件'); // デバッグ用
       
       // ドキュメントの内容をマップに変換し、orderフィールドを追加
       final data = snap.docs.map((doc) {
         final docData = doc.data();
-        print('処理中のカテゴリ: ${doc.id}, データ: $docData'); // デバッグ用
+        debugPrint('処理中のカテゴリ: ${doc.id}, データ: $docData'); // デバッグ用
         
         final Map<String, dynamic> item = {
           'id': doc.id,
@@ -48,7 +48,7 @@ class DrinkSearchService {
       // DrinkCategoryオブジェクトに変換
       return data.map((item) => DrinkCategory.fromFirestore(item, item['id'])).toList();
     } catch (e) {
-      print('カテゴリ読み込みエラー: $e');
+      debugPrint('カテゴリ読み込みエラー: $e');
       return [];
     }
   }
@@ -91,7 +91,7 @@ class DrinkSearchService {
       
       return subcategories;
     } catch (e) {
-      print('サブカテゴリ取得エラー: $e');
+      debugPrint('サブカテゴリ取得エラー: $e');
       return [];
     }
   }
@@ -106,39 +106,39 @@ class DrinkSearchService {
     Query<Map<String, dynamic>> query = _firestore.collection('drinks');
     
     // 🔍 デバッグ: 検索条件を出力
-    print('\n🔍 === SEARCH DEBUG INFO ===');
-    print('📋 Selected Category: "${criteria.selectedCategory}"');
-    print('🆔 Selected Category ID: "${criteria.selectedCategoryId}"');
-    print('🏷️  Selected Subcategory: "${criteria.selectedSubcategory}"');
-    print('🆔 Selected Subcategory ID: "${criteria.selectedSubcategoryId}"');
-    print('🔤 Search Keyword: "${criteria.searchKeyword}"');
-    print('🎛️  Filters Applied: ${criteria.isFiltersApplied}');
+    debugPrint('\n🔍 === SEARCH DEBUG INFO ===');
+    debugPrint('📋 Selected Category: "${criteria.selectedCategory}"');
+    debugPrint('🆔 Selected Category ID: "${criteria.selectedCategoryId}"');
+    debugPrint('🏷️  Selected Subcategory: "${criteria.selectedSubcategory}"');
+    debugPrint('🆔 Selected Subcategory ID: "${criteria.selectedSubcategoryId}"');
+    debugPrint('🔤 Search Keyword: "${criteria.searchKeyword}"');
+    debugPrint('🎛️  Filters Applied: ${criteria.isFiltersApplied}');
     
     // 「すべてのカテゴリ」選択時の処理
     if (criteria.selectedCategory == 'すべてのカテゴリ') {
-      print('🌍 Query Mode: ALL CATEGORIES');
+      debugPrint('🌍 Query Mode: ALL CATEGORIES');
       if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
         // サブカテゴリＩＤが選択されている場合は、配列にそのＩＤを含むドリンクを検索
         query = query.where('subcategories', arrayContains: criteria.selectedSubcategoryId);
-        print('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
+        debugPrint('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
       } else {
-        print('🔎 No subcategory filter - showing all drinks');
+        debugPrint('🔎 No subcategory filter - showing all drinks');
       }
       // サブカテゴリが選択されていない場合はすべてのお酒を表示（フィルタリングなし）
     }
     // 特定のカテゴリが選択されている場合
     else {
-      print('🏷️ Query Mode: SPECIFIC CATEGORY');
+      debugPrint('🏷️ Query Mode: SPECIFIC CATEGORY');
       // カテゴリＩＤで検索
       query = query.where('categoryId', isEqualTo: criteria.selectedCategoryId);
-      print('🔎 Adding category filter: categoryId == "${criteria.selectedCategoryId}"');
+      debugPrint('🔎 Adding category filter: categoryId == "${criteria.selectedCategoryId}"');
       
       // サブカテゴリＩＤでさらにフィルタリング
       if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
         query = query.where('subcategories', arrayContains: criteria.selectedSubcategoryId);
-        print('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
+        debugPrint('🔎 Adding subcategory filter: subcategories arrayContains "${criteria.selectedSubcategoryId}"');
       } else {
-        print('🔎 No subcategory filter for this category');
+        debugPrint('🔎 No subcategory filter for this category');
       }
     }
     
@@ -429,7 +429,7 @@ class DrinkSearchService {
         // Firestoreのバッチ制限（500）に達したらコミット
         if (count % 400 == 0) {
           await batch.commit();
-          print('Committed batch of $count documents.');
+          debugPrint('Committed batch of $count documents.');
           batch = _firestore.batch(); // 新しいバッチを作成
         }
       }
@@ -441,7 +441,7 @@ class DrinkSearchService {
       
       return 'Successfully migrated and duplicated $count drinks.';
     } catch (error) {
-      print('Error during migration: $error');
+      debugPrint('Error during migration: $error');
       return 'Migration failed: ${error.toString()}';
     }
   }

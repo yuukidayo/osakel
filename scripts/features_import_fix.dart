@@ -1,13 +1,13 @@
 import 'dart:io';
 
 void main() async {
-  print('🔧 featuresディレクトリimport修正スクリプト開始...');
+  debugPrint('🔧 featuresディレクトリimport修正スクリプト開始...');
   
   final projectRoot = Directory.current;
   final featuresDir = Directory('${projectRoot.path}/lib/features');
   
   if (!featuresDir.existsSync()) {
-    print('❌ featuresディレクトリが見つかりません');
+    debugPrint('❌ featuresディレクトリが見つかりません');
     return;
   }
 
@@ -42,7 +42,7 @@ void main() async {
           if (content.contains(from)) {
             content = content.replaceAll(from, to);
             fileReplacements++;
-            print('  ✅ ${pattern['description']}: ${entity.path}');
+            debugPrint('  ✅ ${pattern['description']}: ${entity.path}');
           }
         }
 
@@ -51,18 +51,18 @@ void main() async {
           await entity.writeAsString(content);
           modifiedFiles++;
           totalReplacements += fileReplacements;
-          print('📝 修正完了: ${entity.path} (${fileReplacements}箇所)');
+          debugPrint('📝 修正完了: ${entity.path} (${fileReplacements}箇所)');
         }
         
       } catch (e) {
-        print('❌ エラー: ${entity.path} - $e');
+        debugPrint('❌ エラー: ${entity.path} - $e');
       }
     }
   }
 
-  print('\n📊 修正結果:');
-  print('  - 検査ファイル数: $totalFiles');
-  print('  - 修正ファイル数: $modifiedFiles');
-  print('  - 総修正箇所数: $totalReplacements');
-  print('🎉 featuresディレクトリimport修正完了!');
+  debugPrint('\n📊 修正結果:');
+  debugPrint('  - 検査ファイル数: $totalFiles');
+  debugPrint('  - 修正ファイル数: $modifiedFiles');
+  debugPrint('  - 総修正箇所数: $totalReplacements');
+  debugPrint('🎉 featuresディレクトリimport修正完了!');
 }

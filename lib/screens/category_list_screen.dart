@@ -35,7 +35,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       
       // データが取得できなかった場合はモックデータを使用
       if (categories.isEmpty) {
-        print('No categories found in Firestore, using mock data');
+        debugPrint('No categories found in Firestore, using mock data');
         final mockCategories = _categoryService.getMockCategories();
         setState(() {
           _categories = mockCategories;
@@ -48,9 +48,9 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         _categories = categories;
         _isLoading = false;
       });
-      print('Loaded ${categories.length} categories from Firestore');
+      debugPrint('Loaded ${categories.length} categories from Firestore');
     } catch (e) {
-      print('Error loading categories: $e');
+      debugPrint('Error loading categories: $e');
       // エラー時はモックデータを使用
       final mockCategories = _categoryService.getMockCategories();
       setState(() {

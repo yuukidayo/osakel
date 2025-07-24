@@ -12,14 +12,14 @@ class ShopSearchService {
   /// カテゴリを読み込む（ドリンク検索と共通）
   Future<List<DrinkCategory>> loadCategories() async {
     try {
-      print('カテゴリ読み込み開始'); // デバッグ用
+      debugPrint('カテゴリ読み込み開始'); // デバッグ用
       final snap = await _firestore.collection('categories').get();
-      print('カテゴリ取得成功: ${snap.docs.length}件'); // デバッグ用
+      debugPrint('カテゴリ取得成功: ${snap.docs.length}件'); // デバッグ用
       
       // ドキュメントの内容をマップに変換し、orderフィールドを追加
       final data = snap.docs.map((doc) {
         final docData = doc.data();
-        print('処理中のカテゴリ: ${doc.id}, データ: $docData'); // デバッグ用
+        debugPrint('処理中のカテゴリ: ${doc.id}, データ: $docData'); // デバッグ用
         
         final Map<String, dynamic> item = {
           'id': doc.id,
@@ -49,7 +49,7 @@ class ShopSearchService {
       // DrinkCategoryオブジェクトに変換
       return data.map((item) => DrinkCategory.fromFirestore(item, item['id'])).toList();
     } catch (e) {
-      print('カテゴリ読み込みエラー: $e');
+      debugPrint('カテゴリ読み込みエラー: $e');
       return [];
     }
   }
@@ -92,7 +92,7 @@ class ShopSearchService {
       
       return subcategories;
     } catch (e) {
-      print('サブカテゴリ取得エラー: $e');
+      debugPrint('サブカテゴリ取得エラー: $e');
       return [];
     }
   }
@@ -107,40 +107,40 @@ class ShopSearchService {
     Query<Map<String, dynamic>> query = _firestore.collection('shops');
     
     // 🔍 デバッグ: 検索条件を出力
-    print('\n🔍 === SHOP SEARCH DEBUG INFO ===');
-    print('📋 Selected Category: "${criteria.selectedCategory}"');
-    print('🆔 Selected Category ID: "${criteria.selectedCategoryId}"');
-    print('🏷️  Selected Subcategory: "${criteria.selectedSubcategory}"');
-    print('🆔 Selected Subcategory ID: "${criteria.selectedSubcategoryId}"');
-    print('🔤 Search Keyword: "${criteria.searchKeyword}"');
-    print('🎛️  Filters Applied: ${criteria.isFiltersApplied}');
+    debugPrint('\n🔍 === SHOP SEARCH DEBUG INFO ===');
+    debugPrint('📋 Selected Category: "${criteria.selectedCategory}"');
+    debugPrint('🆔 Selected Category ID: "${criteria.selectedCategoryId}"');
+    debugPrint('🏷️  Selected Subcategory: "${criteria.selectedSubcategory}"');
+    debugPrint('🆔 Selected Subcategory ID: "${criteria.selectedSubcategoryId}"');
+    debugPrint('🔤 Search Keyword: "${criteria.searchKeyword}"');
+    debugPrint('🎛️  Filters Applied: ${criteria.isFiltersApplied}');
     
     // 「すべてのカテゴリ」選択時の処理
     if (criteria.selectedCategory == 'すべてのカテゴリ') {
-      print('🌍 Query Mode: ALL CATEGORIES');
+      debugPrint('🌍 Query Mode: ALL CATEGORIES');
       if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
         // サブカテゴリIDが選択されている場合は、配列にそのIDを含むお店を検索
         query = query.where('drink_categories', arrayContains: criteria.selectedSubcategoryId);
-        print('🔎 Adding subcategory filter: drink_categories arrayContains "${criteria.selectedSubcategoryId}"');
+        debugPrint('🔎 Adding subcategory filter: drink_categories arrayContains "${criteria.selectedSubcategoryId}"');
       } else {
-        print('🔎 No subcategory filter - showing all shops');
+        debugPrint('🔎 No subcategory filter - showing all shops');
       }
       // サブカテゴリが選択されていない場合はすべてのお店を表示（フィルタリングなし）
     }
     // 特定のカテゴリが選択されている場合
     else {
-      print('🏷️ Query Mode: SPECIFIC CATEGORY');
+      debugPrint('🏷️ Query Mode: SPECIFIC CATEGORY');
       // カテゴリIDで検索（drink_categoriesフィールドに対してarray-contains）
       query = query.where('drink_categories', arrayContains: criteria.selectedCategoryId);
-      print('🔎 Adding category filter: drink_categories arrayContains "${criteria.selectedCategoryId}"');
+      debugPrint('🔎 Adding category filter: drink_categories arrayContains "${criteria.selectedCategoryId}"');
       
       // サブカテゴリIDでさらにフィルタリング（現在は実装しない）
       if (criteria.selectedSubcategoryId != null && criteria.selectedSubcategoryId!.isNotEmpty) {
         // 注意: Firestoreでは同じフィールドに対して複数のarray-containsは使用できない
         // 将来的にはクライアントサイドフィルタリングまたは複合クエリが必要
-        print('🔎 Subcategory filter skipped (Firestore limitation with multiple array-contains)');
+        debugPrint('🔎 Subcategory filter skipped (Firestore limitation with multiple array-contains)');
       } else {
-        print('🔎 No subcategory filter for this category');
+        debugPrint('🔎 No subcategory filter for this category');
       }
     }
     
@@ -168,7 +168,7 @@ class ShopSearchService {
     // 店名での部分一致検索（簡易実装）
     // 注意: Firestoreでは完全な部分一致検索は制限があるため、
     // 実際のアプリでは Algolia などの検索サービスを使用することを推奨
-    print('🔎 Adding keyword filter: name >= "$searchKeyword"');
+    debugPrint('🔎 Adding keyword filter: name >= "$searchKeyword"');
     return query
         .where('name', isGreaterThanOrEqualTo: searchKeyword)
         .where('name', isLessThan: searchKeyword + '\uf8ff');
@@ -180,15 +180,15 @@ class ShopSearchService {
     Map<String, dynamic> filterValues
   ) {
     // 将来的に地域フィルター、営業時間フィルターなどを実装
-    print('🔎 Detailed filters not implemented yet');
+    debugPrint('🔎 Detailed filters not implemented yet');
     return query;
   }
 
   /// 検索を実行してお店リストを取得
   Future<List<Shop>> searchShops(ShopSearchCriteria criteria) async {
     try {
-      print('\n🔍 === SHOP SEARCH EXECUTION ===');
-      print('📋 Executing search with criteria: $criteria');
+      debugPrint('\n🔍 === SHOP SEARCH EXECUTION ===');
+      debugPrint('📋 Executing search with criteria: $criteria');
       
       // クエリを構築
       final query = buildQuery(criteria);
@@ -196,40 +196,40 @@ class ShopSearchService {
       // Firestoreから検索実行
       final querySnapshot = await query.get();
       
-      print('📊 Found ${querySnapshot.docs.length} shops');
+      debugPrint('📊 Found ${querySnapshot.docs.length} shops');
       
       // Shopオブジェクトに変換
       final shops = querySnapshot.docs.map((doc) {
         try {
           final shop = Shop.fromMap(doc.id, doc.data());
-          print('✅ Converted shop: ${shop.name}');
+          debugPrint('✅ Converted shop: ${shop.name}');
           return shop;
         } catch (e) {
-          print('❌ Error converting shop ${doc.id}: $e');
+          debugPrint('❌ Error converting shop ${doc.id}: $e');
           return null;
         }
       }).where((shop) => shop != null).cast<Shop>().toList();
       
-      print('🎯 Successfully converted ${shops.length} shops');
+      debugPrint('🎯 Successfully converted ${shops.length} shops');
       return shops;
       
     } catch (e) {
-      print('❌ Shop search error: $e');
+      debugPrint('❌ Shop search error: $e');
       
       // Firestoreインデックスエラーの場合、インデックス作成リンクを表示
       if (e.toString().contains('index')) {
-        print('\n🔗 === FIRESTORE INDEX CREATION REQUIRED ===');
-        print('Please create the required Firestore index by visiting:');
+        debugPrint('\n🔗 === FIRESTORE INDEX CREATION REQUIRED ===');
+        debugPrint('Please create the required Firestore index by visiting:');
         
         // エラーメッセージからインデックス作成リンクを抽出
         final errorMessage = e.toString();
         final linkMatch = RegExp(r'https://[^\s]+').firstMatch(errorMessage);
         if (linkMatch != null) {
-          print('🔗 Index Creation Link: ${linkMatch.group(0)}');
+          debugPrint('🔗 Index Creation Link: ${linkMatch.group(0)}');
         } else {
-          print('🔗 Check Firebase Console for index creation requirements');
+          debugPrint('🔗 Check Firebase Console for index creation requirements');
         }
-        print('=== END INDEX CREATION INFO ===\n');
+        debugPrint('=== END INDEX CREATION INFO ===\n');
       }
       
       return [];

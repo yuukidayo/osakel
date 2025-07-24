@@ -126,20 +126,20 @@ Future<String> migrateAndDuplicateDrinksForTesting() async {
   
   try {
     // カテゴリとサブカテゴリの情報を取得
-    print('Fetching categories...');
+    debugPrint('Fetching categories...');
     final categoriesSnapshot = await _firestore.collection('categories').get();
     final categoryMap = <String, List<dynamic>>{};
     
     for (var doc in categoriesSnapshot.docs) {
       final data = doc.data();
       categoryMap[doc.id] = data['subcategories'] ?? [];
-      print('Category ${doc.id} has ${(data['subcategories'] ?? []).length} subcategories');
+      debugPrint('Category ${doc.id} has ${(data['subcategories'] ?? []).length} subcategories');
     }
     
     // 既存のドリンクを取得
-    print('Fetching existing drinks...');
+    debugPrint('Fetching existing drinks...');
     final drinksSnapshot = await _firestore.collection('drinks').get();
-    print('Found ${drinksSnapshot.docs.length} drinks to migrate.');
+    debugPrint('Found ${drinksSnapshot.docs.length} drinks to migrate.');
     
     var batch = _firestore.batch();
     int count = 0;
@@ -184,7 +184,7 @@ Future<String> migrateAndDuplicateDrinksForTesting() async {
       
       // Firestoreのバッチ制限（500）に達したらコミット
       if (count % 400 == 0) {
-        print('Committing batch of $count documents...');
+        debugPrint('Committing batch of $count documents...');
         await batch.commit();
         batch = _firestore.batch(); // 新しいバッチを作成
       }
@@ -192,13 +192,13 @@ Future<String> migrateAndDuplicateDrinksForTesting() async {
     
     // 残りをコミット
     if (count % 400 != 0) {
-      print('Committing final batch...');
+      debugPrint('Committing final batch...');
       await batch.commit();
     }
     
     return 'Successfully migrated and duplicated $count drinks.';
   } catch (error) {
-    print('Error during migration: $error');
+    debugPrint('Error during migration: $error');
     return 'Migration failed: ${error.toString()}';
   }
 }

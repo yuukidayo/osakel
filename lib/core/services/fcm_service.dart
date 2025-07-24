@@ -10,7 +10,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase初期化が必要な場合はここで行う
   // await Firebase.initializeApp();
-  print('バックグラウンドメッセージ受信: ${message.messageId}');
+  debugPrint('バックグラウンドメッセージ受信: ${message.messageId}');
 }
 
 class FCMService {
@@ -42,12 +42,12 @@ class FCMService {
       
       // FCMトークン取得と表示
       String? token = await _messaging.getToken();
-      print('FCMトークン: $token');
+      debugPrint('FCMトークン: $token');
       
       _isInitialized = true;
-      print('FCMサービス初期化完了');
+      debugPrint('FCMサービス初期化完了');
     } catch (e) {
-      print('FCMサービス初期化エラー: $e');
+      debugPrint('FCMサービス初期化エラー: $e');
     }
   }
   
@@ -64,7 +64,7 @@ class FCMService {
         sound: true,
       );
       
-      print('iOS通知許可ステータス: ${settings.authorizationStatus}');
+      debugPrint('iOS通知許可ステータス: ${settings.authorizationStatus}');
     } 
   }
   
@@ -72,21 +72,21 @@ class FCMService {
   void _setupNotificationHandlers() {
     // フォアグラウンド通知
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('フォアグラウンドメッセージ受信: ${message.notification?.title}');
+      debugPrint('フォアグラウンドメッセージ受信: ${message.notification?.title}');
       _showLocalNotification(message);
     });
     
     // アプリが閉じられた状態からの起動
     FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
-        print('初期メッセージ: ${message.messageId}');
+        debugPrint('初期メッセージ: ${message.messageId}');
         _handleNotificationTap(message);
       }
     });
     
     // バックグラウンドからの復帰
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('通知タップでアプリが開かれました: ${message.messageId}');
+      debugPrint('通知タップでアプリが開かれました: ${message.messageId}');
       _handleNotificationTap(message);
     });
   }
@@ -102,7 +102,7 @@ class FCMService {
       requestSoundPermission: false,
       onDidReceiveLocalNotification: (int id, String? title, String? body, String? payload) {
         // iOS 10未満での処理（現在ではほぼ使用されない）
-        print('iOS 10未満のローカル通知: $title');
+        debugPrint('iOS 10未満のローカル通知: $title');
         return;
       }
     );
@@ -115,7 +115,7 @@ class FCMService {
     await _localNotifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {
-        print('ローカル通知タップ: ${details.payload}');
+        debugPrint('ローカル通知タップ: ${details.payload}');
       },
     );
     
@@ -177,7 +177,7 @@ class FCMService {
   // FCMトークン更新リスナーの設定
   void setupTokenRefreshListener(Function(String) onTokenRefresh) {
     _messaging.onTokenRefresh.listen((String token) {
-      print('FCMトークン更新: $token');
+      debugPrint('FCMトークン更新: $token');
       onTokenRefresh(token);
     });
   }

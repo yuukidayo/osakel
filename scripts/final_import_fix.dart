@@ -1,13 +1,13 @@
 import 'dart:io';
 
 void main() async {
-  print('🔧 最終import修正スクリプト開始...');
+  debugPrint('🔧 最終import修正スクリプト開始...');
   
   final projectRoot = Directory.current;
   final libDir = Directory('${projectRoot.path}/lib');
   
   if (!libDir.existsSync()) {
-    print('❌ libディレクトリが見つかりません');
+    debugPrint('❌ libディレクトリが見つかりません');
     return;
   }
 
@@ -54,7 +54,7 @@ void main() async {
           if (content.contains(from)) {
             content = content.replaceAll(from, to);
             fileReplacements++;
-            print('  ✅ ${pattern['description']}: ${entity.path}');
+            debugPrint('  ✅ ${pattern['description']}: ${entity.path}');
           }
         }
 
@@ -63,18 +63,18 @@ void main() async {
           await entity.writeAsString(content);
           modifiedFiles++;
           totalReplacements += fileReplacements;
-          print('📝 修正完了: ${entity.path} (${fileReplacements}箇所)');
+          debugPrint('📝 修正完了: ${entity.path} (${fileReplacements}箇所)');
         }
         
       } catch (e) {
-        print('❌ エラー: ${entity.path} - $e');
+        debugPrint('❌ エラー: ${entity.path} - $e');
       }
     }
   }
 
-  print('\n📊 修正結果:');
-  print('  - 検査ファイル数: $totalFiles');
-  print('  - 修正ファイル数: $modifiedFiles');
-  print('  - 総修正箇所数: $totalReplacements');
-  print('🎉 最終import修正完了!');
+  debugPrint('\n📊 修正結果:');
+  debugPrint('  - 検査ファイル数: $totalFiles');
+  debugPrint('  - 修正ファイル数: $modifiedFiles');
+  debugPrint('  - 総修正箇所数: $totalReplacements');
+  debugPrint('🎉 最終import修正完了!');
 }

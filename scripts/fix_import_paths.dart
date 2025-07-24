@@ -4,7 +4,7 @@ import 'dart:io';
 /// 
 /// 発見されたパターンに基づいて、間違ったimport pathを一括修正します
 void main() async {
-  print('🔧 Import Path修正スクリプト開始...\n');
+  debugPrint('🔧 Import Path修正スクリプト開始...\n');
   
   int totalFixed = 0;
   
@@ -96,9 +96,9 @@ void main() async {
     'screensディレクトリのprovidersパス'
   );
   
-  print('\n✅ 修正完了！');
-  print('📊 総修正ファイル数: $totalFixed');
-  print('🎉 Import path修正が完了しました！');
+  debugPrint('\n✅ 修正完了！');
+  debugPrint('📊 総修正ファイル数: $totalFixed');
+  debugPrint('🎉 Import path修正が完了しました！');
 }
 
 /// 指定されたパターンでimport文を修正
@@ -108,13 +108,13 @@ Future<int> fixImportPattern(
   String toPattern, 
   String description
 ) async {
-  print('🔍 $description を修正中...');
+  debugPrint('🔍 $description を修正中...');
   
   int fixedCount = 0;
   final directory = Directory(searchDir);
   
   if (!directory.existsSync()) {
-    print('   ⚠️  ディレクトリが見つかりません: $searchDir');
+    debugPrint('   ⚠️  ディレクトリが見つかりません: $searchDir');
     return 0;
   }
   
@@ -129,15 +129,15 @@ Future<int> fixImportPattern(
         
         if (content != newContent) {
           await entity.writeAsString(newContent);
-          print('   ✅ 修正: ${entity.path}');
+          debugPrint('   ✅ 修正: ${entity.path}');
           fixedCount++;
         }
       } catch (e) {
-        print('   ❌ エラー: ${entity.path} - $e');
+        debugPrint('   ❌ エラー: ${entity.path} - $e');
       }
     }
   }
   
-  print('   📊 $description: ${fixedCount}ファイル修正\n');
+  debugPrint('   📊 $description: ${fixedCount}ファイル修正\n');
   return fixedCount;
 }

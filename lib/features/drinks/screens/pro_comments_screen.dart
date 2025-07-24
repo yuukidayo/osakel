@@ -74,7 +74,7 @@ class _ProCommentsScreenState extends State<ProCommentsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('プロコメントの取得中にエラーが発生しました: $e');
+      debugPrint('プロコメントの取得中にエラーが発生しました: $e');
       setState(() {
         _isLoading = false;
       });

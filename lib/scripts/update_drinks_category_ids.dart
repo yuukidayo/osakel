@@ -7,20 +7,20 @@ void main() async {
   // Flutterの初期化
   WidgetsFlutterBinding.ensureInitialized();
   
-  print('ドリンクコレクションのカテゴリID更新スクリプトを開始します...');
+  debugPrint('ドリンクコレクションのカテゴリID更新スクリプトを開始します...');
   
   try {
     // Firebaseの初期化
     await Firebase.initializeApp();
-    print('Firebase初期化成功');
+    debugPrint('Firebase初期化成功');
     
     // Firestoreインスタンスの取得
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     
     // カテゴリコレクションの取得
-    print('カテゴリコレクションからデータを取得中...');
+    debugPrint('カテゴリコレクションからデータを取得中...');
     final QuerySnapshot categoriesSnapshot = await firestore.collection('categories').get();
-    print('取得したカテゴリ数: ${categoriesSnapshot.docs.length}');
+    debugPrint('取得したカテゴリ数: ${categoriesSnapshot.docs.length}');
     
     // カテゴリ名とIDのマッピングを作成
     Map<String, String> categoryNameToIdMap = {};
@@ -33,12 +33,12 @@ void main() async {
       
       if (categoryName != null) {
         categoryNameToIdMap[categoryName.toLowerCase()] = categoryDoc.id;
-        print('カテゴリマップ追加: ${categoryName.toLowerCase()} -> ${categoryDoc.id}');
+        debugPrint('カテゴリマップ追加: ${categoryName.toLowerCase()} -> ${categoryDoc.id}');
       }
       
       if (displayName != null) {
         categoryDisplayNameToIdMap[displayName.toLowerCase()] = categoryDoc.id;
-        print('表示名マップ追加: ${displayName.toLowerCase()} -> ${categoryDoc.id}');
+        debugPrint('表示名マップ追加: ${displayName.toLowerCase()} -> ${categoryDoc.id}');
       }
     }
     
@@ -65,14 +65,14 @@ void main() async {
       final japName = name.toLowerCase();
       if (categoryNameToIdMap.containsKey(japName) && !expandedCategoryMap.containsKey(alias)) {
         expandedCategoryMap[alias] = categoryNameToIdMap[japName]!;
-        print('別名マップ追加: $alias -> ${categoryNameToIdMap[japName]}');
+        debugPrint('別名マップ追加: $alias -> ${categoryNameToIdMap[japName]}');
       }
     });
     
     // ドリンクコレクションの取得
-    print('ドリンクコレクションからデータを取得中...');
+    debugPrint('ドリンクコレクションからデータを取得中...');
     final QuerySnapshot drinksSnapshot = await firestore.collection('drinks').get();
-    print('取得したドリンク数: ${drinksSnapshot.docs.length}');
+    debugPrint('取得したドリンク数: ${drinksSnapshot.docs.length}');
     
     // 更新カウンター
     int updatedCount = 0;
@@ -100,7 +100,7 @@ void main() async {
           bool categoryExists = categoriesSnapshot.docs.any((doc) => doc.id == currentCategoryId);
           if (categoryExists) {
             // もし存在するなら、それは既に正しいので変更しない
-            print('$drinkName: カテゴリID $currentCategoryId は既に正しいです');
+            debugPrint('$drinkName: カテゴリID $currentCategoryId は既に正しいです');
             noChangeCount++;
             continue;
           }
@@ -161,44 +161,44 @@ void main() async {
             }
           );
           
-          print('$drinkName: カテゴリID更新 ${currentCategoryId ?? "なし"} -> $newCategoryId');
+          debugPrint('$drinkName: カテゴリID更新 ${currentCategoryId ?? "なし"} -> $newCategoryId');
           updatedCount++;
           operationCount++;
         } else {
           if (newCategoryId == null) {
-            print('警告: $drinkName のカテゴリを特定できません');
+            debugPrint('警告: $drinkName のカテゴリを特定できません');
             errorCount++;
           } else {
             noChangeCount++;
           }
         }
       } catch (e) {
-        print('エラー: ${drinkDoc.id} の処理中にエラーが発生しました - ${e.toString()}');
+        debugPrint('エラー: ${drinkDoc.id} の処理中にエラーが発生しました - ${e.toString()}');
         errorCount++;
       }
     }
     
     // バッチ処理の実行
-    print('ドリンクのカテゴリID更新を実行中...');
+    debugPrint('ドリンクのカテゴリID更新を実行中...');
     int batchIndex = 1;
     for (var batch in batches) {
       if (operationCount > 0) {
-        print('バッチ $batchIndex/${batches.length} を実行中...');
+        debugPrint('バッチ $batchIndex/${batches.length} を実行中...');
         await batch.commit();
-        print('バッチ $batchIndex/${batches.length} 完了');
+        debugPrint('バッチ $batchIndex/${batches.length} 完了');
         batchIndex++;
       }
     }
     
     // 処理結果の表示
-    print('=== 処理完了 ===');
-    print('総ドリンク数: ${drinksSnapshot.docs.length}');
-    print('更新したドリンク数: $updatedCount');
-    print('変更なしドリンク数: $noChangeCount');
-    print('エラー数: $errorCount');
-    print('==================');
+    debugPrint('=== 処理完了 ===');
+    debugPrint('総ドリンク数: ${drinksSnapshot.docs.length}');
+    debugPrint('更新したドリンク数: $updatedCount');
+    debugPrint('変更なしドリンク数: $noChangeCount');
+    debugPrint('エラー数: $errorCount');
+    debugPrint('==================');
     
   } catch (e) {
-    print('スクリプト実行中にエラーが発生しました: ${e.toString()}');
+    debugPrint('スクリプト実行中にエラーが発生しました: ${e.toString()}');
   }
 }

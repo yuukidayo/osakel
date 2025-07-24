@@ -1,7 +1,7 @@
 import 'dart:io';
 
 void main() async {
-  print('🔧 最終一括修正開始...');
+  debugPrint('🔧 最終一括修正開始...');
   
   final fixes = [
     // admin_guard
@@ -45,11 +45,11 @@ void main() async {
       if (content.contains(fix['from']!)) {
         content = content.replaceAll(fix['from']!, fix['to']!);
         await file.writeAsString(content);
-        print('✅ 修正: ${fix['file']}');
+        debugPrint('✅ 修正: ${fix['file']}');
         fixedCount++;
       }
     }
   }
   
-  print('\n🎉 最終修正完了: ${fixedCount}ファイル');
+  debugPrint('\n🎉 最終修正完了: ${fixedCount}ファイル');
 }

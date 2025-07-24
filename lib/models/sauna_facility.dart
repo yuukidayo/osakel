@@ -44,7 +44,7 @@ class SaunaFacility {
         }
       }
     } catch (e) {
-      print('位置情報の処理エラー: $e');
+      debugPrint('位置情報の処理エラー: $e');
     }
     
     return SaunaFacility(

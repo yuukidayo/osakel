@@ -91,31 +91,31 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   /// マイルストーン2：Firestore からカテゴリをロード
   Future<void> _loadCategories() async {
     try {
-      print('カテゴリ読み込み開始');
+      debugPrint('カテゴリ読み込み開始');
       
       // まず通常のクエリで取得してみる
       final snap = await FirebaseFirestore.instance
           .collection('categories')
           .get();
       
-      print('取得成功: ${snap.docs.length}件のカテゴリ');
+      debugPrint('取得成功: ${snap.docs.length}件のカテゴリ');
       
       // ドキュメントの内容をマップに変換し、orderフィールドを追加
-      print('全ドキュメント数: ${snap.docs.length}');
+      debugPrint('全ドキュメント数: ${snap.docs.length}');
       
       final data = snap.docs.map((doc) {
         // ドキュメントデータの詳細なデバッグ情報
         final docData = doc.data();
-        print('ドキュメントID: ${doc.id}');
-        print('  全データ: $docData');
-        print('  データ型: ${docData.runtimeType}');
-        print('  キー一覧: ${docData.keys.toList()}');
-        print('  値一覧: ${docData.values.toList()}');
+        debugPrint('ドキュメントID: ${doc.id}');
+        debugPrint('  全データ: $docData');
+        debugPrint('  データ型: ${docData.runtimeType}');
+        debugPrint('  キー一覧: ${docData.keys.toList()}');
+        debugPrint('  値一覧: ${docData.values.toList()}');
         
         // 各フィールドを個別にデバッグ
-        if (docData['name'] != null) print('  name: ${docData['name']}');
-        if (docData['order'] != null) print('  order: ${docData['order']}');
-        if (docData['subcategories'] != null) print('  サブカテゴリ数: ${(docData['subcategories'] as List?)?.length ?? 0}');
+        if (docData['name'] != null) debugPrint('  name: ${docData['name']}');
+        if (docData['order'] != null) debugPrint('  order: ${docData['order']}');
+        if (docData['subcategories'] != null) debugPrint('  サブカテゴリ数: ${(docData['subcategories'] as List?)?.length ?? 0}');
         
         return {
           'id': doc.id,
@@ -149,7 +149,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       }
       
     } catch (e) {
-      print('❌ カテゴリの取得に失敗: $e');
+      debugPrint('❌ カテゴリの取得に失敗: $e');
       if (mounted) {
         setState(() {
           _isLoadingCategories = false;
@@ -161,18 +161,18 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
 
   /// カテゴリ選択時に _subcategories を更新
   void _updateSubcategories() {
-    print('_updateSubcategories 呼び出し: _selectedCategory=$_selectedCategory');
-    print('現在のカテゴリ一覧: ${_categories.map((c) => c['name']).toList()}');
+    debugPrint('_updateSubcategories 呼び出し: _selectedCategory=$_selectedCategory');
+    debugPrint('現在のカテゴリ一覧: ${_categories.map((c) => c['name']).toList()}');
     
     if (_selectedCategory == 'すべてのカテゴリ') {
       // すべてのカテゴリが選択されている場合、カテゴリ一覧をサブカテゴリとして表示
       if (_categories.isNotEmpty) {
         setState(() {
           _subcategories = _categories.map((c) => c['name']).toList();
-          print('サブカテゴリ更新 (all選択時): $_subcategories');
+          debugPrint('サブカテゴリ更新 (all選択時): $_subcategories');
         });
       } else {
-        print('警告: カテゴリ一覧が空です。データロードに問題がある可能性があります。');
+        debugPrint('警告: カテゴリ一覧が空です。データロードに問題がある可能性があります。');
       }
       return;
     }
@@ -195,34 +195,34 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     
     // 「すべてのカテゴリ」選択時の処理
     if (_selectedCategory == 'すべてのカテゴリ') {
-      print('すべてのカテゴリモードでクエリ構築'); // デバッグログ
+      debugPrint('すべてのカテゴリモードでクエリ構築'); // デバッグログ
       
       if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
         // サブカテゴリが選択されている場合はそのカテゴリのお酒を表示
-        print('サブカテゴリ($_selectedSubcategory)でフィルタリング');
+        debugPrint('サブカテゴリ($_selectedSubcategory)でフィルタリング');
         q = q.where('category', isEqualTo: _selectedSubcategory);
       } else {
         // サブカテゴリが選択されていない場合はすべてのお酒を表示
-        print('すべてのお酒を表示');
+        debugPrint('すべてのお酒を表示');
         // フィルタリングなし - すべてのドキュメントを取得
       }
     } 
     // 特定のカテゴリが選択されている場合
     else {
       // カテゴリ名で検索
-      print('カテゴリ($_selectedCategory)でフィルタリング');
+      debugPrint('カテゴリ($_selectedCategory)でフィルタリング');
       q = q.where('category', isEqualTo: _selectedCategory);
       
       // サブカテゴリでさらにフィルタリング
       if (_selectedSubcategory != null && _selectedSubcategory!.isNotEmpty) {
-        print('サブカテゴリ($_selectedSubcategory)でフィルタリング');
+        debugPrint('サブカテゴリ($_selectedSubcategory)でフィルタリング');
         q = q.where('type', isEqualTo: _selectedSubcategory);
       }
     }
     
     // キーワード検索が指定されている場合
     if (_searchKeyword.isNotEmpty) {
-      print('キーワード検索: $_searchKeyword');
+      debugPrint('キーワード検索: $_searchKeyword');
       q = q
           .where('name', isGreaterThanOrEqualTo: _searchKeyword)
           .where('name', isLessThan: _searchKeyword + '\uf8ff');
@@ -230,13 +230,13 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
     
     // 詳細フィルターの適用
     if (_isFiltersApplied && _filterValues.isNotEmpty) {
-      print('詳細フィルターを適用: $_filterValues');
+      debugPrint('詳細フィルターを適用: $_filterValues');
       
       // 国フィルター
       if (_filterValues.containsKey('country') && 
           (_filterValues['country'] as List<String>?)?.isNotEmpty == true) {
         final countries = _filterValues['country'] as List<String>;
-        print('国フィルター適用: $countries');
+        debugPrint('国フィルター適用: $countries');
         // 複数の国を「OR」条件でクエリするためには配列検索を使用
         // Firestoreの制限により、単純な「IN」クエリでは不十分なケースがある
         // ドキュメントに国の配列フィールドがあることを前提とする
@@ -253,7 +253,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       if (_filterValues.containsKey('region') && 
           (_filterValues['region'] as List<String>?)?.isNotEmpty == true) {
         final regions = _filterValues['region'] as List<String>;
-        print('地域フィルター適用: $regions');
+        debugPrint('地域フィルター適用: $regions');
         if (regions.length == 1) {
           q = q.where('region', isEqualTo: regions.first);
         } else {
@@ -265,7 +265,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       if (_filterValues.containsKey('type') && 
           (_filterValues['type'] as List<String>?)?.isNotEmpty == true) {
         final types = _filterValues['type'] as List<String>;
-        print('タイプフィルター適用: $types');
+        debugPrint('タイプフィルター適用: $types');
         if (types.length == 1) {
           q = q.where('type', isEqualTo: types.first);
         } else {
@@ -277,7 +277,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       if (_filterValues.containsKey('grape') && 
           (_filterValues['grape'] as List<String>?)?.isNotEmpty == true) {
         final grapes = _filterValues['grape'] as List<String>;
-        print('ぶどう品種フィルター適用: $grapes');
+        debugPrint('ぶどう品種フィルター適用: $grapes');
         if (grapes.length == 1) {
           q = q.where('grape', isEqualTo: grapes.first);
         } else {
@@ -289,7 +289,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       if (_filterValues.containsKey('taste') && 
           (_filterValues['taste'] as List<String>?)?.isNotEmpty == true) {
         final tastes = _filterValues['taste'] as List<String>;
-        print('味わいフィルター適用: $tastes');
+        debugPrint('味わいフィルター適用: $tastes');
         if (tastes.length == 1) {
           q = q.where('taste', isEqualTo: tastes.first);
         } else {
@@ -302,7 +302,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           (_filterValues['vintage'] as int?) != null && 
           (_filterValues['vintage'] as int) > 0) {
         final vintage = _filterValues['vintage'] as int;
-        print('ヴィンテージフィルター適用: $vintage');
+        debugPrint('ヴィンテージフィルター適用: $vintage');
         q = q.where('vintage', isEqualTo: vintage);
       }
       
@@ -311,14 +311,14 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
           (_filterValues['aging'] as String?) != null && 
           (_filterValues['aging'] as String) != 'すべて') {
         final aging = _filterValues['aging'] as String;
-        print('熟成年数フィルター適用: $aging');
+        debugPrint('熟成年数フィルター適用: $aging');
         q = q.where('aging', isEqualTo: aging);
       }
       
       // アルコール度数フィルター
       if (_filterValues.containsKey('alcoholRange')) {
         final alcoholRange = _filterValues['alcoholRange'] as RangeValues;
-        print('アルコール度数フィルター適用: ${alcoholRange.start}% - ${alcoholRange.end}%');
+        debugPrint('アルコール度数フィルター適用: ${alcoholRange.start}% - ${alcoholRange.end}%');
         q = q.where('alcoholPercentage', isGreaterThanOrEqualTo: alcoholRange.start)
             .where('alcoholPercentage', isLessThanOrEqualTo: alcoholRange.end);
       }
@@ -326,7 +326,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       // 価格帯フィルター
       if (_filterValues.containsKey('priceRange')) {
         final priceRange = _filterValues['priceRange'] as RangeValues;
-        print('価格帯フィルター適用: ¥${priceRange.start.round()} - ¥${priceRange.end.round()}');
+        debugPrint('価格帯フィルター適用: ¥${priceRange.start.round()} - ¥${priceRange.end.round()}');
         q = q.where('price', isGreaterThanOrEqualTo: priceRange.start.round())
             .where('price', isLessThanOrEqualTo: priceRange.end.round());
       }
@@ -356,7 +356,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       });
 
     } catch (e) {
-      print('❌ 検索処理エラー: $e');
+      debugPrint('❌ 検索処理エラー: $e');
       setState(() {
         _searchSnapshot = null;
         _hasError = true;
@@ -365,7 +365,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   }
 
   void _selectCategory(String id, String name) {
-    print('カテゴリ選択: id=$id, name=$name'); // デバッグログ追加
+    debugPrint('カテゴリ選択: id=$id, name=$name'); // デバッグログ追加
   
     if (name == 'すべてのカテゴリ') {
       // 「すべてのカテゴリ」選択時の特別処理
@@ -449,10 +449,10 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
   // カテゴリ選択ダイアログ
   void _showCategoryModal() {
     // デバッグ情報の出力
-    print('カテゴリモーダル表示時のデータ:');
-    print('  _categories数: ${_categories.length}');
-    print('  _categories内容: ${_categories.map((c) => "${c['name']}(${c['id']})").toList()}');
-    print('  _selectedCategory: $_selectedCategory');
+    debugPrint('カテゴリモーダル表示時のデータ:');
+    debugPrint('  _categories数: ${_categories.length}');
+    debugPrint('  _categories内容: ${_categories.map((c) => "${c['name']}(${c['id']})").toList()}');
+    debugPrint('  _selectedCategory: $_selectedCategory');
   
     // カテゴリが空の場合のエラー表示
     if (_categories.isEmpty && !_isLoadingCategories) {
@@ -558,7 +558,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
 
   void _showFilterBottomSheet() {
     // 新しいフィルターコンポーネントを使用
-    print('_showFilterBottomSheet: カテゴリ = $_selectedCategory');
+    debugPrint('_showFilterBottomSheet: カテゴリ = $_selectedCategory');
     
     DrinkFilterBottomSheet.show(
       context: context,

@@ -9,20 +9,20 @@ void main() async {
   
   // Firebase初期化
   await Firebase.initializeApp();
-  print('Firebase initialized successfully');
+  debugPrint('Firebase initialized successfully');
   
   // データ作成クラスのインスタンス化
   final dataCreator = FirebaseDataCreator();
   
   try {
     // サンプルドリンクデータの作成
-    print('サンプルドリンクデータの作成を開始します...');
+    debugPrint('サンプルドリンクデータの作成を開始します...');
     await dataCreator.createSampleDrinks();
-    print('サンプルドリンクデータの作成が完了しました');
+    debugPrint('サンプルドリンクデータの作成が完了しました');
     
     // 成功メッセージ
-    print('処理が完了しました。アプリを終了します。');
+    debugPrint('処理が完了しました。アプリを終了します。');
   } catch (e) {
-    print('エラーが発生しました: $e');
+    debugPrint('エラーが発生しました: $e');
   }
 }

@@ -9,13 +9,13 @@ void main() async {
   
   // Firebase初期化
   await Firebase.initializeApp();
-  print('Firebase initialized successfully');
+  debugPrint('Firebase initialized successfully');
   
   // Firestoreインスタンスの取得
   final firestore = FirebaseFirestore.instance;
   
   try {
-    print('サンプルドリンクデータの作成を開始します...');
+    debugPrint('サンプルドリンクデータの作成を開始します...');
     
     // バッチ処理を使用して複数のドキュメントを一度に作成
     final batch = firestore.batch();
@@ -181,14 +181,14 @@ void main() async {
     for (var drink in allDrinks) {
       final docRef = firestore.collection('drinks').doc();
       batch.set(docRef, drink);
-      print('ドリンクを追加: ${drink['name']}');
+      debugPrint('ドリンクを追加: ${drink['name']}');
     }
     
     // バッチを実行
     await batch.commit();
-    print('サンプルドリンクデータの作成が完了しました。合計${allDrinks.length}件のドリンクを追加しました。');
+    debugPrint('サンプルドリンクデータの作成が完了しました。合計${allDrinks.length}件のドリンクを追加しました。');
   } catch (e) {
-    print('サンプルドリンクデータの作成中にエラーが発生しました: $e');
+    debugPrint('サンプルドリンクデータの作成中にエラーが発生しました: $e');
     rethrow;
   }
 }

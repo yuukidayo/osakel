@@ -15,7 +15,7 @@ class CategoryService {
         return Category.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      print('Error fetching categories: $e');
+      debugPrint('Error fetching categories: $e');
       return [];
     }
   }
@@ -30,7 +30,7 @@ class CategoryService {
       }
       return null;
     } catch (e) {
-      print('Error fetching category $categoryId: $e');
+      debugPrint('Error fetching category $categoryId: $e');
       return null;
     }
   }

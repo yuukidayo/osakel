@@ -18,11 +18,11 @@ class LocationService {
     final stopwatch = Stopwatch()..start();
     
     try {
-      print('📍 LocationService: 現在地取得開始');
+      debugPrint('📍 LocationService: 現在地取得開始');
       
       // キャッシュされた位置情報をチェック
       if (!forceRefresh && _isLocationCacheValid()) {
-        print('📍 キャッシュされた位置情報を使用 (${stopwatch.elapsedMilliseconds}ms)');
+        debugPrint('📍 キャッシュされた位置情報を使用 (${stopwatch.elapsedMilliseconds}ms)');
         return _lastKnownPosition!;
       }
       
@@ -35,7 +35,7 @@ class LocationService {
       }
       
       // 現在地を取得
-      print('🌐 GPS/ネットワークから位置情報取得中...');
+      debugPrint('🌐 GPS/ネットワークから位置情報取得中...');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 10), // タイムアウト設定
@@ -45,20 +45,20 @@ class LocationService {
       _lastKnownPosition = position;
       _lastUpdateTime = DateTime.now();
       
-      print('✅ 現在地取得完了: (${position.latitude}, ${position.longitude}) (${stopwatch.elapsedMilliseconds}ms)');
+      debugPrint('✅ 現在地取得完了: (${position.latitude}, ${position.longitude}) (${stopwatch.elapsedMilliseconds}ms)');
       return position;
       
     } catch (e) {
-      print('❌ 現在地取得エラー: $e');
+      debugPrint('❌ 現在地取得エラー: $e');
       
       // フォールバック: 最後に取得した位置情報を返す
       if (_lastKnownPosition != null) {
-        print('🔄 最後に取得した位置情報を使用');
+        debugPrint('🔄 最後に取得した位置情報を使用');
         return _lastKnownPosition!;
       }
       
       // デフォルト位置（東京駅）を返す
-      print('🏢 デフォルト位置（東京駅）を使用');
+      debugPrint('🏢 デフォルト位置（東京駅）を使用');
       return Position(
         latitude: 35.6812,
         longitude: 139.7671,
@@ -79,7 +79,7 @@ class LocationService {
     LocationPermission permission = await Geolocator.checkPermission();
     
     if (permission == LocationPermission.denied) {
-      print('📍 位置情報権限を要求中...');
+      debugPrint('📍 位置情報権限を要求中...');
       permission = await Geolocator.requestPermission();
       
       if (permission == LocationPermission.denied) {
@@ -91,7 +91,7 @@ class LocationService {
       throw PermissionDeniedForeverException('位置情報の権限が永続的に拒否されています。設定から許可してください。');
     }
     
-    print('✅ 位置情報権限: OK');
+    debugPrint('✅ 位置情報権限: OK');
   }
   
   /// キャッシュされた位置情報が有効かチェック
@@ -139,18 +139,18 @@ class LocationService {
         onLocationUpdate(position);
       },
       onError: (error) {
-        print('❌ 位置情報監視エラー: $error');
+        debugPrint('❌ 位置情報監視エラー: $error');
       },
     );
     
-    print('📍 位置情報監視開始');
+    debugPrint('📍 位置情報監視開始');
   }
   
   /// 位置情報監視を停止
   void stopLocationTracking() {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
-    print('📍 位置情報監視停止');
+    debugPrint('📍 位置情報監視停止');
   }
   
   /// サービスクリーンアップ

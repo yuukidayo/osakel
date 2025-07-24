@@ -29,7 +29,7 @@ class GeoSearchService {
   /// サービス初期化
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
-    print('🔍 GeoSearchService: 初期化完了');
+    debugPrint('🔍 GeoSearchService: 初期化完了');
   }
 
   /// 現在地周辺の店舗を検索（メインメソッド）
@@ -42,43 +42,43 @@ class GeoSearchService {
     final stopwatch = Stopwatch()..start();
     
     try {
-      print('🔍 GeoSearchService: 検索開始 - 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
+      debugPrint('🔍 GeoSearchService: 検索開始 - 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
       
       final cacheKey = _generateCacheKey(latitude, longitude, drinkId, radiusKm);
       
       // Level 1: メモリキャッシュチェック
       final memoryResult = _checkMemoryCache(cacheKey);
       if (memoryResult != null) {
-        print('💾 メモリキャッシュヒット (${stopwatch.elapsedMilliseconds}ms)');
+        debugPrint('💾 メモリキャッシュヒット (${stopwatch.elapsedMilliseconds}ms)');
         return memoryResult;
       }
       
       // Level 2: ディスクキャッシュチェック
       final diskResult = await _checkDiskCache(cacheKey);
       if (diskResult != null) {
-        print('💽 ディスクキャッシュヒット (${stopwatch.elapsedMilliseconds}ms)');
+        debugPrint('💽 ディスクキャッシュヒット (${stopwatch.elapsedMilliseconds}ms)');
         _saveToMemoryCache(cacheKey, diskResult);
         return diskResult;
       }
       
       // Level 3: Firestore検索
-      print('🌐 Firestore検索実行');
+      debugPrint('🌐 Firestore検索実行');
       final result = await _searchFirestore(latitude, longitude, drinkId, radiusKm);
       
       // キャッシュに保存
       _saveToMemoryCache(cacheKey, result);
       await _saveToDiskCache(cacheKey, result);
       
-      print('✅ 検索完了: ${result.length}件 (${stopwatch.elapsedMilliseconds}ms)');
+      debugPrint('✅ 検索完了: ${result.length}件 (${stopwatch.elapsedMilliseconds}ms)');
       return result;
       
     } catch (e) {
-      print('❌ 検索エラー: $e');
+      debugPrint('❌ 検索エラー: $e');
       
       // フォールバック: 古いキャッシュを返す
       final staleResult = await _getStaleCache(latitude, longitude, drinkId, radiusKm);
       if (staleResult != null) {
-        print('🔄 古いキャッシュを使用: ${staleResult.length}件');
+        debugPrint('🔄 古いキャッシュを使用: ${staleResult.length}件');
         return staleResult;
       }
       
@@ -94,24 +94,24 @@ class GeoSearchService {
     double radiusKm,
   ) async {
     try {
-      print('🔍 GeoSearchService: 検索開始 - drinkId: $drinkId, 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
+      debugPrint('🔍 GeoSearchService: 検索開始 - drinkId: $drinkId, 位置: ($latitude, $longitude), 半径: ${radiusKm}km');
       
       // 1. DrinkShopLinkから該当するドリンクの店舗IDを取得（最大５０件の効率的検索）
-      print('🔍 ステップ１: DrinkShopLink検索開始 - 現在地+お酒ID絞り込み');
+      debugPrint('🔍 ステップ１: DrinkShopLink検索開始 - 現在地+お酒ID絞り込み');
       final drinkShopQuery = await _firestore
           .collection('drink_shop_links')
           .where('drinkId', isEqualTo: drinkId)
           .limit(50) // 初回アクセス時は最大５０件に制限
           .get();
       
-      print('🔍 DrinkShopLink検索結果: ${drinkShopQuery.docs.length}件');
+      debugPrint('🔍 DrinkShopLink検索結果: ${drinkShopQuery.docs.length}件');
       
       if (drinkShopQuery.docs.isEmpty) {
-        print('⚠️ 該当するドリンクの店舗が見つかりません');
+        debugPrint('⚠️ 該当するドリンクの店舗が見つかりません');
         return [];
       }
       
-      print('🔍 ステップ2: shopIds抽出開始');
+      debugPrint('🔍 ステップ2: shopIds抽出開始');
       final shopIds = drinkShopQuery.docs
           .map((doc) => doc.data()['shopId'] as String?)
           .where((id) => id != null)
@@ -121,25 +121,25 @@ class GeoSearchService {
           .map((doc) => DrinkShopLink.fromFirestore(doc))
           .toList();
       
-      print('🔍 抽出したshopIds: ${shopIds.length}件 - ${shopIds.take(5).toList()}...');
+      debugPrint('🔍 抽出したshopIds: ${shopIds.length}件 - ${shopIds.take(5).toList()}...');
       
       if (shopIds.isEmpty) {
-        print('⚠️ shopIdsが空です');
+        debugPrint('⚠️ shopIdsが空です');
         return [];
       }
       
       // 2. 店舗情報を取得（最大５０件の効率的検索）
-      print('🔍 ステップ２: shopsコレクション検索開始 - 最大５０件制限');
+      debugPrint('🔍 ステップ２: shopsコレクション検索開始 - 最大５０件制限');
       // 初回アクセス時は最大５０件に制限（Firestore whereIn制限内）
       final queryShopIds = shopIds.take(50).toList(); // 最大５０件に設定
-      print('🔍 クエリ用shopIds: ${queryShopIds.length}件 - $queryShopIds');
+      debugPrint('🔍 クエリ用shopIds: ${queryShopIds.length}件 - $queryShopIds');
       
       final shopsQuery = await _firestore
           .collection('shops')
           .where(FieldPath.documentId, whereIn: queryShopIds) // Firestore制限対応
           .get();
       
-      print('🔍 shops検索結果: ${shopsQuery.docs.length}件');
+      debugPrint('🔍 shops検索結果: ${shopsQuery.docs.length}件');
       
       // 3. 精密な距離計算とフィルタリング
       final result = <ShopWithPrice>[];
@@ -168,12 +168,12 @@ class GeoSearchService {
       
       // 初回アクセス時は最大５０件に制限（効率的な検索のため）
       final limitedResult = result.take(50).toList();
-      print('🎯 最終結果: ${limitedResult.length}件（距離順、最大５０件制限）');
+      debugPrint('🎯 最終結果: ${limitedResult.length}件（距離順、最大５０件制限）');
       
       return limitedResult;
       
     } catch (e) {
-      print('❌ Firestore検索エラー: $e');
+      debugPrint('❌ Firestore検索エラー: $e');
       rethrow;
     }
   }
@@ -236,7 +236,7 @@ class GeoSearchService {
         }
       }
     } catch (e) {
-      print('⚠️ ディスクキャッシュ読み込みエラー: $e');
+      debugPrint('⚠️ ディスクキャッシュ読み込みエラー: $e');
     }
     return null;
   }
@@ -251,7 +251,7 @@ class GeoSearchService {
       
       await _prefs?.setString('cache_$key', json.encode(cacheData));
     } catch (e) {
-      print('⚠️ ディスクキャッシュ保存エラー: $e');
+      debugPrint('⚠️ ディスクキャッシュ保存エラー: $e');
     }
   }
 
@@ -276,7 +276,7 @@ class GeoSearchService {
         return shopsJson.map((json) => ShopWithPrice.fromJson(json)).toList();
       }
     } catch (e) {
-      print('⚠️ 古いキャッシュ取得エラー: $e');
+      debugPrint('⚠️ 古いキャッシュ取得エラー: $e');
     }
     
     return null;
@@ -289,7 +289,7 @@ class GeoSearchService {
     for (final key in keys) {
       await _prefs?.remove(key);
     }
-    print('🗑️ キャッシュクリア完了');
+    debugPrint('🗑️ キャッシュクリア完了');
   }
 }
 

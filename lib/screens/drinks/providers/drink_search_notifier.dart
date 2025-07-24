@@ -74,7 +74,7 @@ class DrinkSearchNotifier extends ChangeNotifier {
       
       _setLoading(false);
     } catch (e) {
-      print('カテゴリ読み込みエラー: $e');
+      debugPrint('カテゴリ読み込みエラー: $e');
       _setError(true);
       _setLoading(false);
     }
@@ -113,7 +113,7 @@ class DrinkSearchNotifier extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('サブカテゴリ更新エラー: $e');
+      debugPrint('サブカテゴリ更新エラー: $e');
     }
   }
 
@@ -181,35 +181,35 @@ class DrinkSearchNotifier extends ChangeNotifier {
       // 検索結果を取得（エラーハンドリング付き）
       _searchSnapshot = query.snapshots().map((snapshot) {
         // 🍺 デバッグ: 検索結果を出力
-        print('\n🍺 === SEARCH RESULTS DEBUG ===');
-        print('📊 Total drinks found: ${snapshot.docs.length}');
+        debugPrint('\n🍺 === SEARCH RESULTS DEBUG ===');
+        debugPrint('📊 Total drinks found: ${snapshot.docs.length}');
         
         if (snapshot.docs.isEmpty) {
-          print('⚠️  No drinks found with current search criteria');
+          debugPrint('⚠️  No drinks found with current search criteria');
         } else {
-          print('📋 Found drinks:');
+          debugPrint('📋 Found drinks:');
           for (int i = 0; i < snapshot.docs.length && i < 5; i++) {
             final doc = snapshot.docs[i];
             final data = doc.data();
-            print('  ${i + 1}. "${data['name'] ?? 'Unknown'}" (ID: ${doc.id})');
-            print('     - Category ID: "${data['categoryId'] ?? 'N/A'}"');
-            print('     - Subcategories: ${data['subcategories'] ?? 'N/A'}');
+            debugPrint('  ${i + 1}. "${data['name'] ?? 'Unknown'}" (ID: ${doc.id})');
+            debugPrint('     - Category ID: "${data['categoryId'] ?? 'N/A'}"');
+            debugPrint('     - Subcategories: ${data['subcategories'] ?? 'N/A'}');
           }
           if (snapshot.docs.length > 5) {
-            print('  ... and ${snapshot.docs.length - 5} more drinks');
+            debugPrint('  ... and ${snapshot.docs.length - 5} more drinks');
           }
         }
-        print('=== END SEARCH RESULTS DEBUG ===\n');
+        debugPrint('=== END SEARCH RESULTS DEBUG ===\n');
         
         return snapshot;
       }).handleError((error) {
-        print('🔥 Firestore Query Error: $error');
+        debugPrint('🔥 Firestore Query Error: $error');
         
         // Firestoreのインデックスエラーの場合、リンクを抽出して出力
         if (error.toString().contains('index')) {
           final errorMessage = error.toString();
-          print('📋 Full Error Message:');
-          print(errorMessage);
+          debugPrint('📋 Full Error Message:');
+          debugPrint(errorMessage);
           
           // インデックス作成リンクを抽出
           final linkRegex = RegExp(r'https://console\.firebase\.google\.com[^\s]+');
@@ -217,9 +217,9 @@ class DrinkSearchNotifier extends ChangeNotifier {
           
           if (match != null) {
             final indexLink = match.group(0);
-            print('🔗 Index Creation Link:');
-            print(indexLink);
-            print('\n📱 Copy this link and open it in your browser to create the required index.');
+            debugPrint('🔗 Index Creation Link:');
+            debugPrint(indexLink);
+            debugPrint('\n📱 Copy this link and open it in your browser to create the required index.');
           }
         }
         
@@ -231,7 +231,7 @@ class DrinkSearchNotifier extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('❌ 検索処理エラー: $e');
+      debugPrint('❌ 検索処理エラー: $e');
       _searchSnapshot = null;
       _hasError = true;
       notifyListeners();
