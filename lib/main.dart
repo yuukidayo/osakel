@@ -26,14 +26,14 @@ import 'core/services/fcm_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase Core初期化を必要とする処理は避ける
-  print('📱 バックグラウンドメッセージ受信: ${message.messageId}');
+  debugPrint('📱 バックグラウンドメッセージ受信: ${message.messageId}');
 }
 
 /// アプリケーションのエントリーポイント - シンプルに標準的な初期化順序に修正
 Future<void> main() async {
   // 1. Flutter初期化（必須の最初のステップ）
   WidgetsFlutterBinding.ensureInitialized();
-  print('Flutter binding initialized');
+  debugPrint('Flutter binding initialized');
   
   // 2. 画面の向きを縦に固定
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -50,19 +50,19 @@ Future<void> main() async {
     
     // 初期化成功の確認
     firebaseInitialized = Firebase.apps.isNotEmpty;
-    print('Firebase initialized: $firebaseInitialized');
+    debugPrint('Firebase initialized: $firebaseInitialized');
     
     // 5. FCMサービスの初期化
     if (firebaseInitialized) {
       try {
         await FCMService().initialize();
-        print('FCM service initialized');
+        debugPrint('FCM service initialized');
       } catch (e) {
-        print('FCM service initialization error: $e');
+        debugPrint('FCM service initialization error: $e');
       }
     }
   } catch (e) {
-    print('Firebase initialization error: $e');
+    debugPrint('Firebase initialization error: $e');
   }
   
   // 6. アプリを起動
@@ -224,7 +224,7 @@ class _MyAppState extends State<MyApp> {
     // FCMトークン更新リスナーの設定
     if (widget.firebaseInitialized) {
       FCMService().setupTokenRefreshListener((token) {
-        print('FCMトークン更新: $token');
+        debugPrint('FCMトークン更新: $token');
         // ここでトークンをFirestoreなどに保存するロジックを追加可能
       });
     }
