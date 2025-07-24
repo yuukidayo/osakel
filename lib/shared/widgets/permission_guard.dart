@@ -102,7 +102,7 @@ class PermissionGuard extends StatelessWidget {
       
       // 許可された権限リストに含まれているかチェック
       if (!allowedRoles.contains(currentRole)) {
-        print('🚫 権限不足: 現在の権限=${currentRole.name}, 必要な権限=${allowedRoles.map((r) => r.name).join(', ')}');
+        debugPrint('🚫 権限不足: 現在の権限=${currentRole.name}, 必要な権限=${allowedRoles.map((r) => r.name).join(', ')}');
         return false;
       }
 
@@ -110,15 +110,15 @@ class PermissionGuard extends StatelessWidget {
       if (requiredShopId != null && currentRole == UserRole.shopOwner) {
         final isOwner = await AuthService.isOwnerOfShop(requiredShopId!);
         if (!isOwner) {
-          print('🚫 店舗所有者権限不足: shopId=$requiredShopId');
+          debugPrint('🚫 店舗所有者権限不足: shopId=$requiredShopId');
           return false;
         }
       }
 
-      print('✅ 権限チェック通過: ${currentRole.name}');
+      debugPrint('✅ 権限チェック通過: ${currentRole.name}');
       return true;
     } catch (e) {
-      print('❌ 権限チェックエラー: $e');
+      debugPrint('❌ 権限チェックエラー: $e');
       return false;
     }
   }

@@ -23,7 +23,7 @@ class StoreBottomSheet extends StatelessWidget {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      print('Could not launch $url');
+      debugPrint('Could not launch $url');
     }
   }
 

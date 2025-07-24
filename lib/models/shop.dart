@@ -39,24 +39,24 @@ class Shop {
           final geoPoint = data['location'] as GeoPoint;
           lat = geoPoint.latitude;
           lng = geoPoint.longitude;
-          print('GeoPoint形式の位置情報: lat=$lat, lng=$lng');
+          debugPrint('GeoPoint形式の位置情報: lat=$lat, lng=$lng');
         }
         // Map型の場合（古いデータ形式との互換性のため）
         else if (data['location'] is Map) {
           final location = data['location'] as Map<dynamic, dynamic>;
           lat = (location['lat'] is num) ? (location['lat'] as num).toDouble() : 0.0;
           lng = (location['lng'] is num) ? (location['lng'] as num).toDouble() : 0.0;
-          print('Map形式の位置情報: lat=$lat, lng=$lng');
+          debugPrint('Map形式の位置情報: lat=$lat, lng=$lng');
         }
       }
     } catch (e) {
-      print('位置情報の処理エラー: $e');
+      debugPrint('位置情報の処理エラー: $e');
     }
     
     // デバッグ出力
-    print('データ全体: $data');
-    print('imageUrlフィールド: ${data['imageUrl']}');
-    print('imageURLフィールド: ${data['imageURL']}');
+    debugPrint('データ全体: $data');
+    debugPrint('imageUrlフィールド: ${data['imageUrl']}');
+    debugPrint('imageURLフィールド: ${data['imageURL']}');
     
     // imageUrls配列の処理
     List<String> imageUrls = [];
