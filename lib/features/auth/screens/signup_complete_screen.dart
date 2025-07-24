@@ -12,9 +12,9 @@ class SignUpCompleteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFAFAFA),
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -32,8 +32,15 @@ class SignUpCompleteScreen extends StatelessWidget {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50),
+                        color: const Color(0xFF2C2C2C),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.check,
@@ -49,13 +56,14 @@ class SignUpCompleteScreen extends StatelessWidget {
                       'アカウント登録完了！',
                       style: TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
+                        fontWeight: FontWeight.w300,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     
                     // サブタイトル
                     Text(
@@ -63,7 +71,9 @@ class SignUpCompleteScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF666666),
-                        height: 1.5,
+                        height: 1.6,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.3,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -72,38 +82,48 @@ class SignUpCompleteScreen extends StatelessWidget {
                     
                     // 説明文
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8F9FA),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(2),
                         border: Border.all(
-                          color: const Color(0xFFE9ECEF),
+                          color: const Color(0xFFE5E5E5),
                           width: 1,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
                           const Icon(
                             Icons.email_outlined,
-                            color: Color(0xFF6C757D),
-                            size: 32,
+                            color: Color(0xFF4A4A4A),
+                            size: 28,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 20),
                           const Text(
                             'メール認証を完了してください',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF495057),
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF2C2C2C),
+                              letterSpacing: 0.3,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           const Text(
                             '送信されたメールのリンクをタップして\nメール認証を完了してください。\n\n認証完了後、下のボタンから\nログインしてアプリをお楽しみください。',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF6C757D),
-                              height: 1.4,
+                              color: Color(0xFF666666),
+                              height: 1.6,
+                              fontWeight: FontWeight.w300,
+                              letterSpacing: 0.2,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -124,18 +144,20 @@ class SignUpCompleteScreen extends StatelessWidget {
                     Navigator.of(context).pushReplacementNamed('/login');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2196F3),
+                    backgroundColor: const Color(0xFF2C2C2C),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(2),
                     ),
+                    shadowColor: Colors.transparent,
                   ),
                   child: const Text(
                     'ログイン画面へ',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -150,15 +172,17 @@ class SignUpCompleteScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('メール認証を再送信しました'),
-                      backgroundColor: Color(0xFF4CAF50),
+                      backgroundColor: Color(0xFF2C2C2C),
                     ),
                   );
                 },
                 child: const Text(
                   'メール認証を再送信',
                   style: TextStyle(
-                    color: Color(0xFF666666),
+                    color: Color(0xFF8A8A8A),
                     fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ),

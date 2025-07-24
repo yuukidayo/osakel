@@ -36,6 +36,244 @@ class MapView extends StatelessWidget {
     this.isLoading = false,
   }) : super(key: key);
 
+  /// Airbnb風マップスタイル
+  /// 水域: 明るいティール/アクアブルー (#B3E5FC)
+  /// 陸地: 非常に薄いベージュ/クリーム (#FAFAF9)
+  /// 道路: ソフトなグレー (#E8E8E8)
+  /// 公園: 薄いミントグリーン (#E8F5E8)
+  /// 建物: 極薄グレー (#F5F5F5)
+  static const String _airbnbMapStyle = '''
+[
+  {
+    "featureType": "water",
+    "stylers": [
+      {
+        "color": "#B3E5FC"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape",
+    "stylers": [
+      {
+        "color": "#FAFAF9"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural",
+    "stylers": [
+      {
+        "color": "#FAFAF9"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "stylers": [
+      {
+        "color": "#F5F5F5"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "stylers": [
+      {
+        "color": "#E8E8E8"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "stylers": [
+      {
+        "color": "#E0E0E0"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "stylers": [
+      {
+        "color": "#E8E8E8"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "stylers": [
+      {
+        "color": "#EEEEEE"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#E0E0E0"
+      },
+      {
+        "weight": 0.5
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text",
+    "stylers": [
+      {
+        "color": "#9E9E9E"
+      },
+      {
+        "weight": 0.4
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text",
+    "stylers": [
+      {
+        "color": "#757575"
+      },
+      {
+        "weight": 0.5
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "stylers": [
+      {
+        "visibility": "simplified"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "stylers": [
+      {
+        "color": "#BDBDBD"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "stylers": [
+      {
+        "color": "#E8F5E8"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "simplified"
+      },
+      {
+        "color": "#7CB342"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.attraction",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.government",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.medical",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.place_of_worship",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.school",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.sports_complex",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  }
+]
+''';
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -50,7 +288,11 @@ class MapView extends StatelessWidget {
               myLocationButtonEnabled: myLocationButtonEnabled,
               mapToolbarEnabled: mapToolbarEnabled,
               zoomControlsEnabled: zoomControlsEnabled,
-              onMapCreated: onMapCreated,
+              onMapCreated: (GoogleMapController controller) {
+                // Airbnb風スタイルを適用
+                controller.setMapStyle(_airbnbMapStyle);
+                onMapCreated(controller);
+              },
               onCameraMove: onCameraMove,
               onCameraIdle: onCameraIdle,
       ),

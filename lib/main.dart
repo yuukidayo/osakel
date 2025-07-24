@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:developer' as developer;
 import 'firebase_options.dart';
 import 'screens/category_list_screen.dart';
@@ -252,6 +253,24 @@ class _MyAppState extends State<MyApp> {
         title: 'OSAKEL',
         debugShowCheckedModeBanner: false,
         navigatorKey: GlobalNavigator.navigatorKey, // グローバルナビゲーションキー設定
+        // 日本語ローカライゼーション設定（強制的に日本語に設定）
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('ja', 'JP'), // 日本語
+          Locale('en', 'US'), // 英語（フォールバック）
+        ],
+        locale: const Locale('ja', 'JP'), // デフォルトを日本語に設定
+        // デバイス設定を無視して強制的に日本語にする
+        localeResolutionCallback: (locale, supportedLocales) {
+          developer.log('🌍 ロケール解決: デバイスロケール=$locale, サポートロケール=$supportedLocales');
+          developer.log('🌍 強制的に日本語(ja_JP)を返します');
+          // 常に日本語を返す
+          return const Locale('ja', 'JP');
+        },
         theme: ThemeData(
           // モノトーンデザインのベースカラー定義
           colorScheme: const ColorScheme.light(

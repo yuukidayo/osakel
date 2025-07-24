@@ -6,6 +6,7 @@ import 'shop_detail_screen.dart';
 import '../widgets/map/map_view.dart';
 import '../widgets/map/map_control_buttons.dart';
 import '../widgets/map/shop_card_page_view.dart';
+import '../widgets/filter_bar.dart';
 
 
 import 'controllers/map_screen_controller.dart';
@@ -14,7 +15,7 @@ import 'models/map_screen_state.dart';
 class MapScreen extends StatefulWidget {
   final String? drinkId;
 
-  const MapScreen({Key? key, this.drinkId}) : super(key: key);
+  const MapScreen({super.key, this.drinkId});
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -27,6 +28,11 @@ class _MapScreenState extends State<MapScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
   final PageController _pageController = PageController(viewportFraction: 0.85);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // フィルター状態管理
+  String? _selectedFilter;
+  List<String> _activeFilters = [];
+  String? _currentFacilityName;
 
 
 
@@ -119,38 +125,46 @@ class _MapScreenState extends State<MapScreen> {
   
 
   
-  /// 「このエリアで再検索」ボタンのUI
+  /// 「このエリアで再検索」ボタンを構築（小型・黒背景版）
   Widget _buildSearchAreaButton() {
-    return AnimatedOpacity(
-      opacity: _shouldShowSearchButton() ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 300),
-      child: Container(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton.icon(
-          onPressed: _controller.isSearchingNearby ? null : _searchCurrentArea,
-          icon: _controller.isSearchingNearby 
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Icon(Icons.search, size: 20),
-          label: Text(
-            _controller.isSearchingNearby ? '検索中...' : 'このエリアで再検索',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            elevation: 4,
-            shadowColor: Colors.blue.withOpacity(0.3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+    if (!_shouldShowSearchButton()) {
+      return const SizedBox.shrink();
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Center(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.39, // 0.3 × 1.3 = 0.39（39%）
+          height: 36, // 28 × 1.3 ≈ 36
+          child: ElevatedButton(
+            onPressed: _controller.isSearchingNearby ? null : _searchCurrentArea,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF333333), // 黒背景
+              foregroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black.withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18), // 14 × 1.3 ≈ 18
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10), // 8 × 1.3 ≈ 10
             ),
+            child: _controller.isSearchingNearby
+                ? const SizedBox(
+                    width: 16, // 12 × 1.3 ≈ 16
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2, // 1.5 × 1.3 ≈ 2
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'このエリアで再検索',
+                    style: TextStyle(
+                      fontSize: 13, // 10 × 1.3 = 13
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -179,7 +193,7 @@ class _MapScreenState extends State<MapScreen> {
     if (!mounted) return;
     
     final message = resultCount > 0 
-        ? '${resultCount}件の店舗が見つかりました'
+        ? '$resultCount件の店舗が見つかりました'
         : 'このエリアには店舗が見つかりませんでした';
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -211,6 +225,129 @@ class _MapScreenState extends State<MapScreen> {
     // print('📍 地図中心位置更新: ${position.target.latitude}, ${position.target.longitude}');
   }
 
+  /// フィルター選択時の処理
+  void _onFilterSelected(String filter) {
+    setState(() {
+      // 新しいピル型フィルターの処理
+      if (filter == '営業中') {
+        if (_activeFilters.contains('営業中')) {
+          _activeFilters.remove('営業中');
+        } else {
+          _activeFilters.add('営業中');
+        }
+      } else if (filter == '日帰り入浴可') {
+        if (_activeFilters.contains('日帰り入浴可')) {
+          _activeFilters.remove('日帰り入浴可');
+        } else {
+          _activeFilters.add('日帰り入浴可');
+        }
+      } else if (filter == 'facility') {
+        // 施設名タップ時の処理（今後実装）
+        _showFilterBottomSheet('施設情報');
+      } else {
+        // 従来のフィルター（エリア、カテゴリ、特徴）
+        _selectedFilter = _selectedFilter == filter ? null : filter;
+        _handleFilterAction(filter);
+      }
+      
+      // サンプル施設名を設定（実際の実装では選択された店舗から取得）
+      if (_controller.shopsWithPrice.isNotEmpty) {
+        _currentFacilityName = _controller.shopsWithPrice.first.shop.name;
+      }
+    });
+  }
+  
+  /// フィルターアクションの処理
+  void _handleFilterAction(String filter) {
+    switch (filter) {
+      case 'area':
+        // エリア検索の処理（今後実装）
+        _showFilterBottomSheet('エリア');
+        break;
+      case 'category':
+        // カテゴリ検索の処理（今後実装）
+        _showFilterBottomSheet('カテゴリ');
+        break;
+      case 'feature':
+        // 特徴検索の処理（今後実装）
+        _showFilterBottomSheet('特徴');
+        break;
+    }
+  }
+  
+  /// フィルターボトムシート表示
+  void _showFilterBottomSheet(String filterType) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // ハンドルバー
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // タイトル
+            Text(
+              filterType,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 実装中メッセージ
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '実装中',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 閉じるボタン
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('閉じる'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   
   @override
   Widget build(BuildContext context) {
@@ -231,17 +368,28 @@ class _MapScreenState extends State<MapScreen> {
             onCameraIdle: () => _controller.updateMarkerPositions(),
           ),
           
-          // 検索ボックスを次に配置（地図の上に表示）
+          // フィルターバーを最上部に配置
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 8,
-            right: 8,
+            top: MediaQuery.of(context).padding.top,
+            left: 0,
+            right: 0,
+            child: FilterBar(
+              selectedFilter: _selectedFilter,
+              onFilterSelected: _onFilterSelected,
+              activeFilterCount: _activeFilters.length,
+              facilityName: _currentFacilityName,
+              activeFilters: _activeFilters,
+            ),
+          ),
+          
+          // 「このエリアで再検索」ボタンをフィルターバーの下に配置
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 72, // フィルターバー分下げる
+            left: 0,
+            right: 0,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-
-                
-                // 「このエリアで再検索」ボタン
+                const SizedBox(height: 12), // フィルターバーとの間隔12px
                 _buildSearchAreaButton(),
               ],
             ),
@@ -307,14 +455,7 @@ class _MapScreenState extends State<MapScreen> {
               child: CircularProgressIndicator(),
             ),
             
-          // データが空の場合
-          if (!_controller.isLoading && _controller.shopsWithPrice.isEmpty)
-            Container(
-              padding: EdgeInsets.all(20),
-              child: Center(
-                child: Text('データがありません'),
-              ),
-            ),
+
           
 
         ],

@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   carousel_slider: ^5.0.2
   cupertino_icons: ^1.0.8
 
@@ -29,7 +31,7 @@ dependencies:
   google_maps_flutter_android: ^2.6.2
   flutter_svg: ^2.0.9
   cached_network_image: ^3.3.1
-  intl: ^0.17.0
+  intl: ^0.20.2
   url_launcher: ^6.3.1
   geolocator: ^10.1.0
 
