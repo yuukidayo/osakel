@@ -40,25 +40,25 @@ class AuthService {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        print('🚫 ユーザーがログインしていません');
+        debugPrint('🚫 ユーザーがログインしていません');
         return null;
       }
 
-      print('👤 現在のユーザー: ${user.uid}');
+      debugPrint('👤 現在のユーザー: ${user.uid}');
       
       // ユーザードキュメントを取得
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       
       if (!userDoc.exists) {
-        print('🚫 ユーザードキュメントが見つかりません: ${user.uid}');
+        debugPrint('🚫 ユーザードキュメントが見つかりません: ${user.uid}');
         return null;
       }
 
       final userData = userDoc.data();
-      print('📊 ユーザーデータ: $userData');
+      debugPrint('📊 ユーザーデータ: $userData');
       return userData;
     } catch (e) {
-      print('❌ ユーザーデータ取得エラー: $e');
+      debugPrint('❌ ユーザーデータ取得エラー: $e');
       return null;
     }
   }
@@ -72,10 +72,10 @@ class AuthService {
       final roleString = userData['role'] as String?;
       final role = UserRole.fromString(roleString);
       
-      print('🔑 ユーザーロール: ${role.displayName} (${role.value})');
+      debugPrint('🔑 ユーザーロール: ${role.displayName} (${role.value})');
       return role;
     } catch (e) {
-      print('❌ ユーザーロール取得エラー: $e');
+      debugPrint('❌ ユーザーロール取得エラー: $e');
       return UserRole.unknown;
     }
   }
@@ -84,7 +84,7 @@ class AuthService {
   static Future<bool> isAdmin() async {
     final role = await getCurrentUserRole();
     final isAdminUser = role == UserRole.admin;
-    print('👑 管理者権限: $isAdminUser');
+    debugPrint('👑 管理者権限: $isAdminUser');
     return isAdminUser;
   }
 
@@ -92,7 +92,7 @@ class AuthService {
   static Future<bool> isUser() async {
     final role = await getCurrentUserRole();
     final isRegularUser = role == UserRole.user;
-    print('👤 一般ユーザー権限: $isRegularUser');
+    debugPrint('👤 一般ユーザー権限: $isRegularUser');
     return isRegularUser;
   }
 
@@ -100,7 +100,7 @@ class AuthService {
   static Future<bool> isShopOwner() async {
     final role = await getCurrentUserRole();
     final isShopOwnerUser = role == UserRole.shopOwner;
-    print('🏪 店舗ユーザー権限: $isShopOwnerUser');
+    debugPrint('🏪 店舗ユーザー権限: $isShopOwnerUser');
     return isShopOwnerUser;
   }
 
@@ -109,7 +109,7 @@ class AuthService {
     final user = _auth.currentUser;
     final role = await getCurrentUserRole();
     final isAuth = user != null && role != UserRole.unknown;
-    print('🔐 認証済み: $isAuth');
+    debugPrint('🔐 認証済み: $isAuth');
     return isAuth;
   }
 
@@ -124,10 +124,10 @@ class AuthService {
 
       final userShopId = userData['shopId'] as String?;
       final isOwner = userShopId == shopId;
-      print('🏪 店舗所有者チェック: $isOwner (shopId: $shopId)');
+      debugPrint('🏪 店舗所有者チェック: $isOwner (shopId: $shopId)');
       return isOwner;
     } catch (e) {
-      print('❌ 店舗所有者チェックエラー: $e');
+      debugPrint('❌ 店舗所有者チェックエラー: $e');
       return false;
     }
   }
@@ -142,10 +142,10 @@ class AuthService {
       if (role != UserRole.shopOwner) return null;
 
       final shopId = userData['shopId'] as String?;
-      print('🏪 ユーザーの店舗ID: $shopId');
+      debugPrint('🏪 ユーザーの店舗ID: $shopId');
       return shopId;
     } catch (e) {
-      print('❌ 店舗ID取得エラー: $e');
+      debugPrint('❌ 店舗ID取得エラー: $e');
       return null;
     }
   }
@@ -169,7 +169,7 @@ class AuthService {
       'canUploadDrinkImages': role == UserRole.admin,
     };
 
-    print('🔑 ユーザー権限一覧: $permissions');
+    debugPrint('🔑 ユーザー権限一覧: $permissions');
     return permissions;
   }
 
@@ -177,9 +177,9 @@ class AuthService {
   static Future<void> signOut() async {
     try {
       await _auth.signOut();
-      print('👋 ログアウト完了');
+      debugPrint('👋 ログアウト完了');
     } catch (e) {
-      print('❌ ログアウトエラー: $e');
+      debugPrint('❌ ログアウトエラー: $e');
       rethrow;
     }
   }
@@ -199,9 +199,9 @@ class AuthService {
       }
 
       await _firestore.collection('users').doc(userId).update(userData);
-      print('✅ ユーザー権限設定完了: ${role.displayName}');
+      debugPrint('✅ ユーザー権限設定完了: ${role.displayName}');
     } catch (e) {
-      print('❌ ユーザー権限設定エラー: $e');
+      debugPrint('❌ ユーザー権限設定エラー: $e');
       rethrow;
     }
   }
@@ -229,9 +229,9 @@ class AuthService {
       }
 
       await _firestore.collection('users').doc(userId).set(userData);
-      print('✅ 新規ユーザー作成完了: ${role.displayName}');
+      debugPrint('✅ 新規ユーザー作成完了: ${role.displayName}');
     } catch (e) {
-      print('❌ 新規ユーザー作成エラー: $e');
+      debugPrint('❌ 新規ユーザー作成エラー: $e');
       rethrow;
     }
   }
