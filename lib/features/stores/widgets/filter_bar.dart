@@ -94,7 +94,7 @@ class _PillFilterButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05), // 極薄い影
+              color: Colors.black.withValues(alpha: 0.05), // 極薄い影
               blurRadius: 2,
               offset: const Offset(0, 1),
             ),
@@ -203,13 +203,13 @@ class _FilterButtonState extends State<_FilterButton>
       ];
       shadows = [
         BoxShadow(
-          color: Colors.black.withOpacity(0.25),
+          color: Colors.black.withValues(alpha: 0.25),
           offset: const Offset(0, 4),
           blurRadius: 12,
           spreadRadius: 0,
         ),
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           offset: const Offset(0, 2),
           blurRadius: 6,
           spreadRadius: 0,
@@ -225,7 +225,7 @@ class _FilterButtonState extends State<_FilterButton>
       ];
       shadows = [
         BoxShadow(
-          color: Colors.black.withOpacity(0.08),
+          color: Colors.black.withValues(alpha: 0.08),
           offset: const Offset(0, 1),
           blurRadius: 4,
           spreadRadius: 0,
@@ -241,13 +241,13 @@ class _FilterButtonState extends State<_FilterButton>
       ];
       shadows = [
         BoxShadow(
-          color: Colors.black.withOpacity(0.12),
+          color: Colors.black.withValues(alpha: 0.12),
           offset: const Offset(0, 3),
           blurRadius: 10,
           spreadRadius: 0,
         ),
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           offset: const Offset(0, 1),
           blurRadius: 4,
           spreadRadius: 0,
@@ -290,8 +290,8 @@ class _FilterButtonState extends State<_FilterButton>
                   width: 1,
                 ),
                 boxShadow: shadows.map((shadow) => BoxShadow(
-                  color: shadow.color.withOpacity(
-                    shadow.color.opacity * _shadowAnimation.value,
+                  color: shadow.color.withValues(
+                    alpha: shadow.color.a * _shadowAnimation.value,
                   ),
                   offset: shadow.offset,
                   blurRadius: shadow.blurRadius,

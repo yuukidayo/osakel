@@ -97,7 +97,7 @@ class _FirebaseDebugWidgetState extends State<FirebaseDebugWidget> {
   }
 
   Widget _buildOverlay(BuildContext context) {
-    final bg = Colors.black.withOpacity(0.8);
+    final bg = Colors.black.withValues(alpha: 0.8);
     final textColor = Colors.white;
     return Material(
       color: Colors.transparent,

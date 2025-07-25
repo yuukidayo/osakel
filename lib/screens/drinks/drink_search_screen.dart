@@ -227,7 +227,7 @@ class _DrinkSearchScreenState extends State<DrinkSearchScreen> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF000000).withOpacity(0.8), // 黒背景（半透明）
+        color: const Color(0xFF000000).withValues(alpha: 0.8), // 黒背景（半透明）
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

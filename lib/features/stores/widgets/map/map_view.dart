@@ -288,11 +288,8 @@ class MapView extends StatelessWidget {
               myLocationButtonEnabled: myLocationButtonEnabled,
               mapToolbarEnabled: mapToolbarEnabled,
               zoomControlsEnabled: zoomControlsEnabled,
-              onMapCreated: (GoogleMapController controller) {
-                // Airbnb風スタイルを適用
-                controller.setMapStyle(_airbnbMapStyle);
-                onMapCreated(controller);
-              },
+              style: _airbnbMapStyle,
+              onMapCreated: onMapCreated,
               onCameraMove: onCameraMove,
               onCameraIdle: onCameraIdle,
       ),

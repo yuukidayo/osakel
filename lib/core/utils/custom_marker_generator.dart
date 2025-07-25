@@ -32,7 +32,7 @@ class CustomMarkerGenerator {
     const shadowOffset = Offset(0, 4); // 7 * 0.6 ≈ 4
     const shadowBlur = 8.0; // 14 * 0.6 ≈ 8
     final shadowPaint = Paint()
-      ..color = const Color(0xFF8A8A8A).withOpacity(0.3) // グレーの影
+      ..color = const Color(0xFF8A8A8A).withValues(alpha: 0.3) // グレーの影
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, shadowBlur);
     
     // 影を描画 (Airbnb風の丸みを帯びた長方形)
@@ -129,6 +129,6 @@ class CustomMarkerGenerator {
     final img = await picture.toImage(width.toInt(), height.toInt());
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
     
-    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    return BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
   }
 }
