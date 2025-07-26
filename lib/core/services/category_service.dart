@@ -1,18 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/category.dart';
+import 'package:flutter/foundation.dart';
+import '../../models/category.dart' as model;
 
 class CategoryService {
   final CollectionReference categoriesRef = 
       FirebaseFirestore.instance.collection('categories');
   
   // すべてのカテゴリを取得（order順にソート）
-  Future<List<Category>> getCategories() async {
+  Future<List<model.Category>> getCategories() async {
     try {
       final QuerySnapshot snapshot = 
           await categoriesRef.orderBy('order').get();
       
       return snapshot.docs.map((doc) {
-        return Category.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        return model.Category.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
       debugPrint('Error fetching categories: $e');
@@ -21,12 +22,12 @@ class CategoryService {
   }
   
   // 特定のカテゴリを取得
-  Future<Category?> getCategory(String categoryId) async {
+  Future<model.Category?> getCategory(String categoryId) async {
     try {
       final DocumentSnapshot doc = await categoriesRef.doc(categoryId).get();
       
       if (doc.exists) {
-        return Category.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        return model.Category.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }
       return null;
     } catch (e) {
@@ -36,37 +37,37 @@ class CategoryService {
   }
 
   // 開発用のモックデータを作成
-  List<Category> getMockCategories() {
+  List<model.Category> getMockCategories() {
     return [
-      Category(
+      model.Category(
         id: 'beer',
         name: 'ビール',
         order: 1,
         imageUrl: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
         subcategories: ['craft', 'lager', 'pilsner'],
       ),
-      Category(
+      model.Category(
         id: 'sake',
         name: '日本酒',
         order: 2,
         imageUrl: 'https://images.unsplash.com/photo-1579619168343-e9633bad7e74?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
         subcategories: ['junmai', 'daiginjo', 'nigori'],
       ),
-      Category(
+      model.Category(
         id: 'wine',
         name: 'ワイン',
         order: 3,
         imageUrl: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
         subcategories: ['red', 'white', 'rose', 'sparkling'],
       ),
-      Category(
+      model.Category(
         id: 'whisky',
         name: 'ウイスキー',
         order: 4,
         imageUrl: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
         subcategories: ['scotch', 'bourbon', 'japanese', 'islay', 'single_malt'],
       ),
-      Category(
+      model.Category(
         id: 'cocktails',
         name: 'カクテル',
         order: 5,

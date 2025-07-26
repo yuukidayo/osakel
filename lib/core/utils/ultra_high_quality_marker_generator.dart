@@ -14,10 +14,10 @@ class UltraHighQualityMarkerGenerator {
     bool isCluster = false,
     int? clusterCount,
   }) async {
-    // 最高画質設定（サイズそのまま・画質重視）
+    // 最高画質設定（横幅60pxに調整・画質重視）
     const double pixelRatio = 5.0; // 最高画質（5倍密度）
-    const double logicalWidth = 24; // 超小さなサイズ
-    const double logicalHeight = 12; // 超小さな高さ
+    const double logicalWidth = 60; // 横幅60pxに調整
+    const double logicalHeight = 30; // 高さも比例して調整
     final double physicalWidth = logicalWidth * pixelRatio;
     final double physicalHeight = logicalHeight * pixelRatio;
     
@@ -68,7 +68,7 @@ class UltraHighQualityMarkerGenerator {
     // 完璧な角丸四角形（Airbnb風）
     final RRect markerRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, physicalWidth, physicalHeight),
-      Radius.circular(6 * pixelRatio), // 超小サイズに適した角丸
+      Radius.circular(15 * pixelRatio), // 60px幅に適した角丸
     );
     
     // 背景描画
@@ -82,9 +82,9 @@ class UltraHighQualityMarkerGenerator {
     // 最高品質テキスト設定
     final textStyle = TextStyle(
       color: textColor,
-      fontSize: 6 * pixelRatio, // 超小サイズに適したフォント
+      fontSize: 14 * pixelRatio, // 60px幅に適したフォントサイズ
       fontWeight: FontWeight.w600,
-      letterSpacing: -0.05 * pixelRatio, // より精密なスペース調整
+      letterSpacing: -0.1 * pixelRatio, // 60px幅に適したスペース調整
       fontFamily: 'SF Pro Text', // iOS最高品質フォント
       height: 1.0, // ライン高さ最適化
       textBaseline: TextBaseline.alphabetic, // ベースライン最適化
@@ -112,7 +112,7 @@ class UltraHighQualityMarkerGenerator {
       ),
     );
     
-    textPainter.layout(maxWidth: physicalWidth - (6 * pixelRatio));
+    textPainter.layout(maxWidth: physicalWidth - (12 * pixelRatio));
     
     // テキストを完璧に中央配置
     final double textX = (physicalWidth - textPainter.width) / 2;
@@ -156,10 +156,10 @@ class UltraHighQualityMarkerGenerator {
     double pixelRatio,
     bool isSelected,
   ) async {
-    // バッジ設定
-    final double badgeRadius = 12 * pixelRatio;
-    final double badgeX = markerWidth - badgeRadius - (4 * pixelRatio);
-    final double badgeY = badgeRadius + (4 * pixelRatio);
+    // バッジ設定（60px幅に適したサイズ調整）
+    final double badgeRadius = 18 * pixelRatio;
+    final double badgeX = markerWidth - badgeRadius - (8 * pixelRatio);
+    final double badgeY = badgeRadius + (8 * pixelRatio);
     
     // バッジ背景
     final Paint badgePaint = Paint()
@@ -172,7 +172,7 @@ class UltraHighQualityMarkerGenerator {
     final Paint badgeBorderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * pixelRatio
+      ..strokeWidth = 3 * pixelRatio
       ..isAntiAlias = true
       ..filterQuality = FilterQuality.high;
     
@@ -183,7 +183,7 @@ class UltraHighQualityMarkerGenerator {
     final String badgeText = clusterCount > 99 ? '99+' : clusterCount.toString();
     final badgeTextStyle = TextStyle(
       color: Colors.white,
-      fontSize: 10 * pixelRatio,
+      fontSize: 16 * pixelRatio, // 60px幅に適したバッジフォントサイズ
       fontWeight: FontWeight.bold,
       fontFamily: 'System',
     );

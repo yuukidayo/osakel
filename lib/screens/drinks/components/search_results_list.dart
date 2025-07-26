@@ -24,8 +24,16 @@ class SearchResultsList extends StatelessWidget {
       if (hasError) {
         return _buildErrorWidget();
       }
+      // 初期化中は検索中表示に変更
       return const Center(
-        child: Text('検索条件を選択してください', style: TextStyle(fontSize: 16)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('お酒を検索中...', style: TextStyle(fontSize: 16)),
+          ],
+        ),
       );
     }
 

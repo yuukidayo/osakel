@@ -50,7 +50,7 @@ class DrinkSearchNotifier extends ChangeNotifier {
   /// 初期化
   Future<void> initialize() async {
     await loadCategories();
-    executeSearch();
+    // loadCategories内で初期検索が実行される
   }
 
   /// カテゴリを読み込む
@@ -73,6 +73,10 @@ class DrinkSearchNotifier extends ChangeNotifier {
       await updateSubcategories();
       
       _setLoading(false);
+      
+      // カテゴリ読み込み完了後に初期検索を実行
+      debugPrint('🔍 カテゴリ読み込み完了 - 初期検索を実行');
+      executeSearch();
     } catch (e) {
       debugPrint('カテゴリ読み込みエラー: $e');
       _setError(true);

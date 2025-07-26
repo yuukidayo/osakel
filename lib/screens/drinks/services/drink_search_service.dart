@@ -150,8 +150,15 @@ class DrinkSearchService {
       query = _applyDetailedFilters(query, criteria.filterValues);
     }
     
-    // デフォルトのソート順を適用
-    query = query.orderBy('name');
+    // キーワード検索がない場合はソート順を簡略化
+    if (criteria.searchKeyword.isEmpty) {
+      // 検索キーワードがない場合はcreatedAtでソート（インデックス不要）
+      debugPrint('🔎 Applying default sort by timestamp');
+    } else {
+      // キーワード検索がある場合はnameでソート
+      query = query.orderBy('name');
+      debugPrint('🔎 Applying name sort for keyword search');
+    }
     
     // 結果数の制限
     return query.limit(50);

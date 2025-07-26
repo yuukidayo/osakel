@@ -9,6 +9,7 @@ import '../../../screens/drinks/models/drink_category.dart';
 import 'services/shop_search_service.dart';
 import 'models/shop_search_criteria.dart';
 import '../../../../models/shop.dart';
+import '../../../../models/shop_with_price.dart';
 import 'shop_detail_screen.dart';
 
 /// お店検索画面（簡潔版）
@@ -32,7 +33,7 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
   bool _isLoading = true;
   
   // 検索結果
-  List<Shop> _shops = [];
+  List<ShopWithPrice> _shopsWithPrices = [];
   bool _isSearching = false;
   String _searchError = '';
 
@@ -40,11 +41,20 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
   void initState() {
     super.initState();
     // 共有状態を初期化してからカテゴリを読み込み
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
-      sharedProvider.initialize().then((_) {
-        _loadCategories();
-      });
+      
+      // SharedCategoryProviderの初期化を待つ
+      await sharedProvider.initialize();
+      debugPrint('🔄 SharedCategoryProvider初期化完了');
+      
+      // カテゴリを読み込む
+      await _loadCategories();
+      debugPrint('🔄 カテゴリ読み込み完了');
+      
+      // 初期検索を実行
+      await _performInitialSearch();
+      debugPrint('🔄 初期検索完了');
     });
   }
 
@@ -62,9 +72,6 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
         final sharedProvider = Provider.of<SharedCategoryProvider>(context, listen: false);
         sharedProvider.setCategories(categories);
       }
-      
-      // 初期検索を実行
-      await _performInitialSearch();
     } catch (e) {
       setState(() {
         _searchError = 'カテゴリの読み込みに失敗しました: $e';
@@ -91,20 +98,22 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
         selectedCategory: sharedProvider.selectedCategory,
       );
       
-      final shops = await _searchService.searchShops(criteria);
+      final shopsWithPrices = await _searchService.searchShopsWithPrices(criteria);
       
       setState(() {
-        _shops = shops;
+        _shopsWithPrices = shopsWithPrices;
         _isSearching = false;
       });
       
-      debugPrint('✅ 初期検索完了: ${shops.length}件のお店が見つかりました');
-    } catch (e) {
-      setState(() {
-        _searchError = '検索に失敗しました: $e';
-        _isSearching = false;
-      });
+      debugPrint('✅ 初期検索完了 - UI更新済み: ${shopsWithPrices.length}件');
+    } catch (e, stackTrace) {
       debugPrint('❌ 初期検索エラー: $e');
+      debugPrint('❌ スタックトレース: $stackTrace');
+      
+      setState(() {
+        _searchError = '初期検索に失敗しました: $e';
+        _isSearching = false;
+      });
     }
   }
 
@@ -170,12 +179,12 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
       );
       debugPrint('🔍 検索条件作成: ${criteria.selectedCategory}');
       
-      final shops = await _searchService.searchShops(criteria);
-      debugPrint('🔍 検索結果: ${shops.length}件');
+      final shopsWithPrices = await _searchService.searchShopsWithPrices(criteria);
+      debugPrint('🔍 検索結果: ${shopsWithPrices.length}件');
       
       if (mounted) {
         setState(() {
-          _shops = shops;
+          _shopsWithPrices = shopsWithPrices;
           _isSearching = false;
         });
         debugPrint('🔍 検索結果を表示更新');
@@ -240,12 +249,12 @@ class _ShopSearchScreenState extends State<ShopSearchScreen> {
               // 検索結果表示エリア
               Expanded(
                 child: ShopSearchResults(
-                  shops: _shops,
+                  shopsWithPrices: _shopsWithPrices,
                   isLoading: _isLoading,
                   isSearching: _isSearching,
                   searchError: _searchError,
                   onRetry: _performSearch,
-                  onShopTap: _navigateToShopDetail,
+                  onShopTap: (shopWithPrice) => _navigateToShopDetail(shopWithPrice.shop),
                 ),
               ),
             ],

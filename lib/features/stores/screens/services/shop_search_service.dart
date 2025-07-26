@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../models/shop_search_criteria.dart';
 import '../../../../screens/drinks/models/drink_category.dart';
 import '../../../../models/shop.dart';
+import '../../../../models/shop_with_price.dart';
+import '../../../../models/drink_shop_link.dart';
 
 /// お店検索サービスクラス
 class ShopSearchService {
@@ -184,8 +186,8 @@ class ShopSearchService {
     return query;
   }
 
-  /// 検索を実行してお店リストを取得
-  Future<List<Shop>> searchShops(ShopSearchCriteria criteria) async {
+  /// 検索を実行してお店リスト（価格情報付き）を取得
+  Future<List<ShopWithPrice>> searchShopsWithPrices(ShopSearchCriteria criteria) async {
     try {
       debugPrint('\n🔍 === SHOP SEARCH EXECUTION ===');
       debugPrint('📋 Executing search with criteria: $criteria');
@@ -198,20 +200,41 @@ class ShopSearchService {
       
       debugPrint('📊 Found ${querySnapshot.docs.length} shops');
       
-      // Shopオブジェクトに変換
-      final shops = querySnapshot.docs.map((doc) {
+      // ShopWithPriceオブジェクトに変換（価格情報付き）
+      final shopsWithPrices = <ShopWithPrice>[];
+      
+      for (final doc in querySnapshot.docs) {
         try {
           final shop = Shop.fromMap(doc.id, doc.data());
-          debugPrint('✅ Converted shop: ${shop.name}');
-          return shop;
+          debugPrint('✅ Converting shop: ${shop.name}');
+          
+          // 各店舗のデフォルト価格情報を作成（実際のアプリではdrink_shop_linksから取得）
+          final defaultDrinkShopLink = DrinkShopLink(
+            id: '${shop.id}_default',
+            drinkId: 'default_drink',
+            shopId: shop.id,
+            price: _generateDefaultPrice(shop), // 店舗に基づいたデフォルト価格
+            isAvailable: true,
+            note: '参考価格',
+          );
+          
+          final shopWithPrice = ShopWithPrice(
+            shop: shop,
+            drinkShopLink: defaultDrinkShopLink,
+            distance: 0.0,
+          );
+          
+          shopsWithPrices.add(shopWithPrice);
+          debugPrint('✅ Converted shop with price: ${shop.name} - ¥${defaultDrinkShopLink.price}');
+          
         } catch (e) {
           debugPrint('❌ Error converting shop ${doc.id}: $e');
-          return null;
+          continue;
         }
-      }).where((shop) => shop != null).cast<Shop>().toList();
+      }
       
-      debugPrint('🎯 Successfully converted ${shops.length} shops');
-      return shops;
+      debugPrint('🎯 Successfully converted ${shopsWithPrices.length} shops with prices');
+      return shopsWithPrices;
       
     } catch (e) {
       debugPrint('❌ Shop search error: $e');
@@ -234,5 +257,30 @@ class ShopSearchService {
       
       return [];
     }
+  }
+
+  /// 店舗に基づいたデフォルト価格を生成
+  double _generateDefaultPrice(Shop shop) {
+    // 店舗カテゴリや名前に基づいて参考価格を設定
+    final category = shop.category?.toLowerCase() ?? '';
+    final name = shop.name.toLowerCase();
+    
+    if (category.contains('高級') || name.contains('高級')) {
+      return 5000.0; // 高級店
+    } else if (category.contains('バー') || name.contains('バー')) {
+      return 3200.0; // 一般的なバー
+    } else if (category.contains('居酒屋') || name.contains('居酒屋')) {
+      return 2500.0; // 居酒屋
+    } else if (category.contains('カジュアル') || name.contains('カジュアル')) {
+      return 1800.0; // カジュアル
+    } else {
+      return 3000.0; // デフォルト価格
+    }
+  }
+
+  /// 後方互換性のため既存メソッドも保持
+  Future<List<Shop>> searchShops(ShopSearchCriteria criteria) async {
+    final shopsWithPrices = await searchShopsWithPrices(criteria);
+    return shopsWithPrices.map((swp) => swp.shop).toList();
   }
 }

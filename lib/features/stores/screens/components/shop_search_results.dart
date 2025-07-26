@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../../models/shop.dart';
-import 'shop_card.dart';
+import '../../../../models/shop_with_price.dart';
+import '../../../../shared/widgets/modern_bar_card_widget.dart';
 
-/// お店検索結果表示ウィジェット
+/// お店検索結果表示ウィジェット（モダンデザイン対応）
 class ShopSearchResults extends StatelessWidget {
-  final List<Shop> shops;
+  final List<ShopWithPrice> shopsWithPrices;
   final bool isLoading;
   final bool isSearching;
   final String searchError;
   final VoidCallback onRetry;
-  final Function(Shop) onShopTap;
+  final Function(ShopWithPrice) onShopTap;
 
   const ShopSearchResults({
     super.key,
-    required this.shops,
+    required this.shopsWithPrices,
     required this.isLoading,
     required this.isSearching,
     required this.searchError,
@@ -60,41 +60,57 @@ class ShopSearchResults extends StatelessWidget {
       );
     }
 
-    // お店一覧表示
-    if (shops.isNotEmpty) {
+    // お店一覧表示（モダンデザイン）
+    if (shopsWithPrices.isNotEmpty) {
       return Column(
         children: [
-          // 検索結果ヘッダー
+          // 検索結果ヘッダー（モダンスタイル）
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             color: Colors.white,
             child: Row(
               children: [
-                const Icon(Icons.store, color: Colors.grey),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1A1A).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.local_bar_outlined,
+                    color: Color(0xFF1A1A1A),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
-                  '${shops.length}件のお店が見つかりました',
+                  '${shopsWithPrices.length}件のバーが見つかりました',
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                    letterSpacing: -0.3,
                   ),
                 ),
               ],
             ),
           ),
           
-          // お店リスト
+          // バーリスト（モダンカードデザイン）
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: shops.length,
-              itemBuilder: (context, index) {
-                final shop = shops[index];
-                return ShopCard(
-                  shop: shop,
-                  onTap: () => onShopTap(shop),
-                );
-              },
+            child: Container(
+              color: const Color(0xFFFAFAFA), // 背景色を少し変更
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: shopsWithPrices.length,
+                itemBuilder: (context, index) {
+                  final shopWithPrice = shopsWithPrices[index];
+                  return ModernBarCardWidget(
+                    shopWithPrice: shopWithPrice,
+                    onTap: () => onShopTap(shopWithPrice),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -102,27 +118,36 @@ class ShopSearchResults extends StatelessWidget {
     }
 
     // 初期表示（検索結果が空の時）
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'お店が見つかりません',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+    return Container(
+      color: const Color(0xFFFAFAFA),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.local_bar_outlined, size: 80, color: Colors.grey),
+            SizedBox(height: 24),
+            Text(
+              'バーが見つかりません',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            '上のカテゴリボタンで\n別のカテゴリを選択してみてください',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
+            SizedBox(height: 12),
+            Text(
+              '上のカテゴリボタンで\n別のカテゴリを選択してみてください',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                height: 1.5,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
