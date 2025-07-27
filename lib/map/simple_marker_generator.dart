@@ -15,8 +15,8 @@ class SimpleMarkerGenerator {
     bool isSelected = false,
   }) async {
     // 固定サイズ設定（全デバイス統一）
-    const double width = 48.0;
-    const double height = 24.0;
+    const double width = 240.0;
+    const double height = 100.0;
     
     // キャッシュキー（シンプル）
     final key = '${price.toInt()}_$isSelected';
@@ -35,7 +35,7 @@ class SimpleMarkerGenerator {
     
     // 背景描画
     final rect = Rect.fromLTWH(0, 0, width, height);
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(36));
     
     canvas.drawRRect(rrect, Paint()
       ..color = bgColor
@@ -55,7 +55,7 @@ class SimpleMarkerGenerator {
         text: '¥${price.toInt()}',
         style: TextStyle(
           color: textColor,
-          fontSize: 10,
+          fontSize: 40,
           fontWeight: FontWeight.w600,
         ),
       ),
