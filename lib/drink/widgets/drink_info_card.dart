@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/drink.dart';
+import '../models/drink.dart';
 import '../../../core/utils/safe_data_utils.dart';
 
 /// お酒の詳細情報カード

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../screens/drinks/models/drink_category.dart';
+import '../../drink/models/drink_category.dart';
 
 /// 共有カテゴリ状態管理（お酒検索とお店検索で同期）
 class SharedCategoryProvider extends ChangeNotifier {

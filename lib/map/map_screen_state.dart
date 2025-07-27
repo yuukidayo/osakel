@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 
 /// MapScreen の状態管理クラス
 class MapScreenState extends ChangeNotifier {

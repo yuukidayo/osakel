@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../screens/drinks/models/drink_category.dart';
+import '../../../drink/models/drink_category.dart';
 
 /// 美しいカテゴリ選択モーダル（共通コンポーネント）
 class CategorySelectionModal extends StatelessWidget {

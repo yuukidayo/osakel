@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../models/category.dart';
 import '../models/drink.dart';
-import '../../features/drinks/screens/drink_detail_screen.dart';
-import '../../features/stores/screens/shop_search_screen.dart' as shop_screen;
+import 'drink_detail_screen.dart';
+import '../../store/screens/shop_search_screen.dart' as shop_screen;
 
 class SubcategoryScreen extends StatefulWidget {
   final Category category;

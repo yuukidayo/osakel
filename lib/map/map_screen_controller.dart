@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../../models/shop_with_price.dart';
-import '../../../../core/services/geo_search_service.dart';
-import '../../../../core/services/location_service.dart';
-import '../../widgets/map/map_data_service.dart';
-import '../../widgets/map/mock_data_service.dart';
+import '../store/models/shop_with_price.dart';
+import '../core/services/geo_search_service.dart';
+import '../core/services/location_service.dart';
+import 'map_data_service.dart';
+import 'mock_data_service.dart';
 import '../../widgets/map/simple_marker_generator.dart';
 
 /// MapScreen のビジネスロジックを管理するコントローラー

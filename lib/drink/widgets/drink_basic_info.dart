@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/drink.dart';
+import '../models/drink.dart';
 
 /// お酒基本情報表示コンポーネント
 class DrinkBasicInfo extends StatelessWidget {

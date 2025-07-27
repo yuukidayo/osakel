@@ -1,6 +1,6 @@
-import '../../../../models/shop.dart';
-import '../../../../models/shop_with_price.dart';
-import '../../../../models/drink_shop_link.dart';
+import '../store/models/shop.dart';
+import '../store/models/shop_with_price.dart';
+import '../drink/models/drink_shop_link.dart';
 
 /// モックデータ生成サービス
 class MockDataService {

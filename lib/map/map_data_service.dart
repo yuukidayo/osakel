@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 
-import '../../../../core/services/firestore_service.dart';
+import '../core/services/firestore_service.dart';
 import 'mock_data_service.dart';
 
 /// マップデータ管理サービス

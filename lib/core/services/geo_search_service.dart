@@ -4,9 +4,9 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/shop.dart';
-import '../../models/drink_shop_link.dart';
-import '../../models/shop_with_price.dart';
+import '../../store/models/shop.dart';
+import '../../drink/models/drink_shop_link.dart';
+import '../../store/models/shop_with_price.dart';
 
 /// 地理検索とキャッシュを管理するサービス
 class GeoSearchService {

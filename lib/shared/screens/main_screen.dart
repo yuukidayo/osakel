@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 
-import './drinks/drink_search_screen.dart';
-import '../../features/stores/screens/shop_search_screen.dart';
-import '../debug/screens/notification_test_screen.dart';
+import '../../drink/screens/drink_search_screen.dart';
+import '../../store/screens/shop_search_screen.dart';
+import '../../debug/screens/notification_test_screen.dart';
 import '../../providers/shared_category_provider.dart';
 
 /// メイン画面コンテナ

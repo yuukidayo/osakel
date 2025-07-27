@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/drink.dart';
+import '../models/drink.dart';
 
 /// お酒の画像ヘッダー
 class DrinkImageHeader extends StatelessWidget {

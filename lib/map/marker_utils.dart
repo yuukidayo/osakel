@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 import 'price_marker.dart';
 
 class MarkerUtils {

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../models/drink.dart';
-import '../../../../models/comment.dart';
-import '../../../../models/user.dart';
-import '../../../../models/shop.dart';
+import '../models/drink.dart';
+import '../models/comment.dart';
+import '../../user/models/user.dart';
+import '../../store/models/shop.dart';
 import '../../../core/services/firestore_service.dart';
 import '../../../core/utils/safe_data_utils.dart';
 
 import 'pro_comments_screen.dart';
 import '../widgets/drink_info_card.dart';
-import '../../../shared/widgets/shop_search_button.dart';
+import '../../store/widgets/shop_search_button.dart';
 import '../widgets/drink_image_section.dart';
 import '../widgets/drink_basic_info.dart';
 

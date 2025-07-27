@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 
 /// 店舗カードページビューコンポーネント（モノトーン版）
 /// 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../models/comment.dart';
-import '../../../../models/user.dart';
-import '../pro_comments_screen.dart';
+import '../models/comment.dart';
+import '../../user/models/user.dart';
+import '../screens/pro_comments_screen.dart';
 
 /// プロコメントセクション
 class ProCommentSection extends StatelessWidget {

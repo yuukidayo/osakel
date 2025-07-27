@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/shop_search_criteria.dart';
-import '../../../../screens/drinks/models/drink_category.dart';
-import '../../../../models/shop.dart';
-import '../../../../models/shop_with_price.dart';
-import '../../../../models/drink_shop_link.dart';
+import '../../drink/models/drink_category.dart';
+import '../models/shop.dart';
+import '../models/shop_with_price.dart';
+import '../../drink/models/drink_shop_link.dart';
 
 /// お店検索サービスクラス
 class ShopSearchService {

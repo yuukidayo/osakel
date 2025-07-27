@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../models/comment.dart';
-import '../../../../models/user.dart';
-import '../../../../models/shop.dart';
-import '../../../core/services/firestore_service.dart';
+import '../models/comment.dart';
+import '../../user/models/user.dart';
+import '../../store/models/shop.dart';
+import '../../core/services/firestore_service.dart';
 
 class ProCommentsScreen extends StatefulWidget {
   final String drinkId;

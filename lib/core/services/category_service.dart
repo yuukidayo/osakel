@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/category.dart' as model;
+import '../../drink/models/category.dart' as model;
 
 class CategoryService {
   final CollectionReference categoriesRef = 

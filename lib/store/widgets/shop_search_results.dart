@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../models/shop_with_price.dart';
-import '../../../../shared/widgets/modern_bar_card_widget.dart';
+import '../models/shop_with_price.dart';
+import '../../shared/widgets/modern_bar_card_widget.dart';
 
 /// お店検索結果表示ウィジェット（モダンデザイン対応）
 class ShopSearchResults extends StatelessWidget {

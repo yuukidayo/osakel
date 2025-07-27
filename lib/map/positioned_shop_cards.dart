@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 import 'shop_card_page_view.dart';
 
 /// マップ画面下部に固定表示される店舗カードコンポーネント

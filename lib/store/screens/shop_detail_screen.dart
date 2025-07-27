@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../models/shop.dart';
+import '../models/shop.dart';
 
 class ShopDetailScreen extends StatefulWidget {
   final Shop shop;

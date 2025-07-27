@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/shop.dart';
+import '../models/shop.dart';
 
 /// お店カードウィジェット
 class ShopCard extends StatelessWidget {

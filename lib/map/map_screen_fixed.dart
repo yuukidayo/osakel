@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../../models/shop_with_price.dart';
+import '../store/models/shop_with_price.dart';
 import 'shop_detail_screen.dart';
 import '../widgets/map/map_view.dart';
 import '../widgets/map/shop_card_page_view.dart';

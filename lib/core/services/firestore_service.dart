@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/shop.dart';
-import '../../models/drink_shop_link.dart';
-import '../../models/shop_with_price.dart';
-import '../../models/user.dart';
-import '../../models/comment.dart';
+import '../../store/models/shop.dart';
+import '../../drink/models/drink_shop_link.dart';
+import '../../store/models/shop_with_price.dart';
+import '../../user/models/user.dart';
+import '../../drink/models/comment.dart';
 
 class FirestoreService {
   // Lazy initialization of Firestore to avoid issues during app startup

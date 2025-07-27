@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 
-import '../../features/stores/screens/shop_search_screen.dart';
+import '../../store/screens/shop_search_screen.dart';
 import '../../shared/widgets/filters/drink_filter_bottom_sheet.dart';
 import '../../shared/widgets/modals/category_selection_modal.dart';
-import './components/category_top_bar.dart';
-import './components/search_bar.dart';
-import './components/subcategory_bar.dart';
-import './components/search_results_list.dart';
-import './providers/drink_search_notifier.dart';
+import '../widgets/category_top_bar.dart';
+import '../widgets/search_bar.dart';
+import '../widgets/subcategory_bar.dart';
+import '../widgets/search_results_list.dart';
+import '../widgets/drink_search_notifier.dart';
 
 class DrinkSearchScreen extends StatefulWidget {
   static const String routeName = '/drink_search';

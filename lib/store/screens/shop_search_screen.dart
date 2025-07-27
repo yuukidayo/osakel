@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../screens/drinks/components/category_top_bar.dart';
-import '../../../shared/widgets/modals/category_selection_modal.dart';
-import '../../../providers/shared_category_provider.dart';
-import 'components/shop_search_results.dart';
-import '../../../screens/drinks/models/drink_category.dart';
-import 'services/shop_search_service.dart';
-import 'models/shop_search_criteria.dart';
-import '../../../../models/shop.dart';
-import '../../../../models/shop_with_price.dart';
+import '../../drink/widgets/category_top_bar.dart';
+import '../../shared/widgets/modals/category_selection_modal.dart';
+import '../../shared/models/shared_category_provider.dart';
+import '../widgets/shop_search_results.dart';
+import '../../drink/models/drink_category.dart';
+import '../services/shop_search_service.dart';
+import '../models/shop_search_criteria.dart';
+import '../models/shop.dart';
+import '../models/shop_with_price.dart';
 import 'shop_detail_screen.dart';
 
 /// お店検索画面（簡潔版）

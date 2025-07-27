@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../models/shop_with_price.dart';
-import '../../features/stores/widgets/map/marker_utils.dart';
+import '../models/shop_with_price.dart';
+import '../../map/marker_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StoreBottomSheet extends StatelessWidget {
