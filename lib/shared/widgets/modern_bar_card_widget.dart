@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/shop_with_price.dart';
+import '../../store/models/shop_with_price.dart';
 
 /// モダンなバー検索画面用のショップカードウィジェット
 /// デザイン要求に基づいた洗練されたレイアウト

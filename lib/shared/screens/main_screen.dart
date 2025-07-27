@@ -5,7 +5,7 @@ import 'dart:developer' as developer;
 import '../../drink/screens/drink_search_screen.dart';
 import '../../store/screens/shop_search_screen.dart';
 import '../../debug/screens/notification_test_screen.dart';
-import '../../providers/shared_category_provider.dart';
+import '../models/shared_category_provider.dart';
 
 /// メイン画面コンテナ
 /// IndexedStackを使用して各画面を管理し、切り替えのパフォーマンスを最適化する

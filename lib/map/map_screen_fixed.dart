@@ -2,16 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../store/models/shop_with_price.dart';
-import 'shop_detail_screen.dart';
-import '../widgets/map/map_view.dart';
-import '../widgets/map/shop_card_page_view.dart';
-import '../widgets/map/positioned_shop_cards.dart';
-import '../widgets/map/search_area_button.dart';
-import '../widgets/filter_bar.dart';
+import '../store/screens/shop_detail_screen.dart';
+import 'map_view.dart';
+import 'shop_card_page_view.dart';
+import 'positioned_shop_cards.dart';
+import 'search_area_button.dart';
+import 'filter_bar.dart';
 
 
-import 'controllers/map_screen_controller.dart';
-import 'models/map_screen_state.dart';
+import 'map_screen_controller.dart';
+import 'map_screen_state.dart';
 
 class MapScreen extends StatefulWidget {
   final String? drinkId;

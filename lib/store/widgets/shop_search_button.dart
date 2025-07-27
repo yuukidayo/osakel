@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/drink.dart';
+import '../../drink/models/drink.dart';
 
 /// お店検索ボタンコンポーネント
 class ShopSearchButton extends StatelessWidget {

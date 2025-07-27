@@ -8,7 +8,7 @@ import '../core/services/geo_search_service.dart';
 import '../core/services/location_service.dart';
 import 'map_data_service.dart';
 import 'mock_data_service.dart';
-import '../../widgets/map/simple_marker_generator.dart';
+import 'simple_marker_generator.dart';
 
 /// MapScreen のビジネスロジックを管理するコントローラー
 class MapScreenController extends ChangeNotifier {

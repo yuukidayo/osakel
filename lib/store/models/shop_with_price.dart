@@ -1,5 +1,5 @@
 import './shop.dart';
-import './drink_shop_link.dart';
+import '../../drink/models/drink_shop_link.dart';
 
 class ShopWithPrice {
   final Shop shop;

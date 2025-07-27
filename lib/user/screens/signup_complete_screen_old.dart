@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
 import 'dart:async';
 
-import '../../../screens/main_screen.dart';
+import '../../shared/screens/main_screen.dart';
 
 class SignUpCompleteScreen extends StatefulWidget {
   final String email;

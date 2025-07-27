@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/filters/filter_option.dart';
-import '../../../models/filters/drink_filter_options.dart';
+import '../../../drink/models/drink_filter_options.dart';
 
 /// ドリンク検索のフィルターボトムシート
 /// 
